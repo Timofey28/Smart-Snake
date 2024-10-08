@@ -1,0 +1,11 @@
+# IDE files
+*.cbp
+*.depend
+*.layout
+
+# Build
+bin/
+obj/
+
+# Service
+*.txt
