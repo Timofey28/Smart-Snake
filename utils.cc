@@ -7,7 +7,7 @@
 std::map<CellType, Color> CELL_COLOR = {
     {CellType::PASS, Color::BLUE},
     {CellType::WALL, Color::CYAN},
-    {CellType::PORTAL, Color::GREEN},
+    {CellType::PORTAL, Color::BRIGHT_GREEN},
     {CellType::FOOD, Color::RED},
     {CellType::SNAKE_BODY, Color::BRIGHT_MAGENTA},
     {CellType::SNAKE_HEAD, Color::BLACK},

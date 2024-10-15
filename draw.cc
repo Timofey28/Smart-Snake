@@ -43,17 +43,6 @@ void getPosition(short& x, short& y)
     else throw runtime_error("Failed to get current cursor position.");
 }
 
-void draw::FieldParametersInputForm(Playground& playground)
-{
-    // Ввод размеров игрового поля
-    __EnterFieldDimensions(playground.width, playground.height);
-    playground.InitializeFieldFromDimensions();
-
-    // Расположение стен, порталов и самой змейки
-    __ArrangeFieldElements(playground);
-
-}
-
 void draw::GameCell(const Cell& cell, int stretch)
 {
     if (cell.num == PointOfNoReturn) return;
@@ -72,7 +61,27 @@ void draw::GameCell(Cell& cell, CellType cellType, int stretch)
     cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
 }
 
-void draw::__EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
+void draw::Field(vector<Cell>& field, int width, bool onlyPerimeter)
+{
+    int height = field.size() / width;
+    if (onlyPerimeter) {
+        system("cls");
+        draw::GameCell(field[0], width);
+        draw::GameCell(field[field.size() - width], width);
+        draw::GameCell(field[width]);
+        draw::GameCell(field[width * (height - 1) - 1]);
+        for (int i = 2; i < height - 1; ++i) {
+            draw::GameCell(field[i * width - 1]);
+            draw::GameCell(field[i * width]);
+        }
+        for (int i = 1; i < height - 1; ++i) draw::GameCell(field[i * width + 1], width - 2);
+    } else {
+        system("cls");
+        for (int i = 0; i < field.size(); ++i) draw::GameCell(field[i]);
+    }
+}
+
+void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
 {
     int maxFieldWidth = nConsoleWidth / 2 - 2;
     int maxFieldHeight = nConsoleHeight - 2;
@@ -146,138 +155,4 @@ void draw::__ClearInputAndMoveCursorBack(int phraseLength, int inputLength)
     setPosition(phraseLength, posY - 1);
     cout << string(inputLength, ' ');
     setPosition(phraseLength, posY - 1);
-}
-
-void draw::__ArrangeFieldElements(Playground& playground)
-{
-    vector<Cell> field = playground.GetField();
-    int fieldIndentX, fieldIndentY;
-    playground.GetFieldIndents(fieldIndentX, fieldIndentY);
-
-    // Отрисовка периметра
-    system("cls");
-    int width = playground.width;
-    int height = playground.height;
-    draw::GameCell(field[0], width);
-    draw::GameCell(field[field.size() - width], width);
-    draw::GameCell(field[width]);
-    draw::GameCell(field[width * (height - 1) - 1]);
-    for (int i = 2; i < height - 1; ++i) {
-        draw::GameCell(field[i * width - 1]);
-        draw::GameCell(field[i * width]);
-    }
-    for (int i = 1; i < height - 1; ++i) draw::GameCell(field[i * width + 1], width - 2);
-
-    // Расстановка остальных элементов
-    MouseInput mouseInput;
-    bool isBoundary, isCorner, isAdjacentToCorner;
-    int cellIndex;
-    while (true) {
-        mouseInput.GetClickInfo();
-        int clickedX = mouseInput.X / 2;
-        int clickedY = mouseInput.Y;
-
-        if (mouseInput.buttonPressed == ButtonPressed::WHEEL ||
-            clickedX == nConsoleWidth / 2 - 1 && clickedY == nConsoleHeight - 1)  // cheatcode to continue
-        {
-            setColor(Color::NORMAL);
-            break;
-        }
-
-        if (clickedX >= fieldIndentX && clickedX <= fieldIndentX + width - 1 &&
-            clickedY >= fieldIndentY && clickedY <= fieldIndentY + height - 1)
-        {
-            cellIndex = explainClickInfo(
-                clickedX - fieldIndentX,
-                clickedY - fieldIndentY,
-                width,
-                height,
-                isBoundary,
-                isCorner,
-                isAdjacentToCorner
-            );
-
-            if (isCorner) continue;
-            if (isBoundary) {
-                CellType typeToChangeTo = CellType::UNKNOWN;
-                if (mouseInput.buttonPressed == ButtonPressed::LEFT && field[cellIndex].type != CellType::PORTAL) {
-                    field[cellIndex].type = CellType::PORTAL;
-                    field[cellIndex].UpdateColor();
-                    draw::GameCell(field[cellIndex]);
-                    typeToChangeTo = CellType::PORTAL;
-                }
-                else if (mouseInput.buttonPressed == ButtonPressed::RIGHT && field[cellIndex].type != CellType::WALL) {
-                    field[cellIndex].type = CellType::WALL;
-                    field[cellIndex].UpdateColor();
-                    draw::GameCell(field[cellIndex]);
-                    typeToChangeTo = CellType::WALL;
-                }
-
-                if (typeToChangeTo != CellType::UNKNOWN) {
-                    int oppositeCellIndex = getOppositeBoundaryCellIndex(clickedX - fieldIndentX, clickedY - fieldIndentY, width, height);
-                    field[oppositeCellIndex].type = typeToChangeTo;
-                    field[oppositeCellIndex].UpdateColor();
-                    draw::GameCell(field[oppositeCellIndex]);
-
-                    if (isAdjacentToCorner) {  // updating corner
-                        int pairedAdjacentCellIndex, cornerCellIndex;
-                        getPairedAdjacentCellAndCornerCellIndex(
-                            pairedAdjacentCellIndex,
-                            cornerCellIndex,
-                            clickedX - fieldIndentX,
-                            clickedY - fieldIndentY,
-                            width,
-                            height
-                        );
-                        if (field[cellIndex].type == CellType::PORTAL && field[pairedAdjacentCellIndex].type == CellType::PORTAL) {
-                            field[cornerCellIndex].type = CellType::PORTAL;
-                        }
-                        else {
-                            field[cornerCellIndex].type = CellType::WALL;
-                        }
-                        field[cornerCellIndex].UpdateColor();
-                        draw::GameCell(field[cornerCellIndex]);
-
-                        getPairedAdjacentCellAndCornerCellIndex(
-                            pairedAdjacentCellIndex,
-                            cornerCellIndex,
-                            oppositeCellIndex % width,
-                            oppositeCellIndex / width,
-                            width,
-                            height
-                        );
-                        if (field[oppositeCellIndex].type == CellType::PORTAL && field[pairedAdjacentCellIndex].type == CellType::PORTAL) {
-                            field[cornerCellIndex].type = CellType::PORTAL;
-                        }
-                        else {
-                            field[cornerCellIndex].type = CellType::WALL;
-                        }
-                        field[cornerCellIndex].UpdateColor();
-                        draw::GameCell(field[cornerCellIndex]);
-                    }
-                }
-            }
-
-            else {  // if cell is inside field
-                if (mouseInput.buttonPressed == ButtonPressed::LEFT) field[cellIndex].type = CellType::WALL;
-                else if (mouseInput.buttonPressed == ButtonPressed::RIGHT) field[cellIndex].type = CellType::PASS;
-                else if (mouseInput.buttonPressed == ButtonPressed::CTRL_LEFT) field[cellIndex].type = CellType::SNAKE_BODY;
-                else if (mouseInput.buttonPressed == ButtonPressed::CTRL_RIGHT) {
-                    if (field[cellIndex].type == CellType::SNAKE_BODY)
-                        field[cellIndex].type = CellType::SNAKE_HEAD;
-                }
-                field[cellIndex].UpdateColor();
-                draw::GameCell(field[cellIndex]);
-            }
-        }
-    }
-
-    // Проверка на валидность
-
-
-    // Инициализация объекта playground
-
-
-//    _getch();
-    exit(0);
 }

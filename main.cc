@@ -2,6 +2,8 @@
 #include <windows.h>
 #include "application.h"
 
+#include <bits/stdc++.h>
+
 using namespace std;
 
 int nConsoleWidth, nConsoleHeight;
@@ -20,11 +22,14 @@ int main()
 {
     setlocale(0, "");
 
-    configureConsole();
-    getConsoleWH();
+//    configureConsole();
+//    getConsoleWH();
+//
+//    Application application;
+//    application.Run();
 
-    Application application;
-    application.Run();
+    queue<int> q;
+    q.push(5);
 
 //    for (int i = 0; i < 16; ++i) {
 //        setColor(15);

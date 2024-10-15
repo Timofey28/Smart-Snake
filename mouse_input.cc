@@ -38,6 +38,12 @@ void MouseInput::GetClickInfo()
     }
 }
 
+void MouseInput::GetAnyClick()
+{
+    this->__EnableMouseInput();
+    ReadConsoleInput(handle_, &inputRecord_, 1, &events_);
+}
+
 void MouseInput::__EnableMouseInput()
 {
     SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), ENABLE_EXTENDED_FLAGS | (::prev_mode & ~ENABLE_QUICK_EDIT_MODE));

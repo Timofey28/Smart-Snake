@@ -29,7 +29,7 @@ void Application::Run()
 
 void Application::CreateGames()
 {
-    draw::FieldParametersInputForm(playground_);
+    playground_.FieldParametersInputForm();
     exit(0);
 }
 

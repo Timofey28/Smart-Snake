@@ -20,6 +20,7 @@ class MouseInput
 public:
     MouseInput() : handle_(GetStdHandle(STD_INPUT_HANDLE)) {}
     void GetClickInfo();
+    void GetAnyClick();
 
     short X, Y;
     ButtonPressed buttonPressed;
