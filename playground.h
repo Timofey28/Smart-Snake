@@ -21,6 +21,8 @@ public:
 private:
     void __InitializeFieldFromDimensions();
     void __ArrangeFieldElements();
+    void __IdentifySnakeHead();
+    void __DeletePointlessProtals();
 
     int width_, height_;  // considering whole field with boundaries
     int indentX_, indentY_;

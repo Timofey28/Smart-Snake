@@ -43,7 +43,14 @@ void Playground::__ArrangeFieldElements()
     MouseInput mouseInput;
     bool isBoundary, isCorner, isAdjacentToCorner;
     int cellIndex;
+    bool needToRemoveAlert = false;
     while (true) {
+        // Удаление предупреждения
+        if (needToRemoveAlert) {
+            needToRemoveAlert = false;
+            // todo: remove alert...
+        }
+
         // Расстановка
         while (true) {
             mouseInput.GetClickInfo();
@@ -146,10 +153,39 @@ void Playground::__ArrangeFieldElements()
         }
 
         // Валидация
-        // змейка; наличие закрытых пространств; определение головы; закрытые порталы
-        if (!validation.SnakeIsGood(field_, width_)) {
-            cout << '\a';
+        // 1) количество змеек и корректность; SnakeSingularityAndCorrectness
+        // 2) наличие закрытых пространств; ClosedSpacesExistence
+        // 3) определение головы змейки; SnakeHeadIdentification
+        // 4) удаление порталов, которые закрыты стеной хотя бы с одной стороны;
+        //      RemovePointlessPortalsIfThereAreAny
+        if (!validation.SnakeSingularityAndCorrectness(field_, width_)) {
+            if (validation.snakesAmount != 1) {
+                // multiple or none snakes alert
+                needToRemoveAlert = true;
+                continue;
+            }
+            else if (!validation.snakeIsCorrect) {
+                // incorrect snake alert
+                needToRemoveAlert = true;
+                continue;
+            }
         }
+        if (!validation.ClosedSpacesExistence(field_, width_)) {
+            if (validation.noSpaceAtAll) {
+                // no playing space alert
+                needToRemoveAlert = true;
+                continue;
+            }
+            else {
+                // closed spaces alert
+                needToRemoveAlert = true;
+                continue;
+            }
+        }
+
+        // Определение головы и удаление бессмысленных порталов
+
+
         break;
 
         // Инициализация объекта playground
@@ -159,4 +195,14 @@ void Playground::__ArrangeFieldElements()
 
 //    _getch();
     exit(0);
+}
+
+void Playground::__IdentifySnakeHead()
+{
+
+}
+
+void Playground::__DeletePointlessProtals()
+{
+
 }
