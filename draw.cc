@@ -156,3 +156,26 @@ void draw::__ClearInputAndMoveCursorBack(int phraseLength, int inputLength)
     cout << string(inputLength, ' ');
     setPosition(phraseLength, posY - 1);
 }
+
+
+// namespace alert
+
+void draw::alert::MultimpleOrNoneSnakes(int snakesAmount)
+{
+
+}
+
+void draw::alert::IncorrectSnake()
+{
+
+}
+
+void draw::alert::NoPlayingSpace()
+{
+
+}
+
+void draw::alert::ÑlosedSpaces()
+{
+
+}

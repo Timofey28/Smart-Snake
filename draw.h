@@ -22,6 +22,13 @@ namespace draw
     void EnterFieldDimensions(int& fieldWidth, int& fieldHeight);
     void __ClearInputAndMoveCursorBack(int phraseLength, int inputLength);
 
-//    COLOR_CREATING_FIELD_BOUNDARY_CHANGING = Color::CYAN;
-//    COLOR_CREATING_FIELD_BOUNDARY_STATIC = Color::BRIGHT_BLUE;
-}
+
+namespace alert
+{
+    void MultimpleOrNoneSnakes(int snakesAmount);
+    void IncorrectSnake();
+    void NoPlayingSpace();
+    void ÑlosedSpaces();
+
+}  // namespace alert
+}  // namespace draw
