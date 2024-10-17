@@ -17,18 +17,22 @@ namespace draw
 {
     void GameCell(const Cell& cell, int stretch = 1);
     void GameCell(Cell& cell, CellType cellType, int stretch = 1);
-    void Field(std::vector<Cell>& field, int width, bool onlyPerimeter = false);
+    void Field(const std::vector<Cell>& field, int width, bool onlyPerimeter = false);
 
     void EnterFieldDimensions(int& fieldWidth, int& fieldHeight);
     void __ClearInputAndMoveCursorBack(int phraseLength, int inputLength);
 
+    void smth(std::string s);
 
-namespace alert
-{
-    void MultimpleOrNoneSnakes(int snakesAmount);
-    void IncorrectSnake();
-    void NoPlayingSpace();
-    void ÑlosedSpaces();
+    namespace alert
+    {
+        void MultimpleOrNoneSnakes(int snakesAmount);
+        void IncorrectSnake();
+        void NoPlayingSpace();
+        void ClosedSpaces();
+        void LoopedSnake();
+        void Remove();
 
-}  // namespace alert
+    }  // namespace alert
+
 }  // namespace draw

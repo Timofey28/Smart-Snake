@@ -9,3 +9,5 @@ obj/
 
 # Service
 *.txt
+toANSI.bat
+toUTF8.bat

@@ -4,8 +4,6 @@
 #include <windows.h>
 #include <stdexcept>
 
-#include <conio.h>
-
 using namespace std;
 
 
@@ -54,14 +52,16 @@ void draw::GameCell(const Cell& cell, int stretch)
 void draw::GameCell(Cell& cell, CellType cellType, int stretch)
 {
     if (cell.num == PointOfNoReturn) return;
-    cell.type = cellType;
-    cell.UpdateColor();
-    setPosition(cell.realX, cell.realY);
-    setColor(cell.color);
-    cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
+    if (cell.type != cellType) {
+        cell.type = cellType;
+        cell.UpdateColor();
+        setPosition(cell.realX, cell.realY);
+        setColor(cell.color);
+        cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
+    }
 }
 
-void draw::Field(vector<Cell>& field, int width, bool onlyPerimeter)
+void draw::Field(const vector<Cell>& field, int width, bool onlyPerimeter)
 {
     int height = field.size() / width;
     if (onlyPerimeter) {
@@ -85,13 +85,13 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
 {
     int maxFieldWidth = nConsoleWidth / 2 - 2;
     int maxFieldHeight = nConsoleHeight - 2;
-    PointOfNoReturn = (maxFieldWidth + 2) * (maxFieldHeight + 2) - 1;
+    PointOfNoReturn = nConsoleWidth / 2 * nConsoleHeight - 1;
     fieldWidth = 22;
     fieldHeight = 22;
     return;
 
-    string phraseChooseWidth = "������ ������ ���� (3 - " + to_string(maxFieldWidth) + ") => ";
-    string phraseChooseHeight = "������ ������ ���� (3 - " + to_string(maxFieldHeight) + ") => ";
+    string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";
+    string phraseChooseHeight = "Выбери высоту поля (3 - " + to_string(maxFieldHeight) + ") => ";
     string input;
     int number;
     bool bChooseWidth = true;
@@ -162,20 +162,58 @@ void draw::__ClearInputAndMoveCursorBack(int phraseLength, int inputLength)
 
 void draw::alert::MultimpleOrNoneSnakes(int snakesAmount)
 {
-
+    string alertMsg;
+    if (!snakesAmount) alertMsg = "Не найдено ни одной змейки. ИСПРАВИТЬ!!!";
+    else alertMsg = "Змейка должна быть только одна. ИСПРАВИТЬ!!!";
+    setPosition(0, 0);
+    setColor(Color::NORMAL);
+    cout << alertMsg;
 }
 
 void draw::alert::IncorrectSnake()
 {
-
+    string alertMsg = "Змейка некорректна, ее части не могут находиться рядом друг с другом. ИСПРАВИТЬ!!!";
+    setPosition(0, 0);
+    setColor(Color::NORMAL);
+    cout << alertMsg;
 }
 
 void draw::alert::NoPlayingSpace()
 {
-
+    string alertMsg = "Ты еблан? Даже не буду писать что здесь не так";
+//    alertMsg += "\n" + string(50, ' ') + "\n" + string(50, ' ');
+    setPosition(0, 0);
+    setColor(Color::NORMAL);
+    cout << alertMsg;
 }
 
-void draw::alert::�losedSpaces()
+void draw::alert::ClosedSpaces()
 {
+    string alertMsg = "На игровом поле имеются комнаты, в которые невозможно попасть. Закрась их или сделай туда проход";
+//    alertMsg += "\n" + string(50, ' ') + "\n" + string(50, ' ');
+    setPosition(0, 0);
+    setColor(Color::NORMAL);
+    cout << alertMsg;
+}
 
+void draw::alert::LoopedSnake()
+{
+    string alertMsg = "Змейка зациклена, а так нельзя. ИСПРАВЬ!!!";
+    setPosition(0, 0);
+    setColor(Color::NORMAL);
+    cout << alertMsg;
+}
+
+void draw::alert::Remove()
+{
+    setPosition(0, 0);
+    setColor(Color::BLACK);
+    cout << string(100, ' ');
+}
+
+void draw::smth(string s)
+{
+    setPosition(0, 0);
+    setColor(Color::NORMAL);
+    std::cout << s;
 }

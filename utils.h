@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <vector>
 
 
 enum Color {
@@ -53,6 +54,20 @@ enum CellType
     SNAKE_HEAD,
 };
 
+enum Direction
+{
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+};
+
+enum Orientation
+{
+    VERTICAL,
+    HORIZONTAL
+};
+
 
 extern std::map<CellType, Color> CELL_COLOR;
 
@@ -62,11 +77,11 @@ int explainClickInfo(
     int relY,
     int fieldWidth,
     int fieldHeight,
-    bool& isBoundary,
+    bool& isBorder,
     bool& isCorner,
     bool& isAdjacentToCorner
 );
-int getOppositeBoundaryCellIndex(int relX, int relY, int fieldWidth, int fieldHeight);
+int getOppositeBorderCellIndex(int relX, int relY, int fieldWidth, int fieldHeight);
 void getPairedAdjacentCellAndCornerCellIndex(
     int& pairedAdjacentCellIndex,
     int& cornerCellIndex,
@@ -75,18 +90,11 @@ void getPairedAdjacentCellAndCornerCellIndex(
     int fieldWidth,
     int fieldHeight
 );
+std::string toString(CellType cellType);
 
 
 struct Cell
 {
-//    Cell(CellType cellType = CellType::PASS) :
-//        fieldX(-1),
-//        fieldY(-1),
-//        realX(-1),
-//        realY(-1),
-//        num(-1),
-//        type(cellType) {}
-
     Cell() :
         fieldX(-1),
         fieldY(-1),
@@ -104,15 +112,6 @@ struct Cell
         num(number),
         type(cellType),
         color(CELL_COLOR[cellType]) {}
-
-//    Cell(short consoleX, short consoleY) :
-//        fieldX(consoleX / 2),
-//        fieldY(consoleY),
-//        realX(consoleX),
-//        realY(consoleY),
-//        num(-1),
-//        type(CellType::UNKNOWN) {}
-
     void UpdateColor() { color = CELL_COLOR[type]; }
 
     short fieldX, fieldY, realX, realY, num;

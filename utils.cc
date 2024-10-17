@@ -13,6 +13,19 @@ std::map<CellType, Color> CELL_COLOR = {
     {CellType::SNAKE_HEAD, Color::BLACK},
 };
 
+std::string toString(CellType cellType)
+{
+    switch (cellType) {
+        case CellType::PASS: return "Pass";
+        case WALL: return "Wall";
+        case PORTAL: return "Portal";
+        case FOOD: return "Food";
+        case SNAKE_BODY: return "Snake body";
+        case SNAKE_HEAD: return "Snake head";
+        default: return "Unknown";
+    }
+}
+
 bool canConvertToNumber(std::string str)
 {
     try {
@@ -34,24 +47,24 @@ int explainClickInfo(
     int relY,
     int fieldWidth,
     int fieldHeight,
-    bool& isBoundary,
+    bool& isBorder,
     bool& isCorner,
     bool& isAdjacentToCorner
 ) {
-    isBoundary = false;
+    isBorder = false;
     isCorner = false;
     isAdjacentToCorner = false;
     if (relX == 0 || relX == fieldWidth - 1 || relY == 0 || relY == fieldHeight - 1) {
-        isBoundary = true;
+        isBorder = true;
         if (relX == 0 && relY == 0 || relX == 0 && relY == fieldHeight - 1 ||
             relX == fieldWidth - 1 && relY == 0 || relX == fieldWidth - 1 && relY == fieldHeight - 1)
         {
             isCorner = true;
         }
-        else if (relX == 0 && relY == 1 || relX == 1 && relY == 0 ||  // левые верхние
-                 relX == 0 && relY == fieldHeight - 2 || relX == 1 && relY == fieldHeight - 1 ||  // левые нижние
-                 relX == fieldWidth - 2 && relY == fieldHeight - 1 || relX == fieldWidth - 1 && relY == fieldHeight - 2 || // правые нижние
-                 relX == fieldWidth - 2 && relY == 0 || relX == fieldWidth - 1 && relY == 1)  // правые верхние
+        else if (relX == 0 && relY == 1 || relX == 1 && relY == 0 ||  // Р»РµРІС‹Рµ РІРµСЂС…РЅРёРµ
+                 relX == 0 && relY == fieldHeight - 2 || relX == 1 && relY == fieldHeight - 1 ||  // Р»РµРІС‹Рµ РЅРёР¶РЅРёРµ
+                 relX == fieldWidth - 2 && relY == fieldHeight - 1 || relX == fieldWidth - 1 && relY == fieldHeight - 2 || // РїСЂР°РІС‹Рµ РЅРёР¶РЅРёРµ
+                 relX == fieldWidth - 2 && relY == 0 || relX == fieldWidth - 1 && relY == 1)  // РїСЂР°РІС‹Рµ РІРµСЂС…РЅРёРµ
         {
             isAdjacentToCorner = true;
         }
@@ -59,7 +72,7 @@ int explainClickInfo(
     return relY * fieldWidth + relX;
 }
 
-int getOppositeBoundaryCellIndex(int relX, int relY, int fieldWidth, int fieldHeight)
+int getOppositeBorderCellIndex(int relX, int relY, int fieldWidth, int fieldHeight)
 {
     int oppositeX = relX,
         oppositeY = relY;

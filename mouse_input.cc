@@ -27,11 +27,11 @@ void MouseInput::GetClickInfo()
                 return;
             }
             else if (mer.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
-                this->buttonPressed = ButtonPressed::LEFT;
+                this->buttonPressed = ButtonPressed::LEFT_BUTTON;
                 return;
             }
             else if (mer.dwButtonState == RIGHTMOST_BUTTON_PRESSED) {
-                this->buttonPressed = ButtonPressed::RIGHT;
+                this->buttonPressed = ButtonPressed::RIGHT_BUTTON;
                 return;
             }
         }
@@ -41,7 +41,19 @@ void MouseInput::GetClickInfo()
 void MouseInput::GetAnyClick()
 {
     this->__EnableMouseInput();
-    ReadConsoleInput(handle_, &inputRecord_, 1, &events_);
+    FlushConsoleInputBuffer(handle_);
+    while (true) {
+        ReadConsoleInput(handle_, &inputRecord_, 1, &events_);
+        if (inputRecord_.EventType == MOUSE_EVENT) {
+            MOUSE_EVENT_RECORD mer = inputRecord_.Event.MouseEvent;
+            if (mer.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED ||
+                mer.dwButtonState == RIGHTMOST_BUTTON_PRESSED ||
+                mer.dwButtonState == MOUSE_WHEELED)
+            {
+                return;
+            }
+        }
+    }
 }
 
 void MouseInput::__EnableMouseInput()

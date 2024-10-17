@@ -7,10 +7,10 @@ extern DWORD prev_mode;
 
 enum ButtonPressed
 {
-    LEFT,
     CTRL_LEFT,
-    RIGHT,
     CTRL_RIGHT,
+    LEFT_BUTTON,
+    RIGHT_BUTTON,
     WHEEL,
 };
 

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <windows.h>
+#include <stdexcept>
 #include "application.h"
 
 #include <bits/stdc++.h>
@@ -22,14 +23,11 @@ int main()
 {
     setlocale(0, "");
 
-//    configureConsole();
-//    getConsoleWH();
-//
-//    Application application;
-//    application.Run();
+    configureConsole();
+    getConsoleWH();
 
-    queue<int> q;
-    q.push(5);
+    Application application;
+    application.Run();
 
 //    for (int i = 0; i < 16; ++i) {
 //        setColor(15);
@@ -47,7 +45,7 @@ void configureConsole()
 {
     int suitableFontSize = 40;
 
-    // óñòàíîâêà ðàçìåðà øðèôòà â êîíñîëè
+    // ÑƒÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ° Ñ€Ð°Ð·Ð¼ÐµÑ€Ð° ÑˆÑ€Ð¸Ñ„Ñ‚Ð° Ð² ÐºÐ¾Ð½ÑÐ¾Ð»Ð¸
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_FONT_INFOEX fontInfo;
     fontInfo.cbSize = sizeof(fontInfo);
@@ -55,26 +53,26 @@ void configureConsole()
     fontInfo.dwFontSize.Y = suitableFontSize;
     SetCurrentConsoleFontEx(hConsole, TRUE, &fontInfo);
 
-    // óñòàíîâêà ðàçìåðà áóôåðà ýêðàíà ðàâíûì òåêóùåìó ðàçìåðó îêíà
+    // ÑƒÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ° Ñ€Ð°Ð·Ð¼ÐµÑ€Ð° Ð±ÑƒÑ„ÐµÑ€Ð° ÑÐºÑ€Ð°Ð½Ð° Ñ€Ð°Ð²Ð½Ñ‹Ð¼ Ñ‚ÐµÐºÑƒÑ‰ÐµÐ¼Ñƒ Ñ€Ð°Ð·Ð¼ÐµÑ€Ñƒ Ð¾ÐºÐ½Ð°
     getConsoleWH();
     COORD newScreenBufferSize;
     newScreenBufferSize.X = ::nConsoleWidth;
     newScreenBufferSize.Y = ::nConsoleHeight;
     if(!SetConsoleScreenBufferSize(hConsole, newScreenBufferSize)) {
-        cout << "\nError in " << to_string(__LINE__) << " line: " << GetLastError();
-        exit(-1);
+        string errorMsg = "Unable to set console screen buffer size: " + to_string(GetLastError());
+        throw runtime_error(errorMsg.c_str());
     }
 
-    // îòêðûòèå êîíñîëè âî âåñü ýêðàí
+    // Ð¾Ñ‚ÐºÑ€Ñ‹Ñ‚Ð¸Ðµ ÐºÐ¾Ð½ÑÐ¾Ð»Ð¸ Ð²Ð¾ Ð²ÐµÑÑŒ ÑÐºÑ€Ð°Ð½
     ::SendMessage(::GetConsoleWindow(), WM_SYSKEYDOWN, VK_RETURN, 0x20000000);
 
-    // ñäåëàòü êóðñîð íåâèäèìûì
+    // ÑÐ´ÐµÐ»Ð°Ñ‚ÑŒ ÐºÑƒÑ€ÑÐ¾Ñ€ Ð½ÐµÐ²Ð¸Ð´Ð¸Ð¼Ñ‹Ð¼
     CONSOLE_CURSOR_INFO structCursorInfo;
     GetConsoleCursorInfo(hConsole, &structCursorInfo);
     structCursorInfo.bVisible = FALSE;
     SetConsoleCursorInfo(hConsole, &structCursorInfo);
 
-    // ÷òåíèå òåêóùåãî ðåæèìà êîíñîëè
+    // Ñ‡Ñ‚ÐµÐ½Ð¸Ðµ Ñ‚ÐµÐºÑƒÑ‰ÐµÐ³Ð¾ Ñ€ÐµÐ¶Ð¸Ð¼Ð° ÐºÐ¾Ð½ÑÐ¾Ð»Ð¸
     GetConsoleMode(hConsole, &::prev_mode);
 }
 
@@ -89,7 +87,7 @@ void getConsoleWH()
             ::nConsoleWidth = consoleInfo.srWindow.Right - consoleInfo.srWindow.Left + 1;
             ::nConsoleHeight = consoleInfo.srWindow.Bottom - consoleInfo.srWindow.Top + 1;
         }
-        else exit(-1);
+        else throw runtime_error("Unable to get console screen buffer info");
     }
-    else exit(-1);
+    else throw runtime_error("Unable to initialize HANDLE object");
 }
