@@ -264,6 +264,32 @@ void Playground::__AdjustPortals()
         index = y * width_;
         if (field_[index].type == CellType::PORTAL) __CalculatePortalEntries(Orientation::HORIZONTAL, y);
     }
+
+    // remove corner "portals"
+    int upperLeftCorner = 0,
+        upperRightCorner = width_ - 1,
+        lowerLeftCorner = (height_ - 1) * width_,
+        lowerRightCorner = width_ * height_ - 1;
+    int upperLeftAdj1 = 1,
+        upperLeftAdj2 = width_,
+        upperRightAdj1 = width_ - 2,
+        upperRightAdj2 = 2 * width_ - 1,
+        lowerLeftAdj1 = (height_ - 2) * width_,
+        lowerLeftAdj2 = (height_ - 1) * width_ + 1,
+        lowerRightAdj1 = (height_ - 2) * width_ + (width_ - 1),
+        lowerRightAdj2 = width_ * height_ - 2;
+    if (field_[upperLeftAdj1].type != CellType::PORTAL || field_[upperLeftAdj2].type != CellType::PORTAL) {
+        draw::GameCell(field_[upperLeftCorner], CellType::WALL);
+    }
+    if (field_[upperRightAdj1].type != CellType::PORTAL || field_[upperRightAdj2].type != CellType::PORTAL) {
+        draw::GameCell(field_[upperRightCorner], CellType::WALL);
+    }
+    if (field_[lowerLeftAdj1].type != CellType::PORTAL || field_[lowerLeftAdj2].type != CellType::PORTAL) {
+        draw::GameCell(field_[lowerLeftCorner], CellType::WALL);
+    }
+    if (field_[lowerRightAdj1].type != CellType::PORTAL || field_[lowerRightAdj2].type != CellType::PORTAL) {
+        draw::GameCell(field_[lowerRightCorner], CellType::WALL);
+    }
 }
 
 void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue)
@@ -407,5 +433,31 @@ void Playground::__MovePortalsBackToBorder()
         if ((i % width_ != 0) && (i % width_ != width_ - 1) && (i / width_ != 0) && (i / width_ != height_ - 1)) {
             if (field_[i].type == CellType::PORTAL) draw::GameCell(field_[i], CellType::WALL);
         }
+    }
+
+    // add corner "portals" back
+    int upperLeftCorner = 0,
+        upperRightCorner = width_ - 1,
+        lowerLeftCorner = (height_ - 1) * width_,
+        lowerRightCorner = width_ * height_ - 1;
+    int upperLeftAdj1 = 1,
+        upperLeftAdj2 = width_,
+        upperRightAdj1 = width_ - 2,
+        upperRightAdj2 = 2 * width_ - 1,
+        lowerLeftAdj1 = (height_ - 2) * width_,
+        lowerLeftAdj2 = (height_ - 1) * width_ + 1,
+        lowerRightAdj1 = (height_ - 2) * width_ + (width_ - 1),
+        lowerRightAdj2 = width_ * height_ - 2;
+    if (field_[upperLeftAdj1].type == CellType::PORTAL && field_[upperLeftAdj2].type == CellType::PORTAL) {
+        draw::GameCell(field_[upperLeftCorner], CellType::PORTAL);
+    }
+    if (field_[upperRightAdj1].type == CellType::PORTAL && field_[upperRightAdj2].type == CellType::PORTAL) {
+        draw::GameCell(field_[upperRightCorner], CellType::PORTAL);
+    }
+    if (field_[lowerLeftAdj1].type == CellType::PORTAL && field_[lowerLeftAdj2].type == CellType::PORTAL) {
+        draw::GameCell(field_[lowerLeftCorner], CellType::PORTAL);
+    }
+    if (field_[lowerRightAdj1].type == CellType::PORTAL && field_[lowerRightAdj2].type == CellType::PORTAL) {
+        draw::GameCell(field_[lowerRightCorner], CellType::PORTAL);
     }
 }

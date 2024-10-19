@@ -86,8 +86,8 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
     int maxFieldWidth = nConsoleWidth / 2 - 2;
     int maxFieldHeight = nConsoleHeight - 2;
     PointOfNoReturn = nConsoleWidth / 2 * nConsoleHeight - 1;
-    fieldWidth = 22;
-    fieldHeight = 22;
+    fieldWidth = 12;
+    fieldHeight = 12;
     return;
 
     string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";

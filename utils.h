@@ -70,6 +70,7 @@ enum Orientation
 
 
 extern std::map<CellType, Color> CELL_COLOR;
+std::string toString(CellType cellType);
 
 bool canConvertToNumber(std::string str);
 int explainClickInfo(
@@ -90,7 +91,6 @@ void getPairedAdjacentCellAndCornerCellIndex(
     int fieldWidth,
     int fieldHeight
 );
-std::string toString(CellType cellType);
 
 
 struct Cell
