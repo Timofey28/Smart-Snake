@@ -18,8 +18,7 @@ void setPosition(short x, short y)
     if(!SetConsoleCursorPosition(handle, coord)) {
         DWORD errorCode = GetLastError();
         string posStr = "(" + to_string(x) + ", " + to_string(y) + ")";
-        throw runtime_error("Failed to set cursor position " + posStr +
-                            ". Error code: " + to_string(errorCode));
+        throw runtime_error("Failed to set cursor position " + posStr + ". Error code: " + to_string(errorCode));
     }
 }
 
@@ -61,6 +60,13 @@ void draw::GameCell(Cell& cell, CellType cellType, int stretch)
     }
 }
 
+//void draw::GameCell(const Cell& cell, Color color)
+//{
+//    setPosition(cell.realX, cell.realY);
+//    setColor(color);
+//    cout << string(2, ' ');
+//}
+
 void draw::Field(const vector<Cell>& field, int width, bool onlyPerimeter)
 {
     int height = field.size() / width;
@@ -86,8 +92,8 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
     int maxFieldWidth = nConsoleWidth / 2 - 2;
     int maxFieldHeight = nConsoleHeight - 2;
     PointOfNoReturn = nConsoleWidth / 2 * nConsoleHeight - 1;
-    fieldWidth = 12;
-    fieldHeight = 12;
+    fieldWidth = 25;
+    fieldHeight = 24;
     return;
 
     string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";
@@ -178,19 +184,9 @@ void draw::alert::IncorrectSnake()
     cout << alertMsg;
 }
 
-void draw::alert::NoPlayingSpace()
-{
-    string alertMsg = "Ты еблан? Даже не буду писать что здесь не так";
-//    alertMsg += "\n" + string(50, ' ') + "\n" + string(50, ' ');
-    setPosition(0, 0);
-    setColor(Color::NORMAL);
-    cout << alertMsg;
-}
-
 void draw::alert::ClosedSpaces()
 {
     string alertMsg = "На игровом поле имеются комнаты, в которые невозможно попасть. Закрась их или сделай туда проход";
-//    alertMsg += "\n" + string(50, ' ') + "\n" + string(50, ' ');
     setPosition(0, 0);
     setColor(Color::NORMAL);
     cout << alertMsg;
@@ -204,6 +200,14 @@ void draw::alert::LoopedSnake()
     cout << alertMsg;
 }
 
+void draw::alert::NoPossibleStart()
+{
+    string alertMsg = "Змейка не может начать игру, потому что ей некуда идти. ИСПРАВИТЬ!!!";
+    setPosition(0, 0);
+    setColor(Color::NORMAL);
+    cout << alertMsg;
+}
+
 void draw::alert::Remove()
 {
     setPosition(0, 0);
@@ -211,9 +215,9 @@ void draw::alert::Remove()
     cout << string(100, ' ');
 }
 
-void draw::smth(string s)
-{
-    setPosition(0, 0);
-    setColor(Color::NORMAL);
-    std::cout << s;
-}
+//void draw::smth(string s)
+//{
+//    setPosition(0, 0);
+//    setColor(Color::NORMAL);
+//    std::cout << s;
+//}

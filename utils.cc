@@ -10,18 +10,31 @@ std::map<CellType, Color> CELL_COLOR = {
     {CellType::PORTAL, Color::BRIGHT_GREEN},
     {CellType::FOOD, Color::RED},
     {CellType::SNAKE_BODY, Color::BRIGHT_MAGENTA},
-    {CellType::SNAKE_HEAD, Color::BLACK},
+    {CellType::SNAKE_HEAD, Color::MAGENTA},
 };
+std::mt19937 mt(time(nullptr));
+std::uniform_int_distribution<int> uid2{0, 1};
 
 std::string toString(CellType cellType)
 {
     switch (cellType) {
         case CellType::PASS: return "Pass";
-        case WALL: return "Wall";
-        case PORTAL: return "Portal";
-        case FOOD: return "Food";
-        case SNAKE_BODY: return "Snake body";
-        case SNAKE_HEAD: return "Snake head";
+        case CellType::WALL: return "Wall";
+        case CellType::PORTAL: return "Portal";
+        case CellType::FOOD: return "Food";
+        case CellType::SNAKE_BODY: return "Snake body";
+        case CellType::SNAKE_HEAD: return "Snake head";
+        default: return "Unknown";
+    }
+}
+
+std::string toString(Direction direction)
+{
+    switch (direction) {
+        case Direction::LEFT: return "Left";
+        case Direction::RIGHT: return "Right";
+        case Direction::UP: return "Up";
+        case Direction::DOWN: return "Down";
         default: return "Unknown";
     }
 }
@@ -147,4 +160,11 @@ void getPairedAdjacentCellAndCornerCellIndex(
 
     pairedAdjacentCellIndex = adjY * fieldWidth + adjX;
     cornerCellIndex = cornerY * fieldWidth + cornerX;
+}
+
+int randomUnder(int num)
+{
+    if (num == 2) return uid2(mt);
+    std::uniform_int_distribution<int> uid{0, num - 1};
+    return uid(mt);
 }

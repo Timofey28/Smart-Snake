@@ -20,17 +20,17 @@ void Application::Run()
         option = '1';
         switch (option)
         {
-            case '1': CreateGames(); break;
+            case '1': CreateGames(); cout << '\a'; break;
             case '2': break;
             case 27: return;
         }
+        break;
     }
 }
 
 void Application::CreateGames()
 {
     playground_.FieldParametersInputForm();
-    exit(0);
 }
 
 int Application::ChooseOption()

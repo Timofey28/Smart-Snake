@@ -2,6 +2,8 @@
 
 #include <map>
 #include <vector>
+#include <ctime>
+#include <random>
 
 
 enum Color {
@@ -71,6 +73,7 @@ enum Orientation
 
 extern std::map<CellType, Color> CELL_COLOR;
 std::string toString(CellType cellType);
+std::string toString(Direction direction);
 
 bool canConvertToNumber(std::string str);
 int explainClickInfo(
@@ -91,6 +94,7 @@ void getPairedAdjacentCellAndCornerCellIndex(
     int fieldWidth,
     int fieldHeight
 );
+int randomUnder(int num);
 
 
 struct Cell
@@ -113,6 +117,7 @@ struct Cell
         type(cellType),
         color(CELL_COLOR[cellType]) {}
     void UpdateColor() { color = CELL_COLOR[type]; }
+    bool isNone() { return type == CellType::UNKNOWN; }
 
     short fieldX, fieldY, realX, realY, num;
     CellType type;

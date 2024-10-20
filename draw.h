@@ -22,15 +22,16 @@ namespace draw
     void EnterFieldDimensions(int& fieldWidth, int& fieldHeight);
     void __ClearInputAndMoveCursorBack(int phraseLength, int inputLength);
 
-    void smth(std::string s);
+//    void smth(std::string s);
+//    void GameCell(const Cell& cell, Color color);
 
     namespace alert
     {
         void MultimpleOrNoneSnakes(int snakesAmount);
         void IncorrectSnake();
-        void NoPlayingSpace();
         void ClosedSpaces();
         void LoopedSnake();
+        void NoPossibleStart();
         void Remove();
 
     }  // namespace alert

@@ -20,7 +20,7 @@ void Playground::__InitializeFieldFromDimensions()
     indentX_ = (nConsoleWidth / 2 - width_) / 2;
     indentY_ = (nConsoleHeight - height_) / 2;
 
-    // Ставим стены по периметру
+    // Putting walls around perimeter
     field_.resize(width_ * height_);
     CellType cellType;
     for (int i = 0; i < field_.size(); ++i) {
@@ -32,64 +32,79 @@ void Playground::__InitializeFieldFromDimensions()
 
 void Playground::FieldParametersInputForm()
 {
-    // Ввод размеров игрового поля
+    // Entering size of playing field
     draw::EnterFieldDimensions(width_, height_);
     __InitializeFieldFromDimensions();
 
-    // Расположение стен, порталов и самой змейки
+    // Arrangement of walls, portals and snake itself
     __ArrangeFieldElements();
 }
 
-int Playground::GetPortalExitIndex(int portalEnterIndex)
+int Playground::GetPortalExitIndex(int portalEnterIndex, Direction movementDirection)
 {
+    int possibleExitIndex = portalEnterIndex, nextCellIndex;
     int x = portalEnterIndex % width_,
         y = portalEnterIndex / width_;
-    int index;
 
-    if (currentDirection_ == Direction::LEFT) {
+    if (movementDirection == Direction::LEFT) {
+        nextCellIndex = y * width_ + ++x;
         while (true) {
-            if (++x >= width_) {
+            if (x >= width_) {
                 throw runtime_error("Unable to get portal exit, none were found.");
             }
-            index = y * width_ + x;
-            if (field_[index].type == CellType::PORTAL) return index;
+            if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
+            else {
+                possibleExitIndex = nextCellIndex;
+                nextCellIndex = y * width_ + ++x;
+            }
         }
     }
-    else if (currentDirection_ == Direction::RIGHT) {
+    else if (movementDirection == Direction::RIGHT) {
+        nextCellIndex = y * width_ + --x;
         while (true) {
-            if (--x < 0) {
+            if (x < 0) {
                 throw runtime_error("Unable to get portal exit, none were found.");
             }
-            index = y * width_ + x;
-            if (field_[index].type == CellType::PORTAL) return index;
+            if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
+            else {
+                possibleExitIndex = nextCellIndex;
+                nextCellIndex = y * width_ + --x;
+            }
         }
     }
-    else if (currentDirection_ == Direction::UP) {
+    else if (movementDirection == Direction::UP) {
+        nextCellIndex = ++y * width_ + x;
         while (true) {
-            if (++y >= height_) {
+            if (y >= height_) {
                 throw runtime_error("Unable to get portal exit, none were found.");
             }
-            index = y * width_ + x;
-            if (field_[index].type == CellType::PORTAL) return index;
+            if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
+            else {
+                possibleExitIndex = nextCellIndex;
+                nextCellIndex = ++y * width_ + x;
+            }
         }
     }
-    else {  // direction == Direction::DOWN
+    else {  // movementDirection == Direction::DOWN
         while (true) {
-            if (--y < 0) {
+            nextCellIndex = --y * width_ + x;
+            if (y < 0) {
                 throw runtime_error("Unable to get portal exit, none were found.");
             }
-            index = y * width_ + x;
-            if (field_[index].type == CellType::PORTAL) return index;
+            if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
+            else {
+                possibleExitIndex = nextCellIndex;
+                nextCellIndex = --y * width_ + x;
+            }
         }
     }
 }
 
 void Playground::__ArrangeFieldElements()
 {
-    // Отрисовка пустого поля
+    // Draw empty field
     draw::Field(field_, width_, true);
 
-    // Расстановка остальных элементов
     MouseInput mouseInput;
     bool isBorder, isCorner, isAdjacentToCorner;
     int cellIndex;
@@ -102,6 +117,8 @@ void Playground::__ArrangeFieldElements()
             draw::alert::Remove();
             __MovePortalsBackToBorder();
         }
+
+        // Arrangement of remaining elements
         while (true) {
             mouseInput.GetClickInfo();
             int clickedX = mouseInput.X / 2;
@@ -193,18 +210,9 @@ void Playground::__ArrangeFieldElements()
             }
         }
 
-        // Корректировка порталов
         __AdjustPortals();
 
-        cout << '\a';
-
-        // Валидация
-        // 1) количество змеек и корректность; SnakeSingularityAndCorrectness
-        // 2) наличие закрытых пространств; ClosedSpacesExistence
-        // 3) определение головы змейки; SnakeHeadIdentification
-        // 4) удаление порталов, которые закрыты стеной хотя бы с одной стороны;
-        //      RemovePointlessPortalsIfThereAreAny
-
+        // Validation
         if (!validation.SnakeSingularityAndCorrectness(field_, width_)) {
             if (validation.snakesAmount != 1) {
                 draw::alert::MultimpleOrNoneSnakes(validation.snakesAmount);
@@ -223,35 +231,23 @@ void Playground::__ArrangeFieldElements()
             }
         }
         if (!validation.ClosedSpacesExistence(field_, width_)) {
-            if (validation.noSpaceAtAll) {
-                draw::alert::NoPlayingSpace();
-                needToRemoveAlert = true;
-                continue;
-            }
-            else {
-                draw::alert::ClosedSpaces();
-                needToRemoveAlert = true;
-                continue;
-            }
+            draw::alert::ClosedSpaces();
+            needToRemoveAlert = true;
+            continue;
+        }
+        if (!validation.SnakeHeadIdentification(field_, width_)) {
+            draw::alert::NoPossibleStart();
+            needToRemoveAlert = true;
+            continue;
         }
 
+        __RepaintSnakeCells();
 
-        // Идентификация головы и начального направления
+        // Initialization of playground object
+
 
         break;
-
-        // Инициализация объекта playground
-
-
     }
-
-//    _getch();
-    exit(0);
-}
-
-void Playground::__IdentifySnakeHead()
-{
-
 }
 
 void Playground::__AdjustPortals()
@@ -459,5 +455,43 @@ void Playground::__MovePortalsBackToBorder()
     }
     if (field_[lowerRightAdj1].type == CellType::PORTAL && field_[lowerRightAdj2].type == CellType::PORTAL) {
         draw::GameCell(field_[lowerRightCorner], CellType::PORTAL);
+    }
+}
+
+void Playground::__RepaintSnakeCells()
+{
+    queue<int> traversalOrder;
+    traversalOrder.push(validation.startingCellIndex);
+    unordered_set<int> passed;
+    int cellIndex, x, y;
+    int leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
+
+    while (!traversalOrder.empty()) {
+        cellIndex = traversalOrder.front();
+        traversalOrder.pop();
+        passed.insert(cellIndex);
+
+        if (cellIndex == validation.startingCellIndex) draw::GameCell(field_[cellIndex], CellType::SNAKE_HEAD);
+        else draw::GameCell(field_[cellIndex], CellType::SNAKE_BODY);
+
+        x = cellIndex % width_,
+        y = cellIndex / width_;
+        leftCellIndex = y * width_ + (x - 1);
+        rightCellIndex = y * width_ + (x + 1);
+        topCellIndex = (y - 1) * width_ + x;
+        bottomCellIndex = (y + 1) * width_ + x;
+
+        if (validation.IsASnake(field_[leftCellIndex]) && !passed.count(leftCellIndex)) {
+            traversalOrder.push(leftCellIndex);
+        }
+        else if (validation.IsASnake(field_[rightCellIndex]) && !passed.count(rightCellIndex)) {
+            traversalOrder.push(rightCellIndex);
+        }
+        else if (validation.IsASnake(field_[topCellIndex]) && !passed.count(topCellIndex)) {
+            traversalOrder.push(topCellIndex);
+        }
+        else if (validation.IsASnake(field_[bottomCellIndex]) && !passed.count(bottomCellIndex)) {
+            traversalOrder.push(bottomCellIndex);
+        }
     }
 }

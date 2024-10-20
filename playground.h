@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <queue>
+#include <unordered_set>
 
 #include "utils.h"
 #include "mouse_input.h"
@@ -19,16 +20,16 @@ class Playground
 public:
     Playground();
     void FieldParametersInputForm();
-    int GetPortalExitIndex(int portalEnterIndex);
+    int GetPortalExitIndex(int portalEnterIndex, Direction movementDirection);
 
 private:
     void __InitializeFieldFromDimensions();
     void __ArrangeFieldElements();
-    void __IdentifySnakeHead();
     void __AdjustPortals();
     void __CalculatePortalEntries(Orientation orientation, int axisValue);
     bool __WholeAxisIsAWall(Orientation orientation, int axisValue);
     void __MovePortalsBackToBorder();
+    void __RepaintSnakeCells();
 
     int width_, height_;  // considering whole field with boundaries
     int indentX_, indentY_;
