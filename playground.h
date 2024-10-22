@@ -3,6 +3,7 @@
 #include <vector>
 #include <queue>
 #include <unordered_set>
+#include <stack>
 
 #include "utils.h"
 #include "mouse_input.h"
@@ -30,6 +31,10 @@ private:
     bool __WholeAxisIsAWall(Orientation orientation, int axisValue);
     void __MovePortalsBackToBorder();
     void __RepaintSnakeCells();
+
+    void __InitializePlayground();
+    void __FillAdjacencyList();
+    void __FillSnakeTurnsQueue();
 
     int width_, height_;  // considering whole field with boundaries
     int indentX_, indentY_;

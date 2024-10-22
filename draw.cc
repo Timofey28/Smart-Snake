@@ -215,9 +215,9 @@ void draw::alert::Remove()
     cout << string(100, ' ');
 }
 
-//void draw::smth(string s)
-//{
-//    setPosition(0, 0);
-//    setColor(Color::NORMAL);
-//    std::cout << s;
-//}
+void draw::smth(string s)
+{
+    setPosition(0, 0);
+    setColor(Color::NORMAL);
+    std::cout << s;
+}

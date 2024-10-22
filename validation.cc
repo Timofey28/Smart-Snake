@@ -185,7 +185,7 @@ bool Validation::SnakeHeadIdentification(const vector<Cell>& field, int fieldWid
     Cell end1Left, end1Right, end1Top, end1Bottom;
     Cell end2Left, end2Right, end2Top, end2Bottom;
 
-    if (snakeEnd1 == snakeEnd2) {
+    if (snakeEnd1 == snakeEnd2) {  // snake consists of a single cell
         startingCellIndex = snakeEnd1;
         __GetCellVicinity(field, fieldWidth, snakeEnd1, end1Left, end1Right, end1Top, end1Bottom);
 

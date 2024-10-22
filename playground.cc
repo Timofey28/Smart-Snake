@@ -48,55 +48,47 @@ int Playground::GetPortalExitIndex(int portalEnterIndex, Direction movementDirec
 
     if (movementDirection == Direction::LEFT) {
         nextCellIndex = y * width_ + ++x;
-        while (true) {
-            if (x >= width_) {
-                throw runtime_error("Unable to get portal exit, none were found.");
-            }
+        while (x < width_) {
             if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
             else {
                 possibleExitIndex = nextCellIndex;
                 nextCellIndex = y * width_ + ++x;
             }
         }
+        return -1;
     }
     else if (movementDirection == Direction::RIGHT) {
         nextCellIndex = y * width_ + --x;
-        while (true) {
-            if (x < 0) {
-                throw runtime_error("Unable to get portal exit, none were found.");
-            }
+        while (x >= 0) {
             if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
             else {
                 possibleExitIndex = nextCellIndex;
                 nextCellIndex = y * width_ + --x;
             }
         }
+        return -1;
     }
     else if (movementDirection == Direction::UP) {
         nextCellIndex = ++y * width_ + x;
-        while (true) {
-            if (y >= height_) {
-                throw runtime_error("Unable to get portal exit, none were found.");
-            }
+        while (y < height_) {
             if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
             else {
                 possibleExitIndex = nextCellIndex;
                 nextCellIndex = ++y * width_ + x;
             }
         }
+        return -1;
     }
     else {  // movementDirection == Direction::DOWN
-        while (true) {
-            nextCellIndex = --y * width_ + x;
-            if (y < 0) {
-                throw runtime_error("Unable to get portal exit, none were found.");
-            }
+        nextCellIndex = --y * width_ + x;
+        while (y >= 0) {
             if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
             else {
                 possibleExitIndex = nextCellIndex;
                 nextCellIndex = --y * width_ + x;
             }
         }
+        return -1;
     }
 }
 
@@ -244,9 +236,156 @@ void Playground::__ArrangeFieldElements()
         __RepaintSnakeCells();
 
         // Initialization of playground object
-
+        __InitializePlayground();
 
         break;
+    }
+}
+
+void Playground::__InitializePlayground()
+{
+    // Adjacency list
+    nodes_.resize(field_.size());
+    for (int i = 0; i < nodes_.size(); ++i) nodes_[i] = {};
+    currentPassCells_.clear();
+    __FillAdjacencyList();
+
+    // Snake turns
+    currentDirection_ = validation.startingDirection;
+    snakeTurns_ = {};
+    __FillSnakeTurnsQueue();
+}
+
+void Playground::__FillAdjacencyList()
+{
+    int spaceIndex = -1;
+    for (int i = 0; i < field_.size(); ++i) {
+        if (field_[i].type == CellType::PASS) {
+            spaceIndex = i;
+            break;
+        }
+    }
+    if (spaceIndex == -1) {
+        throw runtime_error("Unable to find space index while filling adjacency list (should be impossible to end up here)");
+    }
+
+    queue<int> traversalOrder;
+    traversalOrder.push(spaceIndex);
+    vector<bool> passed(field_.size());
+    passed[spaceIndex] = true;
+    currentPassCells_.push_back(spaceIndex);
+    int cellIndex, x, y;
+    int leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
+    int portalExit;
+
+    while (!traversalOrder.empty()) {
+        cellIndex = traversalOrder.front();
+        traversalOrder.pop();
+        x = cellIndex % width_;
+        y = cellIndex / width_;
+
+        leftCellIndex = y * width_ + (x - 1);
+        rightCellIndex = y * width_ + (x + 1);
+        topCellIndex = (y - 1) * width_ + x;
+        bottomCellIndex = (y + 1) * width_ + x;
+
+        if (field_[leftCellIndex].type == CellType::PORTAL) {
+            portalExit = GetPortalExitIndex(leftCellIndex, Direction::LEFT);
+            if (portalExit != -1) leftCellIndex = portalExit;
+        }
+        if (field_[rightCellIndex].type == CellType::PORTAL) {
+            portalExit = GetPortalExitIndex(rightCellIndex, Direction::RIGHT);
+            if (portalExit != -1) rightCellIndex = portalExit;
+        }
+        if (field_[topCellIndex].type == CellType::PORTAL) {
+            portalExit = GetPortalExitIndex(topCellIndex, Direction::UP);
+            if (portalExit != -1) topCellIndex = portalExit;
+        }
+        if (field_[bottomCellIndex].type == CellType::PORTAL) {
+            portalExit = GetPortalExitIndex(bottomCellIndex, Direction::DOWN);
+            if (portalExit != -1) bottomCellIndex = portalExit;
+        }
+
+        if (field_[leftCellIndex].type == CellType::PASS) {
+            nodes_[cellIndex].push_back(leftCellIndex);
+            if (!passed[leftCellIndex]) {
+                passed[leftCellIndex] = true;
+                currentPassCells_.push_back(leftCellIndex);
+                traversalOrder.push(leftCellIndex);
+            }
+        }
+        if (field_[rightCellIndex].type == CellType::PASS) {
+            nodes_[cellIndex].push_back(rightCellIndex);
+            if (!passed[rightCellIndex]) {
+                passed[rightCellIndex] = true;
+                currentPassCells_.push_back(rightCellIndex);
+                traversalOrder.push(rightCellIndex);
+            }
+        }
+        if (field_[topCellIndex].type == CellType::PASS) {
+            nodes_[cellIndex].push_back(topCellIndex);
+            if (!passed[topCellIndex]) {
+                passed[topCellIndex] = true;
+                currentPassCells_.push_back(topCellIndex);
+                traversalOrder.push(topCellIndex);
+            }
+        }
+        if (field_[bottomCellIndex].type == CellType::PASS) {
+            nodes_[cellIndex].push_back(bottomCellIndex);
+            if (!passed[bottomCellIndex]) {
+                passed[bottomCellIndex] = true;
+                currentPassCells_.push_back(bottomCellIndex);
+                traversalOrder.push(bottomCellIndex);
+            }
+        }
+    }
+}
+
+void Playground::__FillSnakeTurnsQueue()
+{
+    queue<int> traversalOrder;
+    traversalOrder.push(validation.startingCellIndex);
+    unordered_set<int> passed = {validation.startingCellIndex};
+    stack<Direction> temp;
+    int cellIndex, x, y;
+    int leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
+
+    while (!traversalOrder.empty()) {
+        cellIndex = traversalOrder.front();
+        traversalOrder.pop();
+        x = cellIndex % width_;
+        y = cellIndex / width_;
+
+        leftCellIndex = y * width_ + (x - 1);
+        rightCellIndex = y * width_ + (x + 1);
+        topCellIndex = (y - 1) * width_ + x;
+        bottomCellIndex = (y + 1) * width_ + x;
+
+        if (field_[leftCellIndex].type == CellType::SNAKE_BODY && !passed.count(leftCellIndex)) {
+            passed.insert(leftCellIndex);
+            temp.push(Direction::RIGHT);
+            traversalOrder.push(leftCellIndex);
+        }
+        else if (field_[rightCellIndex].type == CellType::SNAKE_BODY && !passed.count(rightCellIndex)) {
+            passed.insert(rightCellIndex);
+            temp.push(Direction::LEFT);
+            traversalOrder.push(rightCellIndex);
+        }
+        else if (field_[topCellIndex].type == CellType::SNAKE_BODY && !passed.count(topCellIndex)) {
+            passed.insert(topCellIndex);
+            temp.push(Direction::DOWN);
+            traversalOrder.push(topCellIndex);
+        }
+        else if (field_[bottomCellIndex].type == CellType::SNAKE_BODY && !passed.count(bottomCellIndex)) {
+            passed.insert(bottomCellIndex);
+            temp.push(Direction::UP);
+            traversalOrder.push(bottomCellIndex);
+        }
+    }
+
+    while (!temp.empty()) {
+        snakeTurns_.push(temp.top());
+        temp.pop();
     }
 }
 
