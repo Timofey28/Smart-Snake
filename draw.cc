@@ -92,9 +92,9 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
     int maxFieldWidth = nConsoleWidth / 2 - 2;
     int maxFieldHeight = nConsoleHeight - 2;
     PointOfNoReturn = nConsoleWidth / 2 * nConsoleHeight - 1;
-    fieldWidth = 25;
-    fieldHeight = 24;
-    return;
+//    fieldWidth = 25;
+//    fieldHeight = 24;
+//    return;
 
     string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";
     string phraseChooseHeight = "Выбери высоту поля (3 - " + to_string(maxFieldHeight) + ") => ";
@@ -152,6 +152,32 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
     } while (!fieldWidth || !fieldHeight);
     fieldWidth += 2;
     fieldHeight += 2;
+}
+
+void draw::EnterAttemptsAmount(int& attemptsAmount)
+{
+    string phrase = "Введи количество игр (1 - 10) => ";
+    string input;
+    int number;
+
+    system("cls");
+    cout << "\n\t" << phrase;
+    do {
+        getline(cin, input);
+        if (canConvertToNumber(input)) {
+            number = stoi(input);
+            if (number >= 1 && number <= 10) {
+                attemptsAmount = number;
+                return;
+            }
+            cout << '\a';
+            __ClearInputAndMoveCursorBack(TAB_WIDTH + phrase.length(), input.length());
+        }
+        else {
+            if (input.empty()) setPosition(TAB_WIDTH + phrase.length(), 1);
+            else __ClearInputAndMoveCursorBack(TAB_WIDTH + phrase.length(), input.length());
+        }
+    } while (true);
 }
 
 void draw::__ClearInputAndMoveCursorBack(int phraseLength, int inputLength)

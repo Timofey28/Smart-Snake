@@ -32,12 +32,15 @@ void Playground::__InitializeFieldFromDimensions()
 
 void Playground::FieldParametersInputForm()
 {
-    // Entering size of playing field
+    // Enter size of playing field
     draw::EnterFieldDimensions(width_, height_);
     __InitializeFieldFromDimensions();
 
     // Arrangement of walls, portals and snake itself
     __ArrangeFieldElements();
+
+    // Enter amount of attempts
+    draw::EnterAttemptsAmount(attemptsAmount_);
 }
 
 int Playground::GetPortalExitIndex(int portalEnterIndex, Direction movementDirection)
@@ -254,6 +257,13 @@ void Playground::__InitializePlayground()
     currentDirection_ = validation.startingDirection;
     snakeTurns_ = {};
     __FillSnakeTurnsQueue();
+
+    // Save initial data for future attempts
+    initialField_ = field_;
+    initialNodes_ = nodes_;
+    initialCurrentPassCells_ = currentPassCells_;
+    initialCurrentDirection_ = currentDirection_;
+    initialSnakeTurns_ = snakeTurns_;
 }
 
 void Playground::__FillAdjacencyList()
@@ -633,4 +643,6 @@ void Playground::__RepaintSnakeCells()
             traversalOrder.push(bottomCellIndex);
         }
     }
+
+    setColor(Color::NORMAL);
 }

@@ -20,6 +20,7 @@ namespace draw
     void Field(const std::vector<Cell>& field, int width, bool onlyPerimeter = false);
 
     void EnterFieldDimensions(int& fieldWidth, int& fieldHeight);
+    void EnterAttemptsAmount(int& attemptsAmount);
     void __ClearInputAndMoveCursorBack(int phraseLength, int inputLength);
 
     void smth(std::string s);

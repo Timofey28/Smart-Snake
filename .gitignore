@@ -1,4 +1,4 @@
-# IDE files
+# IDE
 *.cbp
 *.depend
 *.layout
@@ -11,3 +11,6 @@ obj/
 *.txt
 toANSI.bat
 toUTF8.bat
+
+# Data
+Games/

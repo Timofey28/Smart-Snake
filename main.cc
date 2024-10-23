@@ -43,7 +43,7 @@ int main()
 
 void configureConsole()
 {
-    int suitableFontSize = 40;
+    int suitableFontSize = 20;
 
     // установка размера шрифта в консоли
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);

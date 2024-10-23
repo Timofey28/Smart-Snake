@@ -38,11 +38,12 @@ private:
 
     int width_, height_;  // considering whole field with boundaries
     int indentX_, indentY_;
-    std::vector<Cell> field_;
-    std::vector<std::vector<int>> nodes_;
-    std::vector<int> currentPassCells_;  // to choose a random cell for food
-    Direction currentDirection_;
-    std::queue<Direction> snakeTurns_;
+    std::vector<Cell> field_, initialField_;
+    std::vector<std::vector<int>> nodes_, initialNodes_;
+    std::vector<int> currentPassCells_, initialCurrentPassCells_;  // to choose a random cell for food
+    Direction currentDirection_, initialCurrentDirection_;
+    std::queue<Direction> snakeTurns_, initialSnakeTurns_;
+    int attemptsAmount_;
 
     Validation validation;
 };
