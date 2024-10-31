@@ -154,7 +154,7 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
     fieldHeight += 2;
 }
 
-void draw::EnterAttemptsAmount(int& attemptsAmount)
+void draw::EnterGamesAmount(int& gamesAmount)
 {
     string phrase = "Введи количество игр (1 - 10) => ";
     string input;
@@ -167,7 +167,7 @@ void draw::EnterAttemptsAmount(int& attemptsAmount)
         if (canConvertToNumber(input)) {
             number = stoi(input);
             if (number >= 1 && number <= 10) {
-                attemptsAmount = number;
+                gamesAmount = number;
                 return;
             }
             cout << '\a';

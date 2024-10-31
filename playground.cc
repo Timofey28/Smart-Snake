@@ -13,6 +13,7 @@ Playground::Playground()
 {
     width_ = 0;
     height_ = 0;
+    gameOn_ = true;
 }
 
 void Playground::__InitializeFieldFromDimensions()
@@ -40,7 +41,55 @@ void Playground::FieldParametersInputForm()
     __ArrangeFieldElements();
 
     // Enter amount of attempts
-    draw::EnterAttemptsAmount(attemptsAmount_);
+    draw::EnterGamesAmount(gamesAmount_);
+}
+
+void Playground::SaveInitialData()
+{
+    stack<Direction> snakeTurnsStacked;
+    queue<int> traversalOrder;
+    traversalOrder.push(validation.startingCellIndex);
+    unordered_set<int> passed = {validation.startingCellIndex};
+    int cellIndex, x, y;
+    int leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
+    int snakeLength = 0;
+
+    while (!traversalOrder.empty()) {
+        snakeLength++;
+        cellIndex = traversalOrder.front();
+        traversalOrder.pop();
+        x = cellIndex % width_;
+        y = cellIndex / width_;
+
+        leftCellIndex = y * width_ + (x - 1);
+        rightCellIndex = y * width_ + (x + 1);
+        topCellIndex = (y - 1) * width_ + x;
+        bottomCellIndex = (y + 1) * width_ + x;
+
+        if (field_[leftCellIndex].type == CellType::SNAKE_BODY && !passed.count(leftCellIndex)) {
+            passed.insert(leftCellIndex);
+            snakeTurnsStacked.push(Direction::RIGHT);
+            traversalOrder.push(leftCellIndex);
+        }
+        else if (field_[rightCellIndex].type == CellType::SNAKE_BODY && !passed.count(rightCellIndex)) {
+            passed.insert(rightCellIndex);
+            snakeTurnsStacked.push(Direction::LEFT);
+            traversalOrder.push(rightCellIndex);
+        }
+        else if (field_[topCellIndex].type == CellType::SNAKE_BODY && !passed.count(topCellIndex)) {
+            passed.insert(topCellIndex);
+            snakeTurnsStacked.push(Direction::DOWN);
+            traversalOrder.push(topCellIndex);
+        }
+        else if (field_[bottomCellIndex].type == CellType::SNAKE_BODY && !passed.count(bottomCellIndex)) {
+            passed.insert(bottomCellIndex);
+            snakeTurnsStacked.push(Direction::UP);
+            traversalOrder.push(bottomCellIndex);
+        }
+    }
+
+    // stakeTurnsStacked - stack with the first element to take being the direction from snake last element to second last
+    fileHandler.SaveInitialData(width_, height_, indentX_, indentY_, snakeLength, validation.startingDirection, snakeTurnsStacked, field_);
 }
 
 int Playground::GetPortalExitIndex(int portalEnterIndex, Direction movementDirection)
@@ -258,7 +307,7 @@ void Playground::__InitializePlayground()
     snakeTurns_ = {};
     __FillSnakeTurnsQueue();
 
-    // Save initial data for future attempts
+    // Initialize initial data for future attempts
     initialField_ = field_;
     initialNodes_ = nodes_;
     initialCurrentPassCells_ = currentPassCells_;
@@ -356,7 +405,7 @@ void Playground::__FillSnakeTurnsQueue()
     queue<int> traversalOrder;
     traversalOrder.push(validation.startingCellIndex);
     unordered_set<int> passed = {validation.startingCellIndex};
-    stack<Direction> temp;
+    stack<Direction> snakeTurnsReversed;
     int cellIndex, x, y;
     int leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
 
@@ -373,29 +422,29 @@ void Playground::__FillSnakeTurnsQueue()
 
         if (field_[leftCellIndex].type == CellType::SNAKE_BODY && !passed.count(leftCellIndex)) {
             passed.insert(leftCellIndex);
-            temp.push(Direction::RIGHT);
+            snakeTurnsReversed.push(Direction::RIGHT);
             traversalOrder.push(leftCellIndex);
         }
         else if (field_[rightCellIndex].type == CellType::SNAKE_BODY && !passed.count(rightCellIndex)) {
             passed.insert(rightCellIndex);
-            temp.push(Direction::LEFT);
+            snakeTurnsReversed.push(Direction::LEFT);
             traversalOrder.push(rightCellIndex);
         }
         else if (field_[topCellIndex].type == CellType::SNAKE_BODY && !passed.count(topCellIndex)) {
             passed.insert(topCellIndex);
-            temp.push(Direction::DOWN);
+            snakeTurnsReversed.push(Direction::DOWN);
             traversalOrder.push(topCellIndex);
         }
         else if (field_[bottomCellIndex].type == CellType::SNAKE_BODY && !passed.count(bottomCellIndex)) {
             passed.insert(bottomCellIndex);
-            temp.push(Direction::UP);
+            snakeTurnsReversed.push(Direction::UP);
             traversalOrder.push(bottomCellIndex);
         }
     }
 
-    while (!temp.empty()) {
-        snakeTurns_.push(temp.top());
-        temp.pop();
+    while (!snakeTurnsReversed.empty()) {
+        snakeTurns_.push(snakeTurnsReversed.top());
+        snakeTurnsReversed.pop();
     }
 }
 

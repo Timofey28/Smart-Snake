@@ -10,6 +10,7 @@
 #include "algorithm.h"
 #include "draw.h"
 #include "validation.h"
+#include "file_handler.h"
 
 
 extern int nConsoleWidth, nConsoleHeight;
@@ -21,7 +22,9 @@ class Playground
 public:
     Playground();
     void FieldParametersInputForm();
+    void SaveInitialData();
     int GetPortalExitIndex(int portalEnterIndex, Direction movementDirection);
+    bool GameOn() { return gameOn_; }
 
 private:
     void __InitializeFieldFromDimensions();
@@ -43,7 +46,9 @@ private:
     std::vector<int> currentPassCells_, initialCurrentPassCells_;  // to choose a random cell for food
     Direction currentDirection_, initialCurrentDirection_;
     std::queue<Direction> snakeTurns_, initialSnakeTurns_;
-    int attemptsAmount_;
+    int gamesAmount_;
+    bool gameOn_;
 
     Validation validation;
+    FileHandler fileHandler;
 };

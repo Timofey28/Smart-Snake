@@ -4,6 +4,7 @@
 #include "application.h"
 
 #include <bits/stdc++.h>
+namespace fs = std::filesystem;
 
 using namespace std;
 
@@ -29,6 +30,25 @@ int main()
     Application application;
     application.Run();
 
+//    for (int i = 100; ~i; --i) {
+//        string s = to_string(i);
+//        cout << "\rпривет: " << i << flush;
+//        this_thread::sleep_for(50ms);
+//    }
+
+//    auto now = chrono::system_clock::now();
+//    time_t now_time = chrono::system_clock::to_time_t(now);
+//    cout << now_time;
+//    ostringstream oss;
+//    oss << put_time(localtime(&now_time), "%Y-%m-%d %H:%M:%S");
+//    string humanTime = oss.str();
+//    cout << "\nТекущая дата и время: " << humanTime << std::endl;
+
+//    fs::path a = "a";
+//    fs::path b = "b";
+//    int i = 1;
+//    fs::create_directories(a / b / to_string(i));
+
 //    for (int i = 0; i < 16; ++i) {
 //        setColor(15);
 //        cout << "\n\t" << i << " --> ";
@@ -43,7 +63,7 @@ int main()
 
 void configureConsole()
 {
-    int suitableFontSize = 20;
+    int suitableFontSize = 40;
 
     // установка размера шрифта в консоли
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -79,11 +99,9 @@ void configureConsole()
 void getConsoleWH()
 {
     HANDLE hWndConsole;
-    if (hWndConsole = GetStdHandle(-12))
-    {
+    if (hWndConsole = GetStdHandle(-12)) {
         CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
-        if (GetConsoleScreenBufferInfo(hWndConsole, &consoleInfo))
-        {
+        if (GetConsoleScreenBufferInfo(hWndConsole, &consoleInfo)) {
             ::nConsoleWidth = consoleInfo.srWindow.Right - consoleInfo.srWindow.Left + 1;
             ::nConsoleHeight = consoleInfo.srWindow.Bottom - consoleInfo.srWindow.Top + 1;
         }

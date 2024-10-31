@@ -234,7 +234,7 @@ bool Validation::SnakeHeadIdentification(const vector<Cell>& field, int fieldWid
         startingCellIndex = snakeEnd1;
         startingDirection = __CalculateStartingDirection(end1Left, end1Right, end1Top, end1Bottom);
     }
-    else {  // starting from end 2
+    else {  // starting from 2nd end
         startingCellIndex = snakeEnd2;
         startingDirection = __CalculateStartingDirection(end2Left, end2Right, end2Top, end2Bottom);
     }
