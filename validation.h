@@ -24,6 +24,7 @@ public:
     bool snakeIsLooped;
     int startingCellIndex;
     Direction startingDirection;
+    int snakeAssIndex;
 
 private:
     bool __IsPossibleSpace(const Cell& cell);

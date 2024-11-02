@@ -187,6 +187,7 @@ bool Validation::SnakeHeadIdentification(const vector<Cell>& field, int fieldWid
 
     if (snakeEnd1 == snakeEnd2) {  // snake consists of a single cell
         startingCellIndex = snakeEnd1;
+        snakeAssIndex = snakeEnd1;
         __GetCellVicinity(field, fieldWidth, snakeEnd1, end1Left, end1Right, end1Top, end1Bottom);
 
         unordered_set<CellType> endDirections = {end1Left.type, end1Right.type, end1Top.type, end1Bottom.type};
@@ -232,10 +233,12 @@ bool Validation::SnakeHeadIdentification(const vector<Cell>& field, int fieldWid
 
     if (end1.type == CellType::SNAKE_HEAD && possibleStartFromEnd1 || !possibleStartFromEnd2) {
         startingCellIndex = snakeEnd1;
+        snakeAssIndex = snakeEnd2;
         startingDirection = __CalculateStartingDirection(end1Left, end1Right, end1Top, end1Bottom);
     }
     else {  // starting from 2nd end
         startingCellIndex = snakeEnd2;
+        snakeAssIndex = snakeEnd1;
         startingDirection = __CalculateStartingDirection(end2Left, end2Right, end2Top, end2Bottom);
     }
     return true;

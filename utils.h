@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <map>
 #include <vector>
 #include <ctime>
@@ -28,21 +29,25 @@ enum Color {
     WHITE = 255,
 
     // on black background
-    BB_BLUE = 1,
-    BB_GREEN = 2,
-    BB_CYAN = 3,
-    BB_RED = 4,
-    BB_MAGENTA = 5,
-    BB_GOLD = 6,
-    BB_ALMOST_WHITE = 7,
-    BB_GRAY = 8,
-    BB_BRIGHT_BLUE = 9,
-    BB_BRIGHT_GREEN = 10,
-    BB_SEA_WAVE = 11,
-    BB_BRIGHT_RED = 12,
-    BB_BRIGHT_MAGENTA = 13,
-    BB_BEIGE = 14,
-    BB_WHITE = 15,
+    BLUE_ON_BLACK = 1,
+    GREEN_ON_BLACK = 2,
+    CYAN_ON_BLACK = 3,
+    RED_ON_BLACK = 4,
+    MAGENTA_ON_BLACK = 5,
+    GOLD_ON_BLACK = 6,
+    ALMOST_WHITE_ON_BLACK = 7,
+    GRAY_ON_BLACK = 8,
+    BRIGHT_BLUE_ON_BLACK = 9,
+    BRIGHT_GREEN_ON_BLACK = 10,
+    SEA_WAVE_ON_BLACK = 11,
+    BRIGHT_RED_ON_BLACK = 12,
+    BRIGHT_MAGENTA_ON_BLACK = 13,
+    BEIGE_ON_BLACK = 14,
+    WHITE_ON_BLACK = 15,
+
+    SNAKE_EYES = 80,
+
+    BEIGE_ON_BLUE = 19,
 };
 
 enum CellType
@@ -95,6 +100,8 @@ void getPairedAdjacentCellAndCornerCellIndex(
     int fieldHeight
 );
 int randomUnder(int num);
+Direction toLeftFrom(Direction direction);
+Direction toRightFrom(Direction direction);
 
 
 struct Cell
@@ -105,8 +112,7 @@ struct Cell
         realX(-1),
         realY(-1),
         num(-1),
-        type(CellType::UNKNOWN),
-        color(Color::BLACK) {}
+        type(CellType::UNKNOWN) {}
 
     Cell(int number, int fieldWidth, int indentX, int indentY, CellType cellType = CellType::PASS) :
         fieldX(number % fieldWidth + indentX),
@@ -114,12 +120,9 @@ struct Cell
         realX(fieldX * 2),
         realY(fieldY),
         num(number),
-        type(cellType),
-        color(CELL_COLOR[cellType]) {}
-    void UpdateColor() { color = CELL_COLOR[type]; }
+        type(cellType) {}
     bool isNone() { return type == CellType::UNKNOWN; }
 
     short fieldX, fieldY, realX, realY, num;
     CellType type;
-    Color color;
 };

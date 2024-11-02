@@ -15,4 +15,5 @@ private:
     void CreateGames();
 
     Playground playground_;
+    int gamesAmount_;
 };

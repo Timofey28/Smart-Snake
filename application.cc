@@ -31,7 +31,17 @@ void Application::Run()
 void Application::CreateGames()
 {
     playground_.FieldParametersInputForm();
+    draw::EnterGamesAmount(gamesAmount_);
     playground_.SaveInitialData();
+
+    for (int gameNumber = 1; gameNumber <= gamesAmount_; ++gameNumber) {
+        playground_.ReinitializeInitialData();
+        while (playground_.GameOn()) {
+            playground_.CalculateNextIteration();
+            _getch();
+        }
+        break;
+    }
 }
 
 int Application::ChooseOption()

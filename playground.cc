@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <thread>
+#include <algorithm>
 
 #include <conio.h>
 
@@ -14,6 +15,7 @@ Playground::Playground()
     width_ = 0;
     height_ = 0;
     gameOn_ = true;
+    foodIndex_ = -1;
 }
 
 void Playground::__InitializeFieldFromDimensions()
@@ -39,9 +41,6 @@ void Playground::FieldParametersInputForm()
 
     // Arrangement of walls, portals and snake itself
     __ArrangeFieldElements();
-
-    // Enter amount of attempts
-    draw::EnterGamesAmount(gamesAmount_);
 }
 
 void Playground::SaveInitialData()
@@ -54,6 +53,7 @@ void Playground::SaveInitialData()
     int leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
     int snakeLength = 0;
 
+    snakeHeadIndex_ = validation.startingCellIndex;
     while (!traversalOrder.empty()) {
         snakeLength++;
         cellIndex = traversalOrder.front();
@@ -87,12 +87,217 @@ void Playground::SaveInitialData()
             traversalOrder.push(bottomCellIndex);
         }
     }
+    snakeAssIndex_ = cellIndex;
 
     // stakeTurnsStacked - stack with the first element to take being the direction from snake last element to second last
     fileHandler.SaveInitialData(width_, height_, indentX_, indentY_, snakeLength, validation.startingDirection, snakeTurnsStacked, field_);
 }
 
-int Playground::GetPortalExitIndex(int portalEnterIndex, Direction movementDirection)
+void Playground::ReinitializeInitialData()
+{
+    field_ = initialField_;
+    nodes_ = initialNodes_;
+    currentPassCells_ = initialCurrentPassCells_;
+    currentDirection_ = initialCurrentDirection_;
+    snakeTurns_ = initialSnakeTurns_;
+}
+
+void Playground::CalculateNextIteration()
+{
+    if (foodIndex_ == -1) foodIndex_ = currentPassCells_[randomUnder(currentPassCells_.size())];
+    field_[foodIndex_].type = CellType::FOOD;
+
+//    // Общая инфа слева сверху
+//    ostringstream oss;
+//    oss << "snakeHeadIndex_: (" << snakeHeadIndex_ % width_ << ", " << snakeHeadIndex_ / width_ << ")\nfoodIndex_: (";
+//    oss << foodIndex_ % width_ << ", " << foodIndex_ / width_ << ")\nnodes_[snakeHeadIndex_]: ";
+//    for (auto x : nodes_[snakeHeadIndex_]) oss << "(" << x % width_ << ", " << x / width_ << ") ";
+//    oss << "| [" << nodes_[snakeHeadIndex_].size() << "]";
+//    oss << string(30, ' ');
+//    draw::smth(oss.str());
+
+//    // Запись значений nodes_ в файл
+//    ofstream file("log.txt", ios::app);
+//    file << "\n\n";
+//    for (int i = 1; i < height_ - 1; ++i) {
+//        file << "\n\n";
+//        for (int j = 1; j < width_ - 1; ++j) {
+//            ostringstream foss;
+//            for (auto x : nodes_[i * width_ + j]) {
+//                foss << "(" << x % width_ << "," << x / width_ << ")";
+//            }
+//            int w = 25;
+//            if (j == 1 || j == width_ - 2) w = 20;
+//            file << setw(w) << foss.str();
+//        }
+//    }
+//    file.close();
+
+    // Calculate next snake head position
+    vector<int> shortestPathToFood = Algorithm::FindShortestPath(nodes_, snakeHeadIndex_, foodIndex_);
+
+//    // Следующий шаг к еде слева сверху
+//    oss.str("");
+//    oss.clear();
+//    oss << "Path to food: ";
+//    if (shortestPathToFood.size()) oss << "(" << shortestPathToFood[0] % width_ << ", " << shortestPathToFood[0] / width_ << ")       ";
+//    else oss << "None" << "                  ";
+//    draw::smth(oss.str(), 3);
+
+//    // Путь к еде
+//    if (shortestPathToFood.size()) {
+//        for (int i = 0; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]], Color::BEIGE_ON_BLUE);
+//        _getch();
+//        for (int i = 0; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]]);
+//    }
+//    else _getch();
+
+    int nextCellIndex;
+    Direction nextDirection;
+    if (shortestPathToFood.size()) {
+        nextCellIndex = shortestPathToFood[0];
+        nextDirection = __FindMovementDirection(snakeHeadIndex_, nextCellIndex);
+    }
+    else {
+        int straightIndex = __FindCellFromMovementDirection(snakeHeadIndex_, currentDirection_);
+        if (field_[straightIndex].type == CellType::PASS || straightIndex == snakeAssIndex_) {
+            nextCellIndex = straightIndex;
+            nextDirection = currentDirection_;
+        }
+        else {
+            nextDirection = toLeftFrom(currentDirection_);
+            nextCellIndex = __FindCellFromMovementDirection(snakeHeadIndex_, nextDirection);
+            if (field_[nextCellIndex].type != CellType::PASS && nextCellIndex != snakeAssIndex_) {
+                nextDirection = toRightFrom(currentDirection_);
+                nextCellIndex = __FindCellFromMovementDirection(snakeHeadIndex_, nextDirection);
+                if (field_[nextCellIndex].type != CellType::PASS && nextCellIndex != snakeAssIndex_) {
+                    nextCellIndex = straightIndex;  // nowhere to go, so crushing forward
+                }
+            }
+        }
+    }
+
+    if (field_[nextCellIndex].type == CellType::WALL || field_[nextCellIndex].type == CellType::SNAKE_BODY && nextCellIndex != snakeAssIndex_) {
+        gameOn_ = false;
+        return;
+    }
+
+    // Update currentPassCells_ and nodes_
+    vector<int>::iterator iter;
+    if (nextCellIndex != snakeAssIndex_) {
+        iter = find(currentPassCells_.begin(), currentPassCells_.end(), nextCellIndex);
+        if (iter == currentPassCells_.end()) {
+            setColor(Color::NORMAL);
+            throw runtime_error("Next cell index not in currentPassCells_, but should be.");
+        }
+        currentPassCells_.erase(iter);
+    }
+    if (!snakeTurns_.empty()) {
+        for (auto& index : nodes_[snakeHeadIndex_]) {
+            iter = find(nodes_[index].begin(), nodes_[index].end(), snakeHeadIndex_);
+            if (iter != nodes_[index].end()) nodes_[index].erase(iter);
+        }
+        nodes_[snakeHeadIndex_].clear();
+    }
+
+    snakeTurns_.push(nextDirection);
+    bool gotFood = field_[nextCellIndex].type == CellType::FOOD;
+    field_[snakeHeadIndex_].type = CellType::SNAKE_BODY;
+    field_[nextCellIndex].type = CellType::SNAKE_HEAD;
+
+    if (gotFood) {
+        foodIndex_ = currentPassCells_[randomUnder(currentPassCells_.size())];
+        field_[foodIndex_].type = CellType::FOOD;
+    }
+    else {  // field_[nextCellIndex].type == (CellType::PASS) || nextCellIndex == snakeAssIndex_
+        int nextAssIndex = __FindCellFromMovementDirection(snakeAssIndex_, snakeTurns_.front());
+        snakeTurns_.pop();
+
+        if (snakeAssIndex_ != nextCellIndex) {
+            field_[snakeAssIndex_].type = CellType::PASS;
+            currentPassCells_.push_back(snakeAssIndex_);
+        }
+        for (auto& index : __GetCellVicinityByIndexes(nextAssIndex)) {
+            if (field_[index].type == CellType::PASS ||
+                field_[index].type == CellType::FOOD ||
+                field_[index].type == CellType::SNAKE_HEAD && snakeTurns_.size() > 1)
+            {
+                iter = find(nodes_[nextAssIndex].begin(), nodes_[nextAssIndex].end(), index);
+                if (iter == nodes_[nextAssIndex].end()) nodes_[nextAssIndex].push_back(index);
+
+                iter = find(nodes_[index].begin(), nodes_[index].end(), nextAssIndex);
+                if (iter == nodes_[index].end()) nodes_[index].push_back(nextAssIndex);
+            }
+        }
+        snakeAssIndex_ = nextAssIndex;
+    }
+
+    currentDirection_ = nextDirection;
+    snakeHeadIndex_ = nextCellIndex;
+
+    draw::Field(field_, width_);
+}
+
+Direction Playground::__FindMovementDirection(int fromIndex, int toIndex)
+{
+    int fromX, fromY, toX, toY;
+    fromX = fromIndex % width_;
+    fromY = fromIndex / width_;
+    toX = toIndex % width_;
+    toY = toIndex / width_;
+
+    if (fromY == toY) {
+        if (abs(fromX - toX) == 1) {
+            if (toX < fromX) return Direction::LEFT;
+            else return Direction::RIGHT;
+        }
+        else {
+            if (toX < fromX) return Direction::RIGHT;
+            else return Direction::LEFT;
+        }
+    }
+    else {  // fromX == toX
+        if (abs(fromY - toY) == 1) {
+            if (toY < fromY) return Direction::UP;
+            else return Direction::DOWN;
+        }
+        else {
+            if (toY < fromY) return Direction::DOWN;
+            else return Direction::UP;
+        }
+    }
+}
+
+int Playground::__FindCellFromMovementDirection(int cellIndex, Direction movementDirection)
+{
+    if (movementDirection == Direction::LEFT) cellIndex--;
+    else if (movementDirection == Direction::RIGHT) cellIndex++;
+    else if (movementDirection == Direction::UP) cellIndex -= width_;
+    else cellIndex += width_;
+
+    if (field_[cellIndex].type == CellType::PORTAL) cellIndex = __GetPortalExitIndex(cellIndex, movementDirection);
+    return cellIndex;
+}
+
+vector<int> Playground::__GetCellVicinityByIndexes(int cellIndex)
+{
+    int x, y, leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
+    x = cellIndex % width_,
+    y = cellIndex / width_;
+    leftCellIndex = y * width_ + x - 1;
+    rightCellIndex = y * width_ + x + 1;
+    topCellIndex = (y - 1) * width_ + x;
+    bottomCellIndex = (y + 1) * width_ + x;
+
+    if (field_[leftCellIndex].type == CellType::PORTAL) leftCellIndex = __GetPortalExitIndex(leftCellIndex, Direction::LEFT);
+    if (field_[rightCellIndex].type == CellType::PORTAL) rightCellIndex = __GetPortalExitIndex(rightCellIndex, Direction::RIGHT);
+    if (field_[topCellIndex].type == CellType::PORTAL) topCellIndex = __GetPortalExitIndex(topCellIndex, Direction::UP);
+    if (field_[bottomCellIndex].type == CellType::PORTAL) bottomCellIndex = __GetPortalExitIndex(bottomCellIndex, Direction::DOWN);
+
+    return {leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex};
+}
+
+int Playground::__GetPortalExitIndex(int portalEnterIndex, Direction movementDirection)
 {
     int possibleExitIndex = portalEnterIndex, nextCellIndex;
     int x = portalEnterIndex % width_,
@@ -349,52 +554,72 @@ void Playground::__FillAdjacencyList()
         bottomCellIndex = (y + 1) * width_ + x;
 
         if (field_[leftCellIndex].type == CellType::PORTAL) {
-            portalExit = GetPortalExitIndex(leftCellIndex, Direction::LEFT);
+            portalExit = __GetPortalExitIndex(leftCellIndex, Direction::LEFT);
             if (portalExit != -1) leftCellIndex = portalExit;
         }
         if (field_[rightCellIndex].type == CellType::PORTAL) {
-            portalExit = GetPortalExitIndex(rightCellIndex, Direction::RIGHT);
+            portalExit = __GetPortalExitIndex(rightCellIndex, Direction::RIGHT);
             if (portalExit != -1) rightCellIndex = portalExit;
         }
         if (field_[topCellIndex].type == CellType::PORTAL) {
-            portalExit = GetPortalExitIndex(topCellIndex, Direction::UP);
+            portalExit = __GetPortalExitIndex(topCellIndex, Direction::UP);
             if (portalExit != -1) topCellIndex = portalExit;
         }
         if (field_[bottomCellIndex].type == CellType::PORTAL) {
-            portalExit = GetPortalExitIndex(bottomCellIndex, Direction::DOWN);
+            portalExit = __GetPortalExitIndex(bottomCellIndex, Direction::DOWN);
             if (portalExit != -1) bottomCellIndex = portalExit;
         }
 
-        if (field_[leftCellIndex].type == CellType::PASS) {
+        if (field_[leftCellIndex].type == CellType::PASS ||
+            leftCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
+            leftCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
+        {
             nodes_[cellIndex].push_back(leftCellIndex);
             if (!passed[leftCellIndex]) {
                 passed[leftCellIndex] = true;
-                currentPassCells_.push_back(leftCellIndex);
                 traversalOrder.push(leftCellIndex);
+                if (leftCellIndex != validation.snakeAssIndex && leftCellIndex != validation.startingCellIndex) {
+                    currentPassCells_.push_back(leftCellIndex);
+                }
             }
         }
-        if (field_[rightCellIndex].type == CellType::PASS) {
+        if (field_[rightCellIndex].type == CellType::PASS ||
+            rightCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
+            rightCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
+        {
             nodes_[cellIndex].push_back(rightCellIndex);
             if (!passed[rightCellIndex]) {
                 passed[rightCellIndex] = true;
-                currentPassCells_.push_back(rightCellIndex);
                 traversalOrder.push(rightCellIndex);
+                if (rightCellIndex != validation.snakeAssIndex && rightCellIndex != validation.startingCellIndex) {
+                    currentPassCells_.push_back(rightCellIndex);
+                }
             }
         }
-        if (field_[topCellIndex].type == CellType::PASS) {
+        if (field_[topCellIndex].type == CellType::PASS ||
+            topCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
+            topCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
+        {
             nodes_[cellIndex].push_back(topCellIndex);
             if (!passed[topCellIndex]) {
                 passed[topCellIndex] = true;
-                currentPassCells_.push_back(topCellIndex);
                 traversalOrder.push(topCellIndex);
+                if (topCellIndex != validation.snakeAssIndex && topCellIndex != validation.startingCellIndex) {
+                    currentPassCells_.push_back(topCellIndex);
+                }
             }
         }
-        if (field_[bottomCellIndex].type == CellType::PASS) {
+        if (field_[bottomCellIndex].type == CellType::PASS ||
+            bottomCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
+            bottomCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
+        {
             nodes_[cellIndex].push_back(bottomCellIndex);
             if (!passed[bottomCellIndex]) {
                 passed[bottomCellIndex] = true;
-                currentPassCells_.push_back(bottomCellIndex);
                 traversalOrder.push(bottomCellIndex);
+                if (bottomCellIndex != validation.snakeAssIndex && bottomCellIndex != validation.startingCellIndex) {
+                    currentPassCells_.push_back(bottomCellIndex);
+                }
             }
         }
     }

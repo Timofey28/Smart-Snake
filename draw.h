@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <fcntl.h>
 #include "utils.h"
 
 
@@ -17,14 +18,15 @@ namespace draw
 {
     void GameCell(const Cell& cell, int stretch = 1);
     void GameCell(Cell& cell, CellType cellType, int stretch = 1);
+    void SnakeHead(Cell& cell, Direction movementDirection);
     void Field(const std::vector<Cell>& field, int width, bool onlyPerimeter = false);
 
     void EnterFieldDimensions(int& fieldWidth, int& fieldHeight);
     void EnterGamesAmount(int& gamesAmount);
     void __ClearInputAndMoveCursorBack(int phraseLength, int inputLength);
 
-    void smth(std::string s);
-//    void GameCell(const Cell& cell, Color color);
+    void smth(std::string s, int lineNo = 0);
+    void GameCell(const Cell& cell, Color color);
 
     namespace alert
     {

@@ -7,10 +7,13 @@
 
 #include "utils.h"
 #include "mouse_input.h"
-#include "algorithm.h"
 #include "draw.h"
 #include "validation.h"
 #include "file_handler.h"
+#include "algorithm.h"
+
+#include <sstream>
+#include <iostream>
 
 
 extern int nConsoleWidth, nConsoleHeight;
@@ -23,7 +26,9 @@ public:
     Playground();
     void FieldParametersInputForm();
     void SaveInitialData();
-    int GetPortalExitIndex(int portalEnterIndex, Direction movementDirection);
+
+    void ReinitializeInitialData();
+    void CalculateNextIteration();
     bool GameOn() { return gameOn_; }
 
 private:
@@ -37,7 +42,12 @@ private:
 
     void __InitializePlayground();
     void __FillAdjacencyList();
+    int __GetPortalExitIndex(int portalEnterIndex, Direction movementDirection);
     void __FillSnakeTurnsQueue();
+
+    Direction __FindMovementDirection(int fromIndex, int toIndex);
+    int __FindCellFromMovementDirection(int fromIndex, Direction movementDirection);
+    std::vector<int> __GetCellVicinityByIndexes(int cellIndex);
 
     int width_, height_;  // considering whole field with boundaries
     int indentX_, indentY_;
@@ -46,8 +56,8 @@ private:
     std::vector<int> currentPassCells_, initialCurrentPassCells_;  // to choose a random cell for food
     Direction currentDirection_, initialCurrentDirection_;
     std::queue<Direction> snakeTurns_, initialSnakeTurns_;
-    int gamesAmount_;
     bool gameOn_;
+    int foodIndex_, snakeHeadIndex_, snakeAssIndex_;
 
     Validation validation;
     FileHandler fileHandler;

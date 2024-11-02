@@ -44,7 +44,7 @@ void draw::GameCell(const Cell& cell, int stretch)
 {
     if (cell.num == PointOfNoReturn) return;
     setPosition(cell.realX, cell.realY);
-    setColor(cell.color);
+    setColor(CELL_COLOR[cell.type]);
     cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
 }
 
@@ -53,19 +53,39 @@ void draw::GameCell(Cell& cell, CellType cellType, int stretch)
     if (cell.num == PointOfNoReturn) return;
     if (cell.type != cellType) {
         cell.type = cellType;
-        cell.UpdateColor();
         setPosition(cell.realX, cell.realY);
-        setColor(cell.color);
+        setColor(CELL_COLOR[cell.type]);
         cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
     }
 }
 
-//void draw::GameCell(const Cell& cell, Color color)
-//{
-//    setPosition(cell.realX, cell.realY);
-//    setColor(color);
-//    cout << string(2, ' ');
-//}
+void draw::SnakeHead(Cell& cell, Direction movementDirection)
+{
+    cell.type = CellType::SNAKE_HEAD;
+    setPosition(cell.realX, cell.realY);
+    setColor(Color::SNAKE_EYES);
+    if (movementDirection == Direction::LEFT) cout << ": ";
+    else if (movementDirection == Direction::RIGHT) cout << " :";
+    else if (movementDirection == Direction::DOWN) cout << "..";
+    else {
+        _setmode(_fileno(stdout), _O_U16TEXT);
+        wcout << (wchar_t) 0x02D9 << (wchar_t) 0x02D9;
+        _setmode(_fileno(stdout), _O_TEXT);
+    }
+}
+
+void draw::GameCell(const Cell& cell, Color color)
+{
+    setPosition(cell.realX, cell.realY);
+    setColor(color);
+    cout << string(2, '#');
+}
+void draw::smth(string s, int lineNo)
+{
+    setPosition(0, lineNo);
+    setColor(Color::NORMAL);
+    std::cout << s;
+}
 
 void draw::Field(const vector<Cell>& field, int width, bool onlyPerimeter)
 {
@@ -82,7 +102,6 @@ void draw::Field(const vector<Cell>& field, int width, bool onlyPerimeter)
         }
         for (int i = 1; i < height - 1; ++i) draw::GameCell(field[i * width + 1], width - 2);
     } else {
-        system("cls");
         for (int i = 0; i < field.size(); ++i) draw::GameCell(field[i]);
     }
 }
@@ -92,8 +111,8 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
     int maxFieldWidth = nConsoleWidth / 2 - 2;
     int maxFieldHeight = nConsoleHeight - 2;
     PointOfNoReturn = nConsoleWidth / 2 * nConsoleHeight - 1;
-//    fieldWidth = 25;
-//    fieldHeight = 24;
+//    fieldWidth = 10;
+//    fieldHeight = 10;
 //    return;
 
     string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";
@@ -156,6 +175,9 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
 
 void draw::EnterGamesAmount(int& gamesAmount)
 {
+    gamesAmount = 1;
+    return;
+
     string phrase = "Введи количество игр (1 - 10) => ";
     string input;
     int number;
@@ -239,11 +261,4 @@ void draw::alert::Remove()
     setPosition(0, 0);
     setColor(Color::BLACK);
     cout << string(100, ' ');
-}
-
-void draw::smth(string s)
-{
-    setPosition(0, 0);
-    setColor(Color::NORMAL);
-    std::cout << s;
 }

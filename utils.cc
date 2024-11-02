@@ -27,7 +27,6 @@ std::string toString(CellType cellType)
         default: return "Unknown";
     }
 }
-
 std::string toString(Direction direction)
 {
     switch (direction) {
@@ -167,4 +166,20 @@ int randomUnder(int num)
     if (num == 2) return uid2(mt);
     std::uniform_int_distribution<int> uid{0, num - 1};
     return uid(mt);
+}
+
+Direction toLeftFrom(Direction direction)
+{
+    if (direction == Direction::LEFT) return Direction::DOWN;
+    else if (direction == Direction::RIGHT) return Direction::UP;
+    else if (direction == Direction::UP) return Direction::LEFT;
+    else return Direction::RIGHT;
+}
+
+Direction toRightFrom(Direction direction)
+{
+    if (direction == Direction::LEFT) return Direction::UP;
+    else if (direction == Direction::RIGHT) return Direction::DOWN;
+    else if (direction == Direction::UP) return Direction::RIGHT;
+    else return Direction::LEFT;
 }

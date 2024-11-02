@@ -7,14 +7,14 @@
 using namespace std;
 
 
-vector<int> Algorithm::FindShortestPath(vector<vector<int>>& nodes, int startingNode, int endingNode)
+vector<int> Algorithm::FindShortestPath(const vector<vector<int>>& nodes, int startingNode, int endingNode)
 {
-    vector<bool> passed(nodes.size(), 0);
-    vector<bool> noted(nodes.size(), 0);
-    vector<int> minimumLengths(nodes.size(), -1);
-    minimumLengths[startingNode] = 0;
+    vector<int> minimumDistances(nodes.size(), -1);
+    minimumDistances[startingNode] = 0;
     vector<vector<int>> minimumPaths(nodes.size());
-    minimumPaths[startingNode] = {startingNode};
+    minimumPaths[startingNode] = {};
+    vector<bool> passed(nodes.size(), 0);
+    passed[startingNode] = 1;
 
     queue<int> traversalOrder;
     traversalOrder.push(startingNode);
@@ -30,12 +30,10 @@ vector<int> Algorithm::FindShortestPath(vector<vector<int>>& nodes, int starting
         for (int i = 0; i < nodes[currentNode].size(); ++i) {
             int nodeToTravelTo = nodes[currentNode][i];
             if (!passed[nodeToTravelTo]) {
-                if (!noted[nodeToTravelTo]) {
-                    traversalOrder.push(nodeToTravelTo);
-                    noted[nodeToTravelTo] = 1;
-                }
-                if (minimumLengths[nodeToTravelTo] == -1 || minimumLengths[currentNode] + 1 < minimumLengths[nodeToTravelTo]) {
-                    minimumLengths[nodeToTravelTo] = minimumLengths[currentNode] + 1;
+                passed[nodeToTravelTo] = 1;
+                traversalOrder.push(nodeToTravelTo);
+                if (minimumDistances[nodeToTravelTo] == -1 || minimumDistances[currentNode] + 1 < minimumDistances[nodeToTravelTo]) {
+                    minimumDistances[nodeToTravelTo] = minimumDistances[currentNode] + 1;
                     minimumPaths[nodeToTravelTo] = minimumPaths[currentNode];
                     minimumPaths[nodeToTravelTo].push_back(nodeToTravelTo);
                 }
