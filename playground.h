@@ -27,9 +27,10 @@ public:
     void FieldParametersInputForm();
     void SaveInitialData();
 
-    void ReinitializeInitialData();
+    void ReinitializeStartingData();
     void CalculateNextIteration();
     bool GameOn() { return gameOn_; }
+    void SaveLastGame();
 
 private:
     void __InitializeFieldFromDimensions();
@@ -49,6 +50,7 @@ private:
     int __FindCellFromMovementDirection(int fromIndex, Direction movementDirection);
     std::vector<int> __GetCellVicinityByIndexes(int cellIndex);
 
+
     int width_, height_;  // considering whole field with boundaries
     int indentX_, indentY_;
     std::vector<Cell> field_, initialField_;
@@ -57,8 +59,13 @@ private:
     Direction currentDirection_, initialCurrentDirection_;
     std::queue<Direction> snakeTurns_, initialSnakeTurns_;
     bool gameOn_;
-    int foodIndex_, snakeHeadIndex_, snakeAssIndex_;
+    int foodIndex_, snakeHeadIndex_, snakeAssIndex_, initialSnakeHeadIndex_, initialSnakeAssIndex_;
 
     Validation validation;
     FileHandler fileHandler;
+
+    // data to record the game
+    int firstFoodIndex_;
+    std::vector<int> headAndFoodIndexes_;
+    Direction crashDirection_;
 };

@@ -108,8 +108,8 @@ void draw::Field(const vector<Cell>& field, int width, bool onlyPerimeter)
 
 void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
 {
-    int maxFieldWidth = nConsoleWidth / 2 - 2;
-    int maxFieldHeight = nConsoleHeight - 2;
+    int maxFieldWidth = min(91, nConsoleWidth / 2 - 2);
+    int maxFieldHeight = min(91, nConsoleHeight - 2);
     PointOfNoReturn = nConsoleWidth / 2 * nConsoleHeight - 1;
 //    fieldWidth = 10;
 //    fieldHeight = 10;
@@ -175,10 +175,11 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
 
 void draw::EnterGamesAmount(int& gamesAmount)
 {
-    gamesAmount = 1;
-    return;
+//    gamesAmount = 1;
+//    return;
 
-    string phrase = "Введи количество игр (1 - 10) => ";
+    int gamesLimit = 100;
+    string phrase = "Введи количество игр (1 - " + to_string(gamesLimit) + ") => ";
     string input;
     int number;
 
@@ -188,7 +189,7 @@ void draw::EnterGamesAmount(int& gamesAmount)
         getline(cin, input);
         if (canConvertToNumber(input)) {
             number = stoi(input);
-            if (number >= 1 && number <= 10) {
+            if (number >= 1 && number <= gamesLimit) {
                 gamesAmount = number;
                 return;
             }

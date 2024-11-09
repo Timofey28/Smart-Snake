@@ -1,7 +1,9 @@
 #include "utils.h"
 
 #include <map>
+#include <unordered_map>
 #include <string>
+#include <cassert>
 
 
 std::map<CellType, Color> CELL_COLOR = {
@@ -37,6 +39,27 @@ std::string toString(Direction direction)
         default: return "Unknown";
     }
 }
+
+
+char toBase93(int num)
+{
+    static const std::string base93Digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./:;<=>?@[]^_`{|}~";
+    assert(num >= 0 && num < base93Digits.size());
+    return base93Digits[num];
+}
+
+int fromBase93ToDecimal(char numChar)
+{
+    static const std::string base93Digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./:;<=>?@[]^_`{|}~";
+    static std::unordered_map<char, int> charToValue;
+
+    if (charToValue.empty()) {
+        for (int i = 0; i < base93Digits.size(); ++i) charToValue[base93Digits[i]] = i;
+    }
+
+    return charToValue[numChar];
+}
+
 
 bool canConvertToNumber(std::string str)
 {

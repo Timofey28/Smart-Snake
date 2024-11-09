@@ -5,9 +5,9 @@
 #include <thread>
 #include <algorithm>
 
-#include <conio.h>
-
 using namespace std;
+
+#include <conio.h>
 
 
 Playground::Playground()
@@ -53,7 +53,7 @@ void Playground::SaveInitialData()
     int leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
     int snakeLength = 0;
 
-    snakeHeadIndex_ = validation.startingCellIndex;
+    initialSnakeHeadIndex_ = validation.startingCellIndex;
     while (!traversalOrder.empty()) {
         snakeLength++;
         cellIndex = traversalOrder.front();
@@ -87,24 +87,46 @@ void Playground::SaveInitialData()
             traversalOrder.push(bottomCellIndex);
         }
     }
-    snakeAssIndex_ = cellIndex;
+    initialSnakeAssIndex_ = cellIndex;
 
     // stakeTurnsStacked - stack with the first element to take being the direction from snake last element to second last
-    fileHandler.SaveInitialData(width_, height_, indentX_, indentY_, snakeLength, validation.startingDirection, snakeTurnsStacked, field_);
+    fileHandler.SaveInitialData(
+        width_, height_,
+        indentX_, indentY_,
+        snakeLength,
+        validation.startingDirection,
+        currentPassCells_.size() + snakeLength,
+        snakeTurnsStacked,
+        field_
+    );
 }
 
-void Playground::ReinitializeInitialData()
+void Playground::ReinitializeStartingData()
 {
+    // field parameters
     field_ = initialField_;
     nodes_ = initialNodes_;
     currentPassCells_ = initialCurrentPassCells_;
     currentDirection_ = initialCurrentDirection_;
     snakeTurns_ = initialSnakeTurns_;
+
+    // game calculation
+    gameOn_ = true;
+    foodIndex_ = -1;
+    snakeHeadIndex_ = initialSnakeHeadIndex_;
+    snakeAssIndex_ = initialSnakeAssIndex_;
+
+    // recording the game
+    firstFoodIndex_ = -1;
+    headAndFoodIndexes_.clear();
 }
 
 void Playground::CalculateNextIteration()
 {
-    if (foodIndex_ == -1) foodIndex_ = currentPassCells_[randomUnder(currentPassCells_.size())];
+    if (foodIndex_ == -1) {
+        foodIndex_ = currentPassCells_[randomUnder(currentPassCells_.size())];
+        firstFoodIndex_ = foodIndex_;
+    }
     field_[foodIndex_].type = CellType::FOOD;
 
 //    // Общая инфа слева сверху
@@ -179,8 +201,10 @@ void Playground::CalculateNextIteration()
 
     if (field_[nextCellIndex].type == CellType::WALL || field_[nextCellIndex].type == CellType::SNAKE_BODY && nextCellIndex != snakeAssIndex_) {
         gameOn_ = false;
+        crashDirection_ = nextDirection;
         return;
     }
+    headAndFoodIndexes_.push_back(nextCellIndex);
 
     // Update currentPassCells_ and nodes_
     vector<int>::iterator iter;
@@ -208,6 +232,8 @@ void Playground::CalculateNextIteration()
     if (gotFood) {
         foodIndex_ = currentPassCells_[randomUnder(currentPassCells_.size())];
         field_[foodIndex_].type = CellType::FOOD;
+
+        headAndFoodIndexes_.push_back(foodIndex_);
     }
     else {  // field_[nextCellIndex].type == (CellType::PASS) || nextCellIndex == snakeAssIndex_
         int nextAssIndex = __FindCellFromMovementDirection(snakeAssIndex_, snakeTurns_.front());
@@ -235,7 +261,18 @@ void Playground::CalculateNextIteration()
     currentDirection_ = nextDirection;
     snakeHeadIndex_ = nextCellIndex;
 
-    draw::Field(field_, width_);
+//    draw::Field(field_, width_);
+}
+
+void Playground::SaveLastGame()
+{
+    fileHandler.SaveLastGame(
+        firstFoodIndex_,
+        crashDirection_,
+        snakeTurns_.size() + 1,
+        headAndFoodIndexes_,
+        width_
+    );
 }
 
 Direction Playground::__FindMovementDirection(int fromIndex, int toIndex)

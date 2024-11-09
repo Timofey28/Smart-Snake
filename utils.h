@@ -46,7 +46,6 @@ enum Color {
     WHITE_ON_BLACK = 15,
 
     SNAKE_EYES = 80,
-
     BEIGE_ON_BLUE = 19,
 };
 
@@ -79,6 +78,9 @@ enum Orientation
 extern std::map<CellType, Color> CELL_COLOR;
 std::string toString(CellType cellType);
 std::string toString(Direction direction);
+
+char toBase93(int num);
+int fromBase93ToDecimal(char numChar);
 
 bool canConvertToNumber(std::string str);
 int explainClickInfo(

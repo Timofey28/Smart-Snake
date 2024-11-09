@@ -30,6 +30,17 @@ int main()
     Application application;
     application.Run();
 
+//    auto start = chrono::high_resolution_clock::now();
+//    this_thread::sleep_for(1528ms);
+//    auto end = chrono::high_resolution_clock::now();
+//    chrono::duration<double> duration = end - start;
+//    cout << "Время выполнения: " << round(duration.count() * 100) / 100 << " секунд" << std::endl;
+
+//    fs::path CONSTANT_PATH = "Constant-Path";
+//    int filesAmount = 1;
+//    fs::path p = CONSTANT_PATH / (to_string(filesAmount) + ".txt");
+//    cout << p;
+
 //    for (int i = 100; ~i; --i) {
 //        string s = to_string(i);
 //        cout << "\rпривет: " << i << flush;

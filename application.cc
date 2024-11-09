@@ -6,6 +6,9 @@
 
 using namespace std;
 
+#include <thread>
+#include <chrono>
+
 
 Application::Application()
 {
@@ -34,14 +37,21 @@ void Application::CreateGames()
     draw::EnterGamesAmount(gamesAmount_);
     playground_.SaveInitialData();
 
+    auto start = chrono::high_resolution_clock::now();
+
     for (int gameNumber = 1; gameNumber <= gamesAmount_; ++gameNumber) {
-        playground_.ReinitializeInitialData();
+        playground_.ReinitializeStartingData();
         while (playground_.GameOn()) {
             playground_.CalculateNextIteration();
-            _getch();
+//            _getch();
+//            this_thread::sleep_for(100ms);
         }
-        break;
+        playground_.SaveLastGame();
     }
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    cout << "\n\tВремя выполнения: " << round(duration.count() * 100) / 100 << " секунд\n";
 }
 
 int Application::ChooseOption()
