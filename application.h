@@ -14,6 +14,6 @@ private:
     int ChooseOption();
     void CreateGames();
 
-    Playground playground_;
     int gamesAmount_;
+    Playground playground_;
 };

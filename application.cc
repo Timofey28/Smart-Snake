@@ -43,10 +43,10 @@ void Application::CreateGames()
         playground_.ReinitializeStartingData();
         while (playground_.GameOn()) {
             playground_.CalculateNextIteration();
-//            _getch();
-//            this_thread::sleep_for(100ms);
+//            this_thread::sleep_for(200ms);
         }
         playground_.SaveLastGame();
+//        _getch();
     }
 
     auto end = chrono::high_resolution_clock::now();

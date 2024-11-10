@@ -157,23 +157,6 @@ void Playground::CalculateNextIteration()
 
     // Calculate next snake head position
     vector<int> shortestPathToFood = Algorithm::FindShortestPath(nodes_, snakeHeadIndex_, foodIndex_);
-
-//    // Следующий шаг к еде слева сверху
-//    oss.str("");
-//    oss.clear();
-//    oss << "Path to food: ";
-//    if (shortestPathToFood.size()) oss << "(" << shortestPathToFood[0] % width_ << ", " << shortestPathToFood[0] / width_ << ")       ";
-//    else oss << "None" << "                  ";
-//    draw::smth(oss.str(), 3);
-
-//    // Путь к еде
-//    if (shortestPathToFood.size()) {
-//        for (int i = 0; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]], Color::BEIGE_ON_BLUE);
-//        _getch();
-//        for (int i = 0; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]]);
-//    }
-//    else _getch();
-
     int nextCellIndex;
     Direction nextDirection;
     if (shortestPathToFood.size()) {
@@ -194,6 +177,7 @@ void Playground::CalculateNextIteration()
                 nextCellIndex = __FindCellFromMovementDirection(snakeHeadIndex_, nextDirection);
                 if (field_[nextCellIndex].type != CellType::PASS && nextCellIndex != snakeAssIndex_) {
                     nextCellIndex = straightIndex;  // nowhere to go, so crushing forward
+                    nextDirection = currentDirection_;
                 }
             }
         }
@@ -233,6 +217,11 @@ void Playground::CalculateNextIteration()
         foodIndex_ = currentPassCells_[randomUnder(currentPassCells_.size())];
         field_[foodIndex_].type = CellType::FOOD;
 
+        if (snakeTurns_.size() == 1) {  // snake length becomes 2
+            iter = find(nodes_[nextCellIndex].begin(), nodes_[nextCellIndex].end(), snakeHeadIndex_);
+            nodes_[nextCellIndex].erase(iter);  // so that it couldn't take a 180 degree turn and continue from its ass
+        }
+
         headAndFoodIndexes_.push_back(foodIndex_);
     }
     else {  // field_[nextCellIndex].type == (CellType::PASS) || nextCellIndex == snakeAssIndex_
@@ -261,7 +250,9 @@ void Playground::CalculateNextIteration()
     currentDirection_ = nextDirection;
     snakeHeadIndex_ = nextCellIndex;
 
+//    _getch();
 //    draw::Field(field_, width_);
+//    for (int i = 1; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]], Color::BEIGE_ON_BLUE);  // путь к еде
 }
 
 void Playground::SaveLastGame()
