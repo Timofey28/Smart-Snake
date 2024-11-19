@@ -93,8 +93,8 @@ void Playground::SaveInitialData()
     fileHandler.SaveInitialData(
         width_, height_,
         indentX_, indentY_,
-        snakeLength,
         validation.startingDirection,
+        snakeLength,
         currentPassCells_.size() + snakeLength,
         snakeTurnsStacked,
         field_
@@ -129,7 +129,7 @@ void Playground::CalculateNextIteration()
     }
     field_[foodIndex_].type = CellType::FOOD;
 
-//    // РћР±С‰Р°СЏ РёРЅС„Р° СЃР»РµРІР° СЃРІРµСЂС…Сѓ
+//    // Общая инфа слева сверху
 //    ostringstream oss;
 //    oss << "snakeHeadIndex_: (" << snakeHeadIndex_ % width_ << ", " << snakeHeadIndex_ / width_ << ")\nfoodIndex_: (";
 //    oss << foodIndex_ % width_ << ", " << foodIndex_ / width_ << ")\nnodes_[snakeHeadIndex_]: ";
@@ -138,7 +138,7 @@ void Playground::CalculateNextIteration()
 //    oss << string(30, ' ');
 //    draw::smth(oss.str());
 
-//    // Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёР№ nodes_ РІ С„Р°Р№Р»
+//    // Запись значений nodes_ в файл
 //    ofstream file("log.txt", ios::app);
 //    file << "\n\n";
 //    for (int i = 1; i < height_ - 1; ++i) {
@@ -252,15 +252,15 @@ void Playground::CalculateNextIteration()
 
 //    _getch();
 //    draw::Field(field_, width_);
-//    for (int i = 1; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]], Color::BEIGE_ON_BLUE);  // РїСѓС‚СЊ Рє РµРґРµ
+//    for (int i = 1; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]], Color::BEIGE_ON_BLUE);  // путь к еде
 }
 
 void Playground::SaveLastGame()
 {
     fileHandler.SaveLastGame(
         firstFoodIndex_,
-        crashDirection_,
         snakeTurns_.size() + 1,
+        crashDirection_,
         headAndFoodIndexes_,
         width_
     );

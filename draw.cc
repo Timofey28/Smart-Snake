@@ -115,8 +115,8 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
 //    fieldHeight = 10;
 //    return;
 
-    string phraseChooseWidth = "Р’С‹Р±РµСЂРё С€РёСЂРёРЅСѓ РїРѕР»СЏ (3 - " + to_string(maxFieldWidth) + ") => ";
-    string phraseChooseHeight = "Р’С‹Р±РµСЂРё РІС‹СЃРѕС‚Сѓ РїРѕР»СЏ (3 - " + to_string(maxFieldHeight) + ") => ";
+    string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";
+    string phraseChooseHeight = "Выбери высоту поля (3 - " + to_string(maxFieldHeight) + ") => ";
     string input;
     int number;
     bool bChooseWidth = true;
@@ -179,7 +179,7 @@ void draw::EnterGamesAmount(int& gamesAmount)
 //    return;
 
     int gamesLimit = 100;
-    string phrase = "Р’РІРµРґРё РєРѕР»РёС‡РµСЃС‚РІРѕ РёРіСЂ (1 - " + to_string(gamesLimit) + ") => ";
+    string phrase = "Введи количество игр (1 - " + to_string(gamesLimit) + ") => ";
     string input;
     int number;
 
@@ -218,8 +218,8 @@ void draw::__ClearInputAndMoveCursorBack(int phraseLength, int inputLength)
 void draw::alert::MultimpleOrNoneSnakes(int snakesAmount)
 {
     string alertMsg;
-    if (!snakesAmount) alertMsg = "РќРµ РЅР°Р№РґРµРЅРѕ РЅРё РѕРґРЅРѕР№ Р·РјРµР№РєРё. РРЎРџР РђР’РРўР¬!!!";
-    else alertMsg = "Р—РјРµР№РєР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ С‚РѕР»СЊРєРѕ РѕРґРЅР°. РРЎРџР РђР’РРўР¬!!!";
+    if (!snakesAmount) alertMsg = "Не найдено ни одной змейки. ИСПРАВИТЬ!!!";
+    else alertMsg = "Змейка должна быть только одна. ИСПРАВИТЬ!!!";
     setPosition(0, 0);
     setColor(Color::NORMAL);
     cout << alertMsg;
@@ -227,7 +227,7 @@ void draw::alert::MultimpleOrNoneSnakes(int snakesAmount)
 
 void draw::alert::IncorrectSnake()
 {
-    string alertMsg = "Р—РјРµР№РєР° РЅРµРєРѕСЂСЂРµРєС‚РЅР°, РµРµ С‡Р°СЃС‚Рё РЅРµ РјРѕРіСѓС‚ РЅР°С…РѕРґРёС‚СЊСЃСЏ СЂСЏРґРѕРј РґСЂСѓРі СЃ РґСЂСѓРіРѕРј. РРЎРџР РђР’РРўР¬!!!";
+    string alertMsg = "Змейка некорректна, ее части не могут находиться рядом друг с другом. ИСПРАВИТЬ!!!";
     setPosition(0, 0);
     setColor(Color::NORMAL);
     cout << alertMsg;
@@ -235,7 +235,7 @@ void draw::alert::IncorrectSnake()
 
 void draw::alert::ClosedSpaces()
 {
-    string alertMsg = "РќР° РёРіСЂРѕРІРѕРј РїРѕР»Рµ РёРјРµСЋС‚СЃСЏ РєРѕРјРЅР°С‚С‹, РІ РєРѕС‚РѕСЂС‹Рµ РЅРµРІРѕР·РјРѕР¶РЅРѕ РїРѕРїР°СЃС‚СЊ. Р—Р°РєСЂР°СЃСЊ РёС… РёР»Рё СЃРґРµР»Р°Р№ С‚СѓРґР° РїСЂРѕС…РѕРґ";
+    string alertMsg = "На игровом поле имеются комнаты, в которые невозможно попасть. Закрась их или сделай туда проход";
     setPosition(0, 0);
     setColor(Color::NORMAL);
     cout << alertMsg;
@@ -243,7 +243,7 @@ void draw::alert::ClosedSpaces()
 
 void draw::alert::LoopedSnake()
 {
-    string alertMsg = "Р—РјРµР№РєР° Р·Р°С†РёРєР»РµРЅР°, Р° С‚Р°Рє РЅРµР»СЊР·СЏ. РРЎРџР РђР’Р¬!!!";
+    string alertMsg = "Змейка зациклена, а так нельзя. ИСПРАВЬ!!!";
     setPosition(0, 0);
     setColor(Color::NORMAL);
     cout << alertMsg;
@@ -251,7 +251,7 @@ void draw::alert::LoopedSnake()
 
 void draw::alert::NoPossibleStart()
 {
-    string alertMsg = "Р—РјРµР№РєР° РЅРµ РјРѕР¶РµС‚ РЅР°С‡Р°С‚СЊ РёРіСЂСѓ, РїРѕС‚РѕРјСѓ С‡С‚Рѕ РµР№ РЅРµРєСѓРґР° РёРґС‚Рё. РРЎРџР РђР’РРўР¬!!!";
+    string alertMsg = "Змейка не может начать игру, потому что ей некуда идти. ИСПРАВИТЬ!!!";
     setPosition(0, 0);
     setColor(Color::NORMAL);
     cout << alertMsg;

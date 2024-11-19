@@ -13,8 +13,8 @@ void FileHandler::SaveInitialData(
     int height,
     int indentX,
     int indentY,
-    int snakeLength,
     Direction startingDirection,
+    int snakeLength,
     int passCellsAmount,
     stack<Direction>& snakeTurnsStacked,
     vector<Cell>& field
@@ -27,12 +27,13 @@ void FileHandler::SaveInitialData(
         throw runtime_error(oss.str());
     }
 
-    fout << width << ' ' << height << ' ' << indentX << ' ' << indentY << ' ' << snakeLength << ' ' << startingDirection << ' ' << passCellsAmount << '\n';
+    fout << width << ' ' << height << ' ' << indentX << ' ' << indentY << ' ' << startingDirection << ' ' << snakeLength << ' ' << passCellsAmount << '\n';
     while (!snakeTurnsStacked.empty()) {
         fout << snakeTurnsStacked.top();
         snakeTurnsStacked.pop();
     }
     fout << '\n';
+    cout << "размер field: " << field.size();
     for (int i = 0; i < field.size(); ++i) fout << field[i].type;
 
     fout.close();
@@ -40,8 +41,8 @@ void FileHandler::SaveInitialData(
 
 void FileHandler::SaveLastGame(
     int firstFoodIndex,
+    int finalSnakeLength,
     Direction crashDirection,
-    int maxSnakeLength,
     vector<int> headAndFoodIndexes,
     int fieldWidth
 ) {
@@ -55,12 +56,72 @@ void FileHandler::SaveLastGame(
         throw runtime_error(oss.str());
     }
 
-    fout << firstFoodIndex << ' ' << crashDirection << ' ' << maxSnakeLength << '\n';
+    fout << firstFoodIndex << ' ' << finalSnakeLength << ' ' << crashDirection << '\n';
     for (const auto& headOrFoodIndex : headAndFoodIndexes) {
         fout << toBase93(headOrFoodIndex % fieldWidth) << toBase93(headOrFoodIndex / fieldWidth);
     }
 
     fout.close();
+}
+
+void FileHandler::ReadGame(
+    fs::path gameFilePath,
+    int& fieldWidth, int& fieldHeight,
+    int& indentX, int& indentY,
+    vector<Cell>& field,
+    queue<Direction>& snakeTurns,
+    Direction& startingDirection, Direction& crashDirection,
+    int& startingSnakeLength, int& finalSnakeLength, int& maxPossibleSnakeLength,
+    int& firstFoodIndex,
+    vector<int>& gameIndexes
+) {
+    fs::path initialDataFilePath = __GetGameInitialDataFilePath(gameFilePath);
+    ifstream fin;
+    fin.open(initialDataFilePath);
+    if (!fin.is_open()) throw runtime_error("Unable to open .initialdata file.");
+    char directionValue, cellTypeValue;
+
+    // .initialdata, line 1
+    fin >> fieldWidth >> fieldHeight >> indentX >> indentY >> directionValue >> startingSnakeLength >> maxPossibleSnakeLength;
+    startingDirection = static_cast<Direction>(directionValue - 48);
+
+    // .initialdata, line 2
+    snakeTurns = {};
+    while (fin.peek() != '\n') {
+        fin >> directionValue;
+        snakeTurns.push(static_cast<Direction>(directionValue - 48));
+    }
+
+    // .initialdata, line 3
+    field.resize(fieldWidth * fieldHeight);
+    CellType cellType;
+    for (int i = 0; i < fieldWidth * fieldHeight; ++i) {
+        fin >> cellTypeValue;
+        cellType = static_cast<CellType>(cellTypeValue - 48);
+        field[i] = Cell(i, fieldWidth, indentX, indentY, cellType);
+    }
+    fin.close();
+
+    fin.open(gameFilePath);
+    if (!fin.is_open()) throw runtime_error("Unable to open game file.");
+
+    // game file, line 1
+    fin >> firstFoodIndex >> finalSnakeLength >> directionValue;
+    crashDirection = static_cast<Direction>(directionValue - 48);
+
+    // game file, line 2
+    char coordX, coordY;
+    while (fin >> coordX >> coordY) {
+        gameIndexes.push_back(fromBase93ToDecimal(coordY) * fieldWidth + fromBase93ToDecimal(coordX));
+    }
+}
+
+
+fs::path FileHandler::__GetGameInitialDataFilePath(fs::path gameFilePath)
+{
+    if (!fs::exists(gameFilePath)) throw runtime_error("Path to game not found.");
+    fs::path parentFolder = gameFilePath.parent_path();
+    return parentFolder / INITIAL_DATA_FILE;
 }
 
 void FileHandler::__CreateCurrentDirectory()

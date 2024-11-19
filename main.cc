@@ -20,9 +20,19 @@ void setColor(int color)
     SetConsoleTextAttribute(hStdOut, (WORD) color);
 }
 
+/*
+1) эксперимент
+2) сессия
+3) тест
+4) серия
+5) симуляция
+*/
+
 int main()
 {
     setlocale(0, "");
+    SetConsoleCP(866);
+    SetConsoleOutputCP(866);
 
     configureConsole();
     getConsoleWH();
@@ -30,11 +40,19 @@ int main()
     Application application;
     application.Run();
 
+//    _setmode(_fileno(stdout), _O_U16TEXT);
+//    wcout << (wchar_t) 0x2591 << ' ' << (wchar_t) 0x2592 << ' ' << (wchar_t) 0x2593 << "\n";
+//    wcout << (wchar_t) 0x2500 << (wchar_t) 0x2500 << (wchar_t) 0x2500 << "\n";
+//    wcout << (wchar_t) 0x2502 << "\n" << (wchar_t) 0x2502 << "\n" << (wchar_t) 0x2502 << "\n";
+//    wcout << (wchar_t) 0x250C << (wchar_t) 0x2510 << "\n";
+//    wcout << (wchar_t) 0x2514 << (wchar_t) 0x2518 << "\n";
+//    _setmode(_fileno(stdout), _O_TEXT);
+
 //    auto start = chrono::high_resolution_clock::now();
 //    this_thread::sleep_for(1528ms);
 //    auto end = chrono::high_resolution_clock::now();
 //    chrono::duration<double> duration = end - start;
-//    cout << "Р’СЂРµРјСЏ РІС‹РїРѕР»РЅРµРЅРёСЏ: " << round(duration.count() * 100) / 100 << " СЃРµРєСѓРЅРґ" << std::endl;
+//    cout << "Время выполнения: " << round(duration.count() * 100) / 100 << " секунд" << std::endl;
 
 //    fs::path CONSTANT_PATH = "Constant-Path";
 //    int filesAmount = 1;
@@ -43,7 +61,7 @@ int main()
 
 //    for (int i = 100; ~i; --i) {
 //        string s = to_string(i);
-//        cout << "\rРїСЂРёРІРµС‚: " << i << flush;
+//        cout << "\rпривет: " << i << flush;
 //        this_thread::sleep_for(50ms);
 //    }
 
@@ -53,7 +71,7 @@ int main()
 //    ostringstream oss;
 //    oss << put_time(localtime(&now_time), "%Y-%m-%d %H:%M:%S");
 //    string humanTime = oss.str();
-//    cout << "\nРўРµРєСѓС‰Р°СЏ РґР°С‚Р° Рё РІСЂРµРјСЏ: " << humanTime << std::endl;
+//    cout << "\nТекущая дата и время: " << humanTime << std::endl;
 
 //    fs::path a = "a";
 //    fs::path b = "b";
@@ -76,7 +94,7 @@ void configureConsole()
 {
     int suitableFontSize = 40;
 
-    // СѓСЃС‚Р°РЅРѕРІРєР° СЂР°Р·РјРµСЂР° С€СЂРёС„С‚Р° РІ РєРѕРЅСЃРѕР»Рё
+    // установка размера шрифта в консоли
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_FONT_INFOEX fontInfo;
     fontInfo.cbSize = sizeof(fontInfo);
@@ -84,7 +102,7 @@ void configureConsole()
     fontInfo.dwFontSize.Y = suitableFontSize;
     SetCurrentConsoleFontEx(hConsole, TRUE, &fontInfo);
 
-    // СѓСЃС‚Р°РЅРѕРІРєР° СЂР°Р·РјРµСЂР° Р±СѓС„РµСЂР° СЌРєСЂР°РЅР° СЂР°РІРЅС‹Рј С‚РµРєСѓС‰РµРјСѓ СЂР°Р·РјРµСЂСѓ РѕРєРЅР°
+    // установка размера буфера экрана равным текущему размеру окна
     getConsoleWH();
     COORD newScreenBufferSize;
     newScreenBufferSize.X = ::nConsoleWidth;
@@ -94,16 +112,16 @@ void configureConsole()
         throw runtime_error(errorMsg.c_str());
     }
 
-    // РѕС‚РєСЂС‹С‚РёРµ РєРѕРЅСЃРѕР»Рё РІРѕ РІРµСЃСЊ СЌРєСЂР°РЅ
+    // открытие консоли во весь экран
     ::SendMessage(::GetConsoleWindow(), WM_SYSKEYDOWN, VK_RETURN, 0x20000000);
 
-    // СЃРґРµР»Р°С‚СЊ РєСѓСЂСЃРѕСЂ РЅРµРІРёРґРёРјС‹Рј
+    // сделать курсор невидимым
     CONSOLE_CURSOR_INFO structCursorInfo;
     GetConsoleCursorInfo(hConsole, &structCursorInfo);
     structCursorInfo.bVisible = FALSE;
     SetConsoleCursorInfo(hConsole, &structCursorInfo);
 
-    // С‡С‚РµРЅРёРµ С‚РµРєСѓС‰РµРіРѕ СЂРµР¶РёРјР° РєРѕРЅСЃРѕР»Рё
+    // чтение текущего режима консоли
     GetConsoleMode(hConsole, &::prev_mode);
 }
 

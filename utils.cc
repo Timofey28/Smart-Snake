@@ -96,10 +96,10 @@ int explainClickInfo(
         {
             isCorner = true;
         }
-        else if (relX == 0 && relY == 1 || relX == 1 && relY == 0 ||  // Р»РµРІС‹Рµ РІРµСЂС…РЅРёРµ
-                 relX == 0 && relY == fieldHeight - 2 || relX == 1 && relY == fieldHeight - 1 ||  // Р»РµРІС‹Рµ РЅРёР¶РЅРёРµ
-                 relX == fieldWidth - 2 && relY == fieldHeight - 1 || relX == fieldWidth - 1 && relY == fieldHeight - 2 || // РїСЂР°РІС‹Рµ РЅРёР¶РЅРёРµ
-                 relX == fieldWidth - 2 && relY == 0 || relX == fieldWidth - 1 && relY == 1)  // РїСЂР°РІС‹Рµ РІРµСЂС…РЅРёРµ
+        else if (relX == 0 && relY == 1 || relX == 1 && relY == 0 ||  // левые верхние
+                 relX == 0 && relY == fieldHeight - 2 || relX == 1 && relY == fieldHeight - 1 ||  // левые нижние
+                 relX == fieldWidth - 2 && relY == fieldHeight - 1 || relX == fieldWidth - 1 && relY == fieldHeight - 2 || // правые нижние
+                 relX == fieldWidth - 2 && relY == 0 || relX == fieldWidth - 1 && relY == 1)  // правые верхние
         {
             isAdjacentToCorner = true;
         }
