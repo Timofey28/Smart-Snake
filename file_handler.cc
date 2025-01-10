@@ -33,7 +33,6 @@ void FileHandler::SaveInitialData(
         snakeTurnsStacked.pop();
     }
     fout << '\n';
-    cout << "размер field: " << field.size();
     for (int i = 0; i < field.size(); ++i) fout << field[i].type;
 
     fout.close();

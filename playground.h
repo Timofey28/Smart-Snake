@@ -30,6 +30,7 @@ public:
     void ReinitializeStartingData();
     void CalculateNextIteration();
     bool GameOn() { return gameOn_; }
+    bool Victory() { return victory_; }
     void SaveLastGame();
 
 private:
@@ -58,7 +59,7 @@ private:
     std::vector<int> currentPassCells_, initialCurrentPassCells_;  // to choose a random cell for food
     Direction currentDirection_, initialCurrentDirection_;
     std::queue<Direction> snakeTurns_, initialSnakeTurns_;
-    bool gameOn_;
+    bool gameOn_, victory_;
     int foodIndex_, snakeHeadIndex_, snakeAssIndex_, initialSnakeHeadIndex_, initialSnakeAssIndex_;
 
     Validation validation;

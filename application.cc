@@ -51,14 +51,14 @@ void Application::CreateGames()
 
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
-    cout << "\n\tÂðåìÿ âûïîëíåíèÿ: " << round(duration.count() * 100) / 100 << " ñåêóíä\n";
+    cout << "\n\tÐ’Ñ€ÐµÐ¼Ñ Ð²Ñ‹Ð¿Ð¾Ð»Ð½ÐµÐ½Ð¸Ñ: " << round(duration.count() * 100) / 100 << " ÑÐµÐºÑƒÐ½Ð´\n";
 }
 
 int Application::ChooseOption()
 {
     system("cls");
-    cout << "\n\t1. Ñîçäàòü èãðû";
-    cout << "\n\t2. Ïîñìîòðåòü èãðó";
+    cout << "\n\t1. Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ Ð¸Ð³Ñ€Ñ‹";
+    cout << "\n\t2. ÐŸÐ¾ÑÐ¼Ð¾Ñ‚Ñ€ÐµÑ‚ÑŒ Ð¸Ð³Ñ€Ñƒ";
 
     unordered_set<int> POSSIBLE_OPTIONS = {'1', '2', 27};
     int option;

@@ -56,7 +56,7 @@ public:
         Direction& startingDirection, Direction& crashDirection,
         int& startingsnakeLength, int& finalSnakeLength, int& maxPossibleSnakeLength,
         int& firstFoodIndex,
-        vector<int>& gameIndexes
+        std::vector<int>& gameIndexes
     );
 
 private:

@@ -17,6 +17,6 @@ void Game::Initialize(fs::path gameFilePath)
         startingDirection_, crashDirection_,
         startingSnakeLength_, finalSnakeLength_, maxPossibleSnakeLength_,
         foodIndex_,
-        vector<int> gameIndexes
+        gameIndexes
     );
 }

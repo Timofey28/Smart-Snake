@@ -21,11 +21,11 @@ void setColor(int color)
 }
 
 /*
-1) эксперимент
-2) сессия
-3) тест
-4) серия
-5) симуляция
+1) СЌРєСЃРїРµСЂРёРјРµРЅС‚
+2) СЃРµСЃСЃРёСЏ
+3) С‚РµСЃС‚
+4) СЃРµСЂРёСЏ
+5) СЃРёРјСѓР»СЏС†РёСЏ
 */
 
 int main()
@@ -52,7 +52,7 @@ int main()
 //    this_thread::sleep_for(1528ms);
 //    auto end = chrono::high_resolution_clock::now();
 //    chrono::duration<double> duration = end - start;
-//    cout << "Время выполнения: " << round(duration.count() * 100) / 100 << " секунд" << std::endl;
+//    cout << "Р’СЂРµРјСЏ РІС‹РїРѕР»РЅРµРЅРёСЏ: " << round(duration.count() * 100) / 100 << " СЃРµРєСѓРЅРґ" << std::endl;
 
 //    fs::path CONSTANT_PATH = "Constant-Path";
 //    int filesAmount = 1;
@@ -61,7 +61,7 @@ int main()
 
 //    for (int i = 100; ~i; --i) {
 //        string s = to_string(i);
-//        cout << "\rпривет: " << i << flush;
+//        cout << "\rРїСЂРёРІРµС‚: " << i << flush;
 //        this_thread::sleep_for(50ms);
 //    }
 
@@ -71,7 +71,7 @@ int main()
 //    ostringstream oss;
 //    oss << put_time(localtime(&now_time), "%Y-%m-%d %H:%M:%S");
 //    string humanTime = oss.str();
-//    cout << "\nТекущая дата и время: " << humanTime << std::endl;
+//    cout << "\nРўРµРєСѓС‰Р°СЏ РґР°С‚Р° Рё РІСЂРµРјСЏ: " << humanTime << std::endl;
 
 //    fs::path a = "a";
 //    fs::path b = "b";
@@ -94,7 +94,7 @@ void configureConsole()
 {
     int suitableFontSize = 40;
 
-    // установка размера шрифта в консоли
+    // СѓСЃС‚Р°РЅРѕРІРєР° СЂР°Р·РјРµСЂР° С€СЂРёС„С‚Р° РІ РєРѕРЅСЃРѕР»Рё
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_FONT_INFOEX fontInfo;
     fontInfo.cbSize = sizeof(fontInfo);
@@ -102,7 +102,7 @@ void configureConsole()
     fontInfo.dwFontSize.Y = suitableFontSize;
     SetCurrentConsoleFontEx(hConsole, TRUE, &fontInfo);
 
-    // установка размера буфера экрана равным текущему размеру окна
+    // СѓСЃС‚Р°РЅРѕРІРєР° СЂР°Р·РјРµСЂР° Р±СѓС„РµСЂР° СЌРєСЂР°РЅР° СЂР°РІРЅС‹Рј С‚РµРєСѓС‰РµРјСѓ СЂР°Р·РјРµСЂСѓ РѕРєРЅР°
     getConsoleWH();
     COORD newScreenBufferSize;
     newScreenBufferSize.X = ::nConsoleWidth;
@@ -112,16 +112,16 @@ void configureConsole()
         throw runtime_error(errorMsg.c_str());
     }
 
-    // открытие консоли во весь экран
+    // РѕС‚РєСЂС‹С‚РёРµ РєРѕРЅСЃРѕР»Рё РІРѕ РІРµСЃСЊ СЌРєСЂР°РЅ
     ::SendMessage(::GetConsoleWindow(), WM_SYSKEYDOWN, VK_RETURN, 0x20000000);
 
-    // сделать курсор невидимым
+    // СЃРґРµР»Р°С‚СЊ РєСѓСЂСЃРѕСЂ РЅРµРІРёРґРёРјС‹Рј
     CONSOLE_CURSOR_INFO structCursorInfo;
     GetConsoleCursorInfo(hConsole, &structCursorInfo);
     structCursorInfo.bVisible = FALSE;
     SetConsoleCursorInfo(hConsole, &structCursorInfo);
 
-    // чтение текущего режима консоли
+    // С‡С‚РµРЅРёРµ С‚РµРєСѓС‰РµРіРѕ СЂРµР¶РёРјР° РєРѕРЅСЃРѕР»Рё
     GetConsoleMode(hConsole, &::prev_mode);
 }
 

@@ -112,6 +112,7 @@ void Playground::ReinitializeStartingData()
 
     // game calculation
     gameOn_ = true;
+    victory_ = false;
     foodIndex_ = -1;
     snakeHeadIndex_ = initialSnakeHeadIndex_;
     snakeAssIndex_ = initialSnakeAssIndex_;
@@ -129,7 +130,7 @@ void Playground::CalculateNextIteration()
     }
     field_[foodIndex_].type = CellType::FOOD;
 
-//    // Œ·˘‡ˇ ËÌÙ‡ ÒÎÂ‚‡ Ò‚ÂıÛ
+//    // –û–±—â–∞—è –∏–Ω—Ñ–∞ —Å–ª–µ–≤–∞ —Å–≤–µ—Ä—Ö—É
 //    ostringstream oss;
 //    oss << "snakeHeadIndex_: (" << snakeHeadIndex_ % width_ << ", " << snakeHeadIndex_ / width_ << ")\nfoodIndex_: (";
 //    oss << foodIndex_ % width_ << ", " << foodIndex_ / width_ << ")\nnodes_[snakeHeadIndex_]: ";
@@ -138,22 +139,28 @@ void Playground::CalculateNextIteration()
 //    oss << string(30, ' ');
 //    draw::smth(oss.str());
 
-//    // «‡ÔËÒ¸ ÁÌ‡˜ÂÌËÈ nodes_ ‚ Ù‡ÈÎ
-//    ofstream file("log.txt", ios::app);
-//    file << "\n\n";
-//    for (int i = 1; i < height_ - 1; ++i) {
-//        file << "\n\n";
-//        for (int j = 1; j < width_ - 1; ++j) {
-//            ostringstream foss;
-//            for (auto x : nodes_[i * width_ + j]) {
-//                foss << "(" << x % width_ << "," << x / width_ << ")";
-//            }
-//            int w = 25;
-//            if (j == 1 || j == width_ - 2) w = 20;
-//            file << setw(w) << foss.str();
-//        }
-//    }
-//    file.close();
+    // –ó–∞–ø–∏—Å—å –∑–Ω–∞—á–µ–Ω–∏–π nodes_ –≤ —Ñ–∞–π–ª
+    ofstream file("log.txt", ios::app);
+    file << "\n\n\n";
+    int cellIndex, x, y;
+    for (int i = 1; i < height_ - 1; ++i) {
+        file << "\n\n";
+        for (int j = 1; j < width_ - 1; ++j) {
+            ostringstream foss;
+            cellIndex = i * width_ + j;
+            for (auto node : nodes_[cellIndex]) {
+                x = node % width_; y = node / width_;
+                if (cellIndex - 1 == node || x - j > 1) foss << 'l';
+                else if (cellIndex + 1 == node || j - x > 1) foss << 'r';
+                else if (cellIndex - width_ == node || y - i > 1) foss << 'u';
+                else if (cellIndex + width_ == node || i - y > 1) foss << 'd';
+            }
+            if (!nodes_[cellIndex].size()) foss << "...";
+            int w = 7;
+            file << setw(w) << foss.str();
+        }
+    }
+    file.close();
 
     // Calculate next snake head position
     vector<int> shortestPathToFood = Algorithm::FindShortestPath(nodes_, snakeHeadIndex_, foodIndex_);
@@ -183,11 +190,13 @@ void Playground::CalculateNextIteration()
         }
     }
 
+    // collision
     if (field_[nextCellIndex].type == CellType::WALL || field_[nextCellIndex].type == CellType::SNAKE_BODY && nextCellIndex != snakeAssIndex_) {
         gameOn_ = false;
         crashDirection_ = nextDirection;
         return;
     }
+
     headAndFoodIndexes_.push_back(nextCellIndex);
 
     // Update currentPassCells_ and nodes_
@@ -214,28 +223,30 @@ void Playground::CalculateNextIteration()
     field_[nextCellIndex].type = CellType::SNAKE_HEAD;
 
     if (gotFood) {
-        foodIndex_ = currentPassCells_[randomUnder(currentPassCells_.size())];
-        field_[foodIndex_].type = CellType::FOOD;
+        if (currentPassCells_.size()) {
+            foodIndex_ = currentPassCells_[randomUnder(currentPassCells_.size())];
+            field_[foodIndex_].type = CellType::FOOD;
+            headAndFoodIndexes_.push_back(foodIndex_);
+        }
 
         if (snakeTurns_.size() == 1) {  // snake length becomes 2
             iter = find(nodes_[nextCellIndex].begin(), nodes_[nextCellIndex].end(), snakeHeadIndex_);
             nodes_[nextCellIndex].erase(iter);  // so that it couldn't take a 180 degree turn and continue from its ass
         }
-
-        headAndFoodIndexes_.push_back(foodIndex_);
     }
     else {  // field_[nextCellIndex].type == (CellType::PASS) || nextCellIndex == snakeAssIndex_
         int nextAssIndex = __FindCellFromMovementDirection(snakeAssIndex_, snakeTurns_.front());
         snakeTurns_.pop();
 
-        if (snakeAssIndex_ != nextCellIndex) {
+        if (snakeAssIndex_ != nextCellIndex) {  // head does not go to previous ass spot
             field_[snakeAssIndex_].type = CellType::PASS;
             currentPassCells_.push_back(snakeAssIndex_);
         }
+        nodes_[nextAssIndex].clear();
         for (auto& index : __GetCellVicinityByIndexes(nextAssIndex)) {
             if (field_[index].type == CellType::PASS ||
                 field_[index].type == CellType::FOOD ||
-                field_[index].type == CellType::SNAKE_HEAD && snakeTurns_.size() > 1)
+                field_[index].type == CellType::SNAKE_HEAD && snakeTurns_.size() > 1)  // ... && snake length is at least 3
             {
                 iter = find(nodes_[nextAssIndex].begin(), nodes_[nextAssIndex].end(), index);
                 if (iter == nodes_[nextAssIndex].end()) nodes_[nextAssIndex].push_back(index);
@@ -244,15 +255,27 @@ void Playground::CalculateNextIteration()
                 if (iter == nodes_[index].end()) nodes_[index].push_back(nextAssIndex);
             }
         }
+        int newSecondLastIndex = __FindCellFromMovementDirection(nextAssIndex, snakeTurns_.front());
+        iter = find(nodes_[nextAssIndex].begin(), nodes_[nextAssIndex].end(), newSecondLastIndex);
+        if (iter == nodes_[nextAssIndex].end()) nodes_[nextAssIndex].push_back(newSecondLastIndex);
+
         snakeAssIndex_ = nextAssIndex;
     }
 
     currentDirection_ = nextDirection;
     snakeHeadIndex_ = nextCellIndex;
 
-//    _getch();
-//    draw::Field(field_, width_);
-//    for (int i = 1; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]], Color::BEIGE_ON_BLUE);  // ÔÛÚ¸ Í Â‰Â
+    // –æ—Ç—Ä–∏—Å–æ–≤–∫–∞ –ø–æ–ª—è –∏ –ø—É—Ç–∏ –∫ –µ–¥–µ
+    if (shortestPathToFood.size()) {
+        _getch();
+        draw::Field(field_, width_);
+        for (int i = 1; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]], Color::BEIGE_ON_BLUE);
+    }
+
+    if (!currentPassCells_.size()) {
+        gameOn_ = false;
+        victory_ = true;
+    }
 }
 
 void Playground::SaveLastGame()
@@ -327,54 +350,64 @@ vector<int> Playground::__GetCellVicinityByIndexes(int cellIndex)
 
 int Playground::__GetPortalExitIndex(int portalEnterIndex, Direction movementDirection)
 {
-    int possibleExitIndex = portalEnterIndex, nextCellIndex;
-    int x = portalEnterIndex % width_,
-        y = portalEnterIndex / width_;
+    assert(field_[portalEnterIndex].type == CellType::PORTAL);
+    int possibleExitIndex, nextCellIndex;
+    int enterX = portalEnterIndex % width_,
+        enterY = portalEnterIndex / width_;
 
     if (movementDirection == Direction::LEFT) {
-        nextCellIndex = y * width_ + ++x;
-        while (x < width_) {
-            if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
-            else {
-                possibleExitIndex = nextCellIndex;
-                nextCellIndex = y * width_ + ++x;
+        nextCellIndex = enterY * width_ + (enterX - 1);
+        if (portalEnterIndex % width_) {  // check if portal is correct for this orientation (horizontal)
+            while (nextCellIndex % width_) {
+                if (field_[nextCellIndex].type != CellType::WALL) return -1;
+                nextCellIndex--;
             }
         }
-        return -1;
+        possibleExitIndex = enterY * width_ + (width_ - 1);
+        while (possibleExitIndex != portalEnterIndex) {
+            if (field_[possibleExitIndex].type == CellType::PORTAL) return (possibleExitIndex - 1);
+            possibleExitIndex--;
+        }
     }
     else if (movementDirection == Direction::RIGHT) {
-        nextCellIndex = y * width_ + --x;
-        while (x >= 0) {
-            if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
-            else {
-                possibleExitIndex = nextCellIndex;
-                nextCellIndex = y * width_ + --x;
+        nextCellIndex = enterY * width_ + (enterX + 1);
+        if (portalEnterIndex % width_ < width_ - 1) {  // check if portal is correct for this orientation (horizontal)
+            while (nextCellIndex % width_ < width_ - 1) {
+                if (field_[nextCellIndex].type != CellType::WALL) return -1;
+                nextCellIndex++;
             }
         }
-        return -1;
+        possibleExitIndex = enterY * width_;
+        while (possibleExitIndex != portalEnterIndex) {
+            if (field_[possibleExitIndex].type == CellType::PORTAL) return (possibleExitIndex + 1);
+            possibleExitIndex++;
+        }
     }
     else if (movementDirection == Direction::UP) {
-        nextCellIndex = ++y * width_ + x;
-        while (y < height_) {
-            if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
-            else {
-                possibleExitIndex = nextCellIndex;
-                nextCellIndex = ++y * width_ + x;
-            }
+        nextCellIndex = portalEnterIndex - width_;
+        while (nextCellIndex / width_ > 0) {  // check if portal is correct for this orientation (vertical)
+            if (field_[nextCellIndex].type != CellType::WALL) return -1;
+            nextCellIndex -= width_;
         }
-        return -1;
+        possibleExitIndex = (height_ - 1) * width_ + enterX;
+        while (possibleExitIndex != portalEnterIndex) {
+            if (field_[possibleExitIndex].type == CellType::PORTAL) return (possibleExitIndex - width_);
+            possibleExitIndex -= width_;
+        }
     }
     else {  // movementDirection == Direction::DOWN
-        nextCellIndex = --y * width_ + x;
-        while (y >= 0) {
-            if (field_[nextCellIndex].type == CellType::PORTAL) return possibleExitIndex;
-            else {
-                possibleExitIndex = nextCellIndex;
-                nextCellIndex = --y * width_ + x;
-            }
+        nextCellIndex = portalEnterIndex + width_;
+        while (nextCellIndex / width_ < height_ - 1) {  // check if portal is correct for this orientation (vertical)
+            if (field_[nextCellIndex].type != CellType::WALL) return -1;
+            nextCellIndex += width_;
         }
-        return -1;
+        possibleExitIndex = enterX;
+        while (possibleExitIndex != portalEnterIndex) {
+            if (field_[possibleExitIndex].type == CellType::PORTAL) return (possibleExitIndex + width_);
+            possibleExitIndex += width_;
+        }
     }
+    return -1;
 }
 
 void Playground::__ArrangeFieldElements()
@@ -531,7 +564,10 @@ void Playground::__InitializePlayground()
 {
     // Adjacency list
     nodes_.resize(field_.size());
-    for (int i = 0; i < nodes_.size(); ++i) nodes_[i] = {};
+    for (int i = 0; i < nodes_.size(); ++i) {
+        nodes_[i] = {};
+        nodes_[i].reserve(4);
+    }
     currentPassCells_.clear();
     __FillAdjacencyList();
 
@@ -560,6 +596,15 @@ void Playground::__FillAdjacencyList()
     if (spaceIndex == -1) {
         throw runtime_error("Unable to find space index while filling adjacency list (should be impossible to end up here)");
     }
+
+//    // –≤—ã–≤–æ–¥ —Ç–∏–ø–æ–≤ –∫–ª–µ—Ç–æ–∫ –ø–æ–ª—è
+//    setPosition(0, 0);
+//    setColor(Color::NORMAL);
+//    for (int i = 0; i < field_.size(); ++i) {
+//        cout << toString(field_[i].type) << '\t';
+//        if ((i + 1) % width_ == 0) cout << '\n';
+//    }
+//    _getch();
 
     queue<int> traversalOrder;
     traversalOrder.push(spaceIndex);
@@ -744,22 +789,22 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
     int index, possiblePortalIndex, nextCellIndex;
     if (orientation == Orientation::VERTICAL) {
         assert(axisValue >= 1 && axisValue < width_ - 1);
-        const int x = axisValue;
+        const int X = axisValue;
 
         if (__WholeAxisIsAWall(orientation, axisValue)) {
-            draw::GameCell(field_[x], CellType::WALL);
-            index = (height_ - 1) * width_ + x;
+            draw::GameCell(field_[X], CellType::WALL);
+            index = (height_ - 1) * width_ + X;
             draw::GameCell(field_[index], CellType::WALL);
             return;
         }
 
         int y = 0;
-        possiblePortalIndex = y * width_ + x;
+        possiblePortalIndex = y * width_ + X;
         while (true) {
             if (++y >= height_) {
                 throw runtime_error("Unable to calculate portal entry.");
             }
-            nextCellIndex = y * width_ + x;
+            nextCellIndex = y * width_ + X;
             if (field_[nextCellIndex].type != CellType::WALL) {
                 if (y != 1) draw::GameCell(field_[possiblePortalIndex], CellType::PORTAL);
                 break;
@@ -771,12 +816,12 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
         }
 
         y = height_ - 1;
-        possiblePortalIndex = y * width_ + x;
+        possiblePortalIndex = y * width_ + X;
         while (true) {
             if (--y < 0) {
                 throw runtime_error("Unable to calculate portal entry.");
             }
-            nextCellIndex = y * width_ + x;
+            nextCellIndex = y * width_ + X;
             if (field_[nextCellIndex].type != CellType::WALL) {
                 if (y != height_ - 2) draw::GameCell(field_[possiblePortalIndex], CellType::PORTAL);
                 break;
@@ -789,23 +834,23 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
     }
     else {  // orientation == Orientation::HORIZONTAL
         assert(axisValue >= 1 && axisValue < height_ - 1);
-        const int y = axisValue;
+        const int Y = axisValue;
 
         if (__WholeAxisIsAWall(orientation, axisValue)) {
-            index = y * width_;
+            index = Y * width_;
             draw::GameCell(field_[index], CellType::WALL);
-            index = y * width_ + (width_ - 1);
+            index = Y * width_ + (width_ - 1);
             draw::GameCell(field_[index], CellType::WALL);
             return;
         }
 
         int x = 0;
-        possiblePortalIndex = y * width_ + x;
+        possiblePortalIndex = Y * width_ + x;
         while (true) {
             if (++x >= width_) {
                 throw runtime_error("Unable to calculate portal entry.");
             }
-            nextCellIndex = y * width_ + x;
+            nextCellIndex = Y * width_ + x;
             if (field_[nextCellIndex].type != CellType::WALL && field_[nextCellIndex].type != CellType::PORTAL) {
                 if (x != 1) draw::GameCell(field_[possiblePortalIndex], CellType::PORTAL);
                 break;
@@ -817,12 +862,12 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
         }
 
         x = width_ - 1;
-        possiblePortalIndex = y * width_ + x;
+        possiblePortalIndex = Y * width_ + x;
         while (true) {
             if (--x < 0) {
                 throw runtime_error("Unable to calculate portal entry.");
             }
-            nextCellIndex = y * width_ + x;
+            nextCellIndex = Y * width_ + x;
             if (field_[nextCellIndex].type != CellType::WALL && field_[nextCellIndex].type != CellType::PORTAL) {
                 if (x != width_ - 2) draw::GameCell(field_[possiblePortalIndex], CellType::PORTAL);
                 break;

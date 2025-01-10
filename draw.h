@@ -2,6 +2,9 @@
 
 #include <iostream>
 #include <vector>
+#include <windows.h>
+#include <stdexcept>
+#include <cassert>
 #include <fcntl.h>
 #include "utils.h"
 
@@ -35,6 +38,9 @@ namespace draw
         void ClosedSpaces();
         void LoopedSnake();
         void NoPossibleStart();
+
+        void Victory();
+
         void Remove();
 
     }  // namespace alert

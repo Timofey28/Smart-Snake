@@ -9,8 +9,9 @@ obj/
 
 # Service
 *.txt
+*jpg
 toANSI.bat
 toUTF8.bat
 
-# Data
+# AppData
 Games/
