@@ -47,6 +47,7 @@ enum Color {
 
     SNAKE_EYES = 80,
     BEIGE_ON_BLUE = 19,
+    BLACK_ON_GREEN = 2*16,
 };
 
 enum CellType

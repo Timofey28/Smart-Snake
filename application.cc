@@ -39,14 +39,14 @@ void Application::CreateGames()
 
     auto start = chrono::high_resolution_clock::now();
 
+    draw::ProgressBar(0, gamesAmount_);
     for (int gameNumber = 1; gameNumber <= gamesAmount_; ++gameNumber) {
         playground_.ReinitializeStartingData();
         while (playground_.GameOn()) {
             playground_.CalculateNextIteration();
-//            this_thread::sleep_for(200ms);
         }
         playground_.SaveLastGame();
-//        _getch();
+        draw::ProgressBar(gameNumber, gamesAmount_);
     }
 
     auto end = chrono::high_resolution_clock::now();

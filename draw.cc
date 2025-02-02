@@ -4,6 +4,7 @@ using namespace std;
 
 
 int PointOfNoReturn;
+static int previousBarValue = -1;
 
 void setPosition(short x, short y)
 {
@@ -40,8 +41,16 @@ void draw::GameCell(const Cell& cell, int stretch)
 {
     if (cell.num == PointOfNoReturn) return;
     setPosition(cell.realX, cell.realY);
-    setColor(CELL_COLOR[cell.type]);
-    cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
+    if (cell.type == CellType::PASS) {
+        setColor(Color::NORMAL);
+        _setmode(_fileno(stdout), _O_U16TEXT);
+        wcout << wstring(min(stretch, PointOfNoReturn - cell.num) * 2, (wchar_t) 0x2591);
+        _setmode(_fileno(stdout), _O_TEXT);
+    }
+    else {
+        setColor(CELL_COLOR[cell.type]);
+        cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
+    }
 }
 
 void draw::GameCell(Cell& cell, CellType cellType, int stretch)
@@ -50,8 +59,16 @@ void draw::GameCell(Cell& cell, CellType cellType, int stretch)
     if (cell.type != cellType) {
         cell.type = cellType;
         setPosition(cell.realX, cell.realY);
-        setColor(CELL_COLOR[cell.type]);
-        cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
+        if (cell.type == CellType::PASS) {
+            setColor(Color::NORMAL);
+            _setmode(_fileno(stdout), _O_U16TEXT);
+            wcout << wstring(min(stretch, PointOfNoReturn - cell.num) * 2, (wchar_t) 0x2591);
+            _setmode(_fileno(stdout), _O_TEXT);
+        }
+        else {
+            setColor(CELL_COLOR[cell.type]);
+            cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
+        }
     }
 }
 
@@ -109,7 +126,7 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
     int maxFieldHeight = min(91, nConsoleHeight - 2);
     PointOfNoReturn = nConsoleWidth / 2 * nConsoleHeight - 1;
 //    fieldWidth = 10;
-//    fieldHeight = 10;
+//    fieldHeight = 12;
 //    return;
 
     string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";
@@ -182,10 +199,10 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
 
 void draw::EnterGamesAmount(int& gamesAmount)
 {
-//    gamesAmount = 1;
+//    gamesAmount = 1000;
 //    return;
 
-    int gamesLimit = 100;
+    int gamesLimit = 1000;
     string phrase = "Введи количество игр (1 - " + to_string(gamesLimit) + ") => ";
     string input;
     int number;
@@ -217,6 +234,52 @@ void draw::__ClearInputAndMoveCursorBack(int phraseLength, int inputLength)
     setPosition(phraseLength, posY - 1);
     cout << string(inputLength, ' ');
     setPosition(phraseLength, posY - 1);
+}
+
+void draw::ProgressBar(int done, int total)
+{
+    int rowIndex = 3;
+    int places = nConsoleWidth - 35;
+
+    if (done == total) {
+        if (previousBarValue == -1) {
+            setPosition(8, rowIndex);
+            setColor(Color::BLACK_ON_GREEN);
+            cout << "Progress: [100%]";
+            setColor(Color::NORMAL);
+            cout << " [" << string(places, '#') << "]";
+        }
+        else {
+            setPosition(19, rowIndex);
+            setColor(Color::BLACK_ON_GREEN);
+            cout << "100";
+            setPosition(26 + previousBarValue, rowIndex);
+            setColor(Color::NORMAL);
+            cout << string(places - previousBarValue, '#');
+            previousBarValue = -1;
+        }
+        return;
+    }
+
+    int hashes = round((float) done * places / total);
+    int percent = round((float) done / total * 100);
+
+    if (previousBarValue == -1) {
+        setPosition(8, rowIndex);
+        setColor(Color::BLACK_ON_GREEN);
+        cout << "Progress: [" << setw(3) << percent << "%]";
+        setColor(Color::NORMAL);
+        cout << " [" << string(hashes, '#') << string(places - hashes, '.') << "]";
+    }
+    else {
+        setPosition(19, rowIndex);
+        setColor(Color::BLACK_ON_GREEN);
+        cout << setw(3) << percent;
+        setPosition(26 + previousBarValue, rowIndex);
+        setColor(Color::NORMAL);
+        cout << string(hashes - previousBarValue, '#');
+    }
+    previousBarValue = hashes;
 }
 
 

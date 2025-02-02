@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <fcntl.h>
+#include <iomanip>
 #include "utils.h"
 
 
@@ -27,6 +28,8 @@ namespace draw
     void EnterFieldDimensions(int& fieldWidth, int& fieldHeight);
     void EnterGamesAmount(int& gamesAmount);
     void __ClearInputAndMoveCursorBack(int phraseLength, int inputLength);
+
+    void ProgressBar(int done, int total);
 
     void smth(std::string s, int lineNo = 0);
     void GameCell(const Cell& cell, Color color);

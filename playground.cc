@@ -139,28 +139,28 @@ void Playground::CalculateNextIteration()
 //    oss << string(30, ' ');
 //    draw::smth(oss.str());
 
-    // Запись значений nodes_ в файл
-    ofstream file("log.txt", ios::app);
-    file << "\n\n\n";
-    int cellIndex, x, y;
-    for (int i = 1; i < height_ - 1; ++i) {
-        file << "\n\n";
-        for (int j = 1; j < width_ - 1; ++j) {
-            ostringstream foss;
-            cellIndex = i * width_ + j;
-            for (auto node : nodes_[cellIndex]) {
-                x = node % width_; y = node / width_;
-                if (cellIndex - 1 == node || x - j > 1) foss << 'l';
-                else if (cellIndex + 1 == node || j - x > 1) foss << 'r';
-                else if (cellIndex - width_ == node || y - i > 1) foss << 'u';
-                else if (cellIndex + width_ == node || i - y > 1) foss << 'd';
-            }
-            if (!nodes_[cellIndex].size()) foss << "...";
-            int w = 7;
-            file << setw(w) << foss.str();
-        }
-    }
-    file.close();
+//    // Запись значений nodes_ в файл
+//    ofstream file("log.txt", ios::app);
+//    file << "\n\n\n";
+//    int cellIndex, x, y;
+//    for (int i = 1; i < height_ - 1; ++i) {
+//        file << "\n\n";
+//        for (int j = 1; j < width_ - 1; ++j) {
+//            ostringstream foss;
+//            cellIndex = i * width_ + j;
+//            for (auto node : nodes_[cellIndex]) {
+//                x = node % width_; y = node / width_;
+//                if (cellIndex - 1 == node || x - j > 1) foss << 'l';
+//                else if (cellIndex + 1 == node || j - x > 1) foss << 'r';
+//                else if (cellIndex - width_ == node || y - i > 1) foss << 'u';
+//                else if (cellIndex + width_ == node || i - y > 1) foss << 'd';
+//            }
+//            if (!nodes_[cellIndex].size()) foss << "...";
+//            int w = 7;
+//            file << setw(w) << foss.str();
+//        }
+//    }
+//    file.close();
 
     // Calculate next snake head position
     vector<int> shortestPathToFood = Algorithm::FindShortestPath(nodes_, snakeHeadIndex_, foodIndex_);
@@ -234,7 +234,7 @@ void Playground::CalculateNextIteration()
             nodes_[nextCellIndex].erase(iter);  // so that it couldn't take a 180 degree turn and continue from its ass
         }
     }
-    else {  // field_[nextCellIndex].type == (CellType::PASS) || nextCellIndex == snakeAssIndex_
+    else {  // field_[nextCellIndex].type == CellType::PASS || nextCellIndex == snakeAssIndex_
         int nextAssIndex = __FindCellFromMovementDirection(snakeAssIndex_, snakeTurns_.front());
         snakeTurns_.pop();
 
@@ -265,12 +265,12 @@ void Playground::CalculateNextIteration()
     currentDirection_ = nextDirection;
     snakeHeadIndex_ = nextCellIndex;
 
-    // отрисовка поля и пути к еде
-    if (shortestPathToFood.size()) {
-        _getch();
-        draw::Field(field_, width_);
-        for (int i = 1; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]], Color::BEIGE_ON_BLUE);
-    }
+//    // отрисовка поля и пути к еде
+//    if (shortestPathToFood.size()) {
+//        _getch();
+//        draw::Field(field_, width_);
+//        for (int i = 1; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]], Color::BEIGE_ON_BLUE);
+//    }
 
     if (!currentPassCells_.size()) {
         gameOn_ = false;
@@ -326,7 +326,10 @@ int Playground::__FindCellFromMovementDirection(int cellIndex, Direction movemen
     else if (movementDirection == Direction::UP) cellIndex -= width_;
     else cellIndex += width_;
 
-    if (field_[cellIndex].type == CellType::PORTAL) cellIndex = __GetPortalExitIndex(cellIndex, movementDirection);
+    if (field_[cellIndex].type == CellType::PORTAL) {
+        int possibleCellIndex = __GetPortalExitIndex(cellIndex, movementDirection);
+        if (possibleCellIndex != -1) return possibleCellIndex;
+    }
     return cellIndex;
 }
 
@@ -359,51 +362,66 @@ int Playground::__GetPortalExitIndex(int portalEnterIndex, Direction movementDir
         nextCellIndex = enterY * width_ + (enterX - 1);
         if (portalEnterIndex % width_) {  // check if portal is correct for this orientation (horizontal)
             while (nextCellIndex % width_) {
-                if (field_[nextCellIndex].type != CellType::WALL) return -1;
+                if (field_[nextCellIndex].type != CellType::WALL &&
+                    field_[nextCellIndex].type != CellType::PORTAL) return -1;
                 nextCellIndex--;
             }
         }
         possibleExitIndex = enterY * width_ + (width_ - 1);
         while (possibleExitIndex != portalEnterIndex) {
-            if (field_[possibleExitIndex].type == CellType::PORTAL) return (possibleExitIndex - 1);
+            if (field_[possibleExitIndex].type == CellType::PORTAL &&
+                field_[possibleExitIndex - 1].type != CellType::PORTAL &&
+                field_[possibleExitIndex - 1].type != CellType::WALL) return (possibleExitIndex - 1);
             possibleExitIndex--;
         }
     }
+
     else if (movementDirection == Direction::RIGHT) {
         nextCellIndex = enterY * width_ + (enterX + 1);
         if (portalEnterIndex % width_ < width_ - 1) {  // check if portal is correct for this orientation (horizontal)
             while (nextCellIndex % width_ < width_ - 1) {
-                if (field_[nextCellIndex].type != CellType::WALL) return -1;
+                if (field_[nextCellIndex].type != CellType::WALL &&
+                    field_[nextCellIndex].type != CellType::PORTAL) return -1;
                 nextCellIndex++;
             }
         }
         possibleExitIndex = enterY * width_;
         while (possibleExitIndex != portalEnterIndex) {
-            if (field_[possibleExitIndex].type == CellType::PORTAL) return (possibleExitIndex + 1);
+            if (field_[possibleExitIndex].type == CellType::PORTAL &&
+                field_[possibleExitIndex + 1].type != CellType::PORTAL &&
+                field_[possibleExitIndex + 1].type != CellType::WALL) return (possibleExitIndex + 1);
             possibleExitIndex++;
         }
     }
+
     else if (movementDirection == Direction::UP) {
         nextCellIndex = portalEnterIndex - width_;
         while (nextCellIndex / width_ > 0) {  // check if portal is correct for this orientation (vertical)
-            if (field_[nextCellIndex].type != CellType::WALL) return -1;
+            if (field_[nextCellIndex].type != CellType::WALL &&
+                field_[nextCellIndex].type != CellType::PORTAL) return -1;
             nextCellIndex -= width_;
         }
         possibleExitIndex = (height_ - 1) * width_ + enterX;
         while (possibleExitIndex != portalEnterIndex) {
-            if (field_[possibleExitIndex].type == CellType::PORTAL) return (possibleExitIndex - width_);
+            if (field_[possibleExitIndex].type == CellType::PORTAL &&
+                field_[possibleExitIndex - width_].type != CellType::PORTAL &&
+                field_[possibleExitIndex - width_].type != CellType::WALL) return (possibleExitIndex - width_);
             possibleExitIndex -= width_;
         }
     }
+
     else {  // movementDirection == Direction::DOWN
         nextCellIndex = portalEnterIndex + width_;
         while (nextCellIndex / width_ < height_ - 1) {  // check if portal is correct for this orientation (vertical)
-            if (field_[nextCellIndex].type != CellType::WALL) return -1;
+            if (field_[nextCellIndex].type != CellType::WALL &&
+                field_[nextCellIndex].type != CellType::PORTAL) return -1;
             nextCellIndex += width_;
         }
         possibleExitIndex = enterX;
         while (possibleExitIndex != portalEnterIndex) {
-            if (field_[possibleExitIndex].type == CellType::PORTAL) return (possibleExitIndex + width_);
+            if (field_[possibleExitIndex].type == CellType::PORTAL &&
+                field_[possibleExitIndex + width_].type != CellType::PORTAL &&
+                field_[possibleExitIndex + width_].type != CellType::WALL) return (possibleExitIndex + width_);
             possibleExitIndex += width_;
         }
     }
