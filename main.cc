@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <stdexcept>
 #include "application.h"
+#include "utils.h"
 
 #include <bits/stdc++.h>
 namespace fs = std::filesystem;
@@ -11,6 +12,7 @@ using namespace std;
 int nConsoleWidth, nConsoleHeight;
 DWORD prev_mode;
 
+void initializeBase93Map();
 void configureConsole();
 void getConsoleWH();
 
@@ -34,11 +36,18 @@ int main()
     SetConsoleCP(866);
     SetConsoleOutputCP(866);
 
+    initializeBase93Map();
     configureConsole();
     getConsoleWH();
 
     Application application;
     application.Run();
+
+//    std::mt19937 generator(1);
+//    uniform_int_distribution<int> uid{0, 5};
+//    cout << uid(generator) << "\n";
+//    uniform_int_distribution<int> uid2{0, 7};
+//    cout << uid2(generator);
 
 //    _setmode(_fileno(stdout), _O_U16TEXT);
 //    wcout << (wchar_t) 0x2591 << ' ' << (wchar_t) 0x2592 << ' ' << (wchar_t) 0x2593 << "\n";

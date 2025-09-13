@@ -20,3 +20,18 @@ void Game::Initialize(fs::path gameFilePath)
         gameIndexes
     );
 }
+
+void Game::PrintFirstFrame()
+{
+
+}
+
+void Game::PrintNextIteration()
+{
+
+}
+
+void Game::PrintPreviousIteration()
+{
+
+}

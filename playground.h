@@ -26,14 +26,34 @@ public:
     Playground();
     void FieldParametersInputForm();
     void SaveInitialData();
-
+    void SaveLastGame();
     void ReinitializeStartingData();
     void CalculateNextIteration();
     bool GameOn() { return gameOn_; }
     bool Victory() { return victory_; }
-    void SaveLastGame();
 
 private:
+    int width_, height_;  // considering whole field with boundaries
+    int indentX_, indentY_;
+    std::vector<Cell> field_, initialField_;
+    std::vector<std::vector<int>> nodes_, initialNodes_;
+    std::vector<int> currentPassCells_, initialCurrentPassCells_;  // to choose a random cell for food
+    Direction currentDirection_, initialCurrentDirection_;
+    std::queue<Direction> snakeTurns_, initialSnakeTurns_;
+    bool gameOn_, victory_;
+    int foodIndex_, snakeHeadIndex_, snakeAssIndex_, initialSnakeHeadIndex_, initialSnakeAssIndex_;
+
+    Validation validation;
+    FileHandler fileHandler;
+
+    // vars to record the game
+    int firstFoodIndex_;
+    std::vector<int> headAndFoodIndexes_;
+    Direction crashDirection_;
+    int movesAmount_;
+    float averageMovesToFood_;
+
+
     void __InitializeFieldFromDimensions();
     void __ArrangeFieldElements();
     void __AdjustPortals();
@@ -50,23 +70,4 @@ private:
     Direction __FindMovementDirection(int fromIndex, int toIndex);
     int __FindCellFromMovementDirection(int fromIndex, Direction movementDirection);
     std::vector<int> __GetCellVicinityByIndexes(int cellIndex);
-
-
-    int width_, height_;  // considering whole field with boundaries
-    int indentX_, indentY_;
-    std::vector<Cell> field_, initialField_;
-    std::vector<std::vector<int>> nodes_, initialNodes_;
-    std::vector<int> currentPassCells_, initialCurrentPassCells_;  // to choose a random cell for food
-    Direction currentDirection_, initialCurrentDirection_;
-    std::queue<Direction> snakeTurns_, initialSnakeTurns_;
-    bool gameOn_, victory_;
-    int foodIndex_, snakeHeadIndex_, snakeAssIndex_, initialSnakeHeadIndex_, initialSnakeAssIndex_;
-
-    Validation validation;
-    FileHandler fileHandler;
-
-    // data to record the game
-    int firstFoodIndex_;
-    std::vector<int> headAndFoodIndexes_;
-    Direction crashDirection_;
 };

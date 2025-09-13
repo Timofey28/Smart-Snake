@@ -14,6 +14,9 @@ class Game
 public:
     Game();
     void Initialize(fs::path gameFilePath);
+    void PrintFirstFrame();
+    void PrintNextIteration();
+    void PrintPreviousIteration();
 
 private:
     int width_, height_;
@@ -24,6 +27,9 @@ private:
     int startingSnakeLength_, finalSnakeLength_, maxPossibleSnakeLength_;
     int foodIndex_;
     std::vector<int> gameIndexes;
+
+    std::stack<Direction> previousSnakeTurns_;
+    int currentIndex_;
 
     FileHandler fileHandler;
 };

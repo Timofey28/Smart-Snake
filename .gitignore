@@ -1,7 +1,9 @@
 # IDE
+.idea/
 *.cbp
 *.depend
 *.layout
+*.cscope_file_list
 
 # Build
 bin/

@@ -11,9 +11,10 @@ public:
     void Run();
 
 private:
-    int ChooseOption();
-    void CreateGames();
-
     int gamesAmount_;
     Playground playground_;
+
+    int ChooseOption();
+    void CreateGames();
+    void ListOfGames();
 };

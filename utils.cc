@@ -6,6 +6,9 @@
 #include <cassert>
 
 
+static const std::string BASE93_DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./:;<=>?@[]^_`{|}~";
+static std::unordered_map<char, int> BASE93_TO_INT;
+
 std::map<CellType, Color> CELL_COLOR = {
     {CellType::PASS, Color::BLUE},
     {CellType::WALL, Color::CYAN},
@@ -14,7 +17,8 @@ std::map<CellType, Color> CELL_COLOR = {
     {CellType::SNAKE_BODY, Color::BRIGHT_MAGENTA},
     {CellType::SNAKE_HEAD, Color::MAGENTA},
 };
-std::mt19937 mt(time(nullptr));
+//std::mt19937 generator(time(nullptr));
+std::mt19937 generator(1);
 std::uniform_int_distribution<int> uid2{0, 1};
 
 std::string toString(CellType cellType)
@@ -41,23 +45,21 @@ std::string toString(Direction direction)
 }
 
 
+void initializeBase93Map()
+{
+    for (int i = 0; i < BASE93_DIGITS.size(); ++i)
+        BASE93_TO_INT[BASE93_DIGITS[i]] = i;
+}
+
 char toBase93(int num)
 {
-    static const std::string base93Digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./:;<=>?@[]^_`{|}~";
-    assert(num >= 0 && num < base93Digits.size());
-    return base93Digits[num];
+    assert(num >= 0 && num < BASE93_DIGITS.size());
+    return BASE93_DIGITS[num];
 }
 
 int fromBase93ToDecimal(char numChar)
 {
-    static const std::string base93Digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./:;<=>?@[]^_`{|}~";
-    static std::unordered_map<char, int> charToValue;
-
-    if (charToValue.empty()) {
-        for (int i = 0; i < base93Digits.size(); ++i) charToValue[base93Digits[i]] = i;
-    }
-
-    return charToValue[numChar];
+    return BASE93_TO_INT[numChar];
 }
 
 
@@ -186,9 +188,12 @@ void getPairedAdjacentCellAndCornerCellIndex(
 
 int randomUnder(int num)
 {
-    if (num == 2) return uid2(mt);
     std::uniform_int_distribution<int> uid{0, num - 1};
-    return uid(mt);
+    return uid(generator);
+
+//    if (num == 2) return uid2(generator);
+//    std::uniform_int_distribution<int> uid{0, num - 1};
+//    return uid(generator);
 }
 
 Direction toLeftFrom(Direction direction)

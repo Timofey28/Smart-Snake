@@ -120,6 +120,8 @@ void Playground::ReinitializeStartingData()
     // recording the game
     firstFoodIndex_ = -1;
     headAndFoodIndexes_.clear();
+    movesAmount_ = 0;
+    averageMovesToFood_ = 0;
 }
 
 void Playground::CalculateNextIteration()
@@ -138,11 +140,12 @@ void Playground::CalculateNextIteration()
 //    oss << "| [" << nodes_[snakeHeadIndex_].size() << "]";
 //    oss << string(30, ' ');
 //    draw::smth(oss.str());
-
+//
 //    // Запись значений nodes_ в файл
 //    ofstream file("log.txt", ios::app);
 //    file << "\n\n\n";
 //    int cellIndex, x, y;
+//    int w = 7;
 //    for (int i = 1; i < height_ - 1; ++i) {
 //        file << "\n\n";
 //        for (int j = 1; j < width_ - 1; ++j) {
@@ -156,8 +159,25 @@ void Playground::CalculateNextIteration()
 //                else if (cellIndex + width_ == node || i - y > 1) foss << 'd';
 //            }
 //            if (!nodes_[cellIndex].size()) foss << "...";
-//            int w = 7;
 //            file << setw(w) << foss.str();
+//        }
+//    }
+//    file << "\n";
+//    for (int i = 1; i < height_ - 1; ++i) {
+//        file << "\n\n";
+//        for (int j = 1; j < width_ - 1; ++j) {
+//            cellIndex = i * width_ + j;
+//            auto it = find(currentPassCells_.begin(), currentPassCells_.end(), cellIndex);
+//            if (field_[cellIndex].type == CellType::WALL) file << setw(w) << "wwww";
+//            else if (field_[cellIndex].type == CellType::PORTAL) file << setw(w) << "wppw";
+//            else if (field_[cellIndex].type == CellType::FOOD) {
+//                if (it == currentPassCells_.end()) file << setw(w) << "!ff!";
+//                else file << setw(w) << " ff ";
+//            }
+//            else if (field_[cellIndex].type == CellType::SNAKE_BODY) file << setw(w) << " ss ";
+//            else if (field_[cellIndex].type == CellType::SNAKE_HEAD) file << setw(w) << " sh ";
+//            else if (it == currentPassCells_.end()) file << setw(w) << "(**)";
+//            else file << setw(w) << "(  )";
 //        }
 //    }
 //    file.close();
@@ -191,20 +211,32 @@ void Playground::CalculateNextIteration()
     }
 
     // collision
-    if (field_[nextCellIndex].type == CellType::WALL || field_[nextCellIndex].type == CellType::SNAKE_BODY && nextCellIndex != snakeAssIndex_) {
+    int portalExitIndex;
+    if (field_[nextCellIndex].type == CellType::PORTAL) {
+        portalExitIndex = __GetPortalExitIndex(nextCellIndex, nextDirection);
+    }
+    if (field_[nextCellIndex].type == CellType::WALL ||
+        field_[nextCellIndex].type == CellType::SNAKE_BODY && nextCellIndex != snakeAssIndex_ ||
+        field_[nextCellIndex].type == CellType::PORTAL && portalExitIndex == -1)
+    {
         gameOn_ = false;
         crashDirection_ = nextDirection;
         return;
     }
 
     headAndFoodIndexes_.push_back(nextCellIndex);
+    movesAmount_++;
 
     // Update currentPassCells_ and nodes_
     vector<int>::iterator iter;
     if (nextCellIndex != snakeAssIndex_) {
         iter = find(currentPassCells_.begin(), currentPassCells_.end(), nextCellIndex);
         if (iter == currentPassCells_.end()) {
+//            draw::Field(field_, width_);
+//            for (int i = 1; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]], Color::BEIGE_ON_BLUE);
+
             setColor(Color::NORMAL);
+//            _getch();
             throw runtime_error("Next cell index not in currentPassCells_, but should be.");
         }
         currentPassCells_.erase(iter);
@@ -265,7 +297,7 @@ void Playground::CalculateNextIteration()
     currentDirection_ = nextDirection;
     snakeHeadIndex_ = nextCellIndex;
 
-//    // отрисовка поля и пути к еде
+////     отрисовка поля и пути к еде
 //    if (shortestPathToFood.size()) {
 //        _getch();
 //        draw::Field(field_, width_);
@@ -425,6 +457,7 @@ int Playground::__GetPortalExitIndex(int portalEnterIndex, Direction movementDir
             possibleExitIndex += width_;
         }
     }
+
     return -1;
 }
 

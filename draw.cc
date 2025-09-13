@@ -41,16 +41,16 @@ void draw::GameCell(const Cell& cell, int stretch)
 {
     if (cell.num == PointOfNoReturn) return;
     setPosition(cell.realX, cell.realY);
-    if (cell.type == CellType::PASS) {
-        setColor(Color::NORMAL);
-        _setmode(_fileno(stdout), _O_U16TEXT);
-        wcout << wstring(min(stretch, PointOfNoReturn - cell.num) * 2, (wchar_t) 0x2591);
-        _setmode(_fileno(stdout), _O_TEXT);
-    }
-    else {
+//    if (cell.type == CellType::PASS) {
+//        setColor(Color::NORMAL);
+//        _setmode(_fileno(stdout), _O_U16TEXT);
+//        wcout << wstring(min(stretch, PointOfNoReturn - cell.num) * 2, (wchar_t) 0x2591);
+//        _setmode(_fileno(stdout), _O_TEXT);
+//    }
+//    else {
         setColor(CELL_COLOR[cell.type]);
         cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
-    }
+//    }
 }
 
 void draw::GameCell(Cell& cell, CellType cellType, int stretch)
@@ -59,16 +59,16 @@ void draw::GameCell(Cell& cell, CellType cellType, int stretch)
     if (cell.type != cellType) {
         cell.type = cellType;
         setPosition(cell.realX, cell.realY);
-        if (cell.type == CellType::PASS) {
-            setColor(Color::NORMAL);
-            _setmode(_fileno(stdout), _O_U16TEXT);
-            wcout << wstring(min(stretch, PointOfNoReturn - cell.num) * 2, (wchar_t) 0x2591);
-            _setmode(_fileno(stdout), _O_TEXT);
-        }
-        else {
+//        if (cell.type == CellType::PASS) {
+//            setColor(Color::NORMAL);
+//            _setmode(_fileno(stdout), _O_U16TEXT);
+//            wcout << wstring(min(stretch, PointOfNoReturn - cell.num) * 2, (wchar_t) 0x2591);
+//            _setmode(_fileno(stdout), _O_TEXT);
+//        }
+//        else {
             setColor(CELL_COLOR[cell.type]);
             cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
-        }
+//        }
     }
 }
 
@@ -125,9 +125,9 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
     int maxFieldWidth = min(91, nConsoleWidth / 2 - 2);
     int maxFieldHeight = min(91, nConsoleHeight - 2);
     PointOfNoReturn = nConsoleWidth / 2 * nConsoleHeight - 1;
-//    fieldWidth = 10;
-//    fieldHeight = 12;
-//    return;
+    fieldWidth = 10;
+    fieldHeight = 10;
+    return;
 
     string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";
     string phraseChooseHeight = "Выбери высоту поля (3 - " + to_string(maxFieldHeight) + ") => ";

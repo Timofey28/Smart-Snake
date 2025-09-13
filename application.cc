@@ -19,8 +19,8 @@ void Application::Run()
 {
     int option;
     while (true) {
-//        option = ChooseOption();
-        option = '1';
+        option = ChooseOption();
+//        option = '1';
         switch (option)
         {
             case '1': CreateGames(); break;
@@ -31,11 +31,27 @@ void Application::Run()
     }
 }
 
+int Application::ChooseOption()
+{
+    system("cls");
+    cout << "\n\t1. Создать игры";
+    cout << "\n\t2. Список игр";
+
+    unordered_set<int> POSSIBLE_OPTIONS = {'1', '2', 27};
+    int option;
+    while (true) {
+        option = getch();
+        if (POSSIBLE_OPTIONS.find(option) != POSSIBLE_OPTIONS.end()) return option;
+    }
+}
+
 void Application::CreateGames()
 {
     playground_.FieldParametersInputForm();
     draw::EnterGamesAmount(gamesAmount_);
     playground_.SaveInitialData();
+
+    system("cls");
 
     auto start = chrono::high_resolution_clock::now();
 
@@ -54,16 +70,7 @@ void Application::CreateGames()
     cout << "\n\tВремя выполнения: " << round(duration.count() * 100) / 100 << " секунд\n";
 }
 
-int Application::ChooseOption()
+void Application::ListOfGames()
 {
-    system("cls");
-    cout << "\n\t1. Создать игры";
-    cout << "\n\t2. Посмотреть игру";
 
-    unordered_set<int> POSSIBLE_OPTIONS = {'1', '2', 27};
-    int option;
-    while (true) {
-        option = getch();
-        if (POSSIBLE_OPTIONS.find(option) != POSSIBLE_OPTIONS.end()) return option;
-    }
 }
