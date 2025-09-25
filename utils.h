@@ -4,7 +4,9 @@
 #include <map>
 #include <vector>
 #include <ctime>
+#include <iomanip>
 #include <random>
+#include <sstream>
 
 
 enum Color {
@@ -106,9 +108,21 @@ int randomUnder(int num);
 Direction toLeftFrom(Direction direction);
 Direction toRightFrom(Direction direction);
 
+bool isToday(time_t timestamp);
+bool isYesterday(time_t timestamp);
+
+std::string _timestampToString(time_t timestamp, std::string format);
+std::string timestampToDateStr(time_t timestamp);  // -> dd.mm.yyyy
+std::string timestampToISOFormatDateStr(time_t timestamp);  // -> yyyy-mm-dd
+std::string timestampToHourMinuteStr(time_t timestamp);  // -> HH:MM
+time_t dateStrISOFormatToTimestamp(std::string dateStr);
+std::string doubleToStr(double value, int precision = 2);
 
 struct Cell
 {
+    short fieldX, fieldY, realX, realY, num;
+    CellType type;
+
     Cell() :
         fieldX(-1),
         fieldY(-1),
@@ -125,7 +139,30 @@ struct Cell
         num(number),
         type(cellType) {}
     bool isNone() { return type == CellType::UNKNOWN; }
+};
 
-    short fieldX, fieldY, realX, realY, num;
-    CellType type;
+struct Symbols
+{
+    struct BoxLight
+    {
+        static constexpr wchar_t HORIZONTAL_LINE = 0x2500;
+        static constexpr wchar_t VERTICAL_LINE = 0x2502;
+        static constexpr wchar_t LEFT_TSHAPE = 0x251C;
+        static constexpr wchar_t LEFT_UP_CORNER = 0x250C;
+        static constexpr wchar_t LEFT_DOWN_CORNER = 0x2514;
+        static constexpr wchar_t RIGHT_TSHAPE = 0x2524;
+        static constexpr wchar_t RIGHT_UP_CORNER = 0x2510;
+        static constexpr wchar_t RIGHT_DOWN_CORNER = 0x2518;
+    };
+    struct BoxHeavy
+    {
+        static constexpr wchar_t HORIZONTAL_LINE = 0x2501;
+        static constexpr wchar_t VERTICAL_LINE = 0x2503;
+        static constexpr wchar_t LEFT_TSHAPE = 0x2523;
+        static constexpr wchar_t LEFT_UP_CORNER = 0x250F;
+        static constexpr wchar_t LEFT_DOWN_CORNER = 0x2517;
+        static constexpr wchar_t RIGHT_TSHAPE = 0x252B;
+        static constexpr wchar_t RIGHT_UP_CORNER = 0x2513;
+        static constexpr wchar_t RIGHT_DOWN_CORNER = 0x251B;
+    };
 };

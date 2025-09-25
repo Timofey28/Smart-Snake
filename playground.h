@@ -12,8 +12,8 @@
 #include "file_handler.h"
 #include "algorithm.h"
 
-#include <sstream>
-#include <iostream>
+//#include <sstream>
+//#include <iostream>
 
 
 extern int nConsoleWidth, nConsoleHeight;
@@ -23,7 +23,7 @@ const int SCREEN_WIDTH = nConsoleWidth / 2;
 class Playground
 {
 public:
-    Playground();
+    Playground() { __Init(); }
     void FieldParametersInputForm();
     void SaveInitialData();
     void SaveLastGame();
@@ -44,7 +44,6 @@ private:
     int foodIndex_, snakeHeadIndex_, snakeAssIndex_, initialSnakeHeadIndex_, initialSnakeAssIndex_;
 
     Validation validation;
-    FileHandler fileHandler;
 
     // vars to record the game
     int firstFoodIndex_;
@@ -53,7 +52,7 @@ private:
     int movesAmount_;
     float averageMovesToFood_;
 
-
+    void __Init();
     void __InitializeFieldFromDimensions();
     void __ArrangeFieldElements();
     void __AdjustPortals();

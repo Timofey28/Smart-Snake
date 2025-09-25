@@ -48,28 +48,9 @@ void draw::GameCell(const Cell& cell, int stretch)
 //        _setmode(_fileno(stdout), _O_TEXT);
 //    }
 //    else {
-        setColor(CELL_COLOR[cell.type]);
-        cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
+    setColor(CELL_COLOR[cell.type]);
+    cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
 //    }
-}
-
-void draw::GameCell(Cell& cell, CellType cellType, int stretch)
-{
-    if (cell.num == PointOfNoReturn) return;
-    if (cell.type != cellType) {
-        cell.type = cellType;
-        setPosition(cell.realX, cell.realY);
-//        if (cell.type == CellType::PASS) {
-//            setColor(Color::NORMAL);
-//            _setmode(_fileno(stdout), _O_U16TEXT);
-//            wcout << wstring(min(stretch, PointOfNoReturn - cell.num) * 2, (wchar_t) 0x2591);
-//            _setmode(_fileno(stdout), _O_TEXT);
-//        }
-//        else {
-            setColor(CELL_COLOR[cell.type]);
-            cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
-//        }
-    }
 }
 
 void draw::SnakeHead(Cell& cell, Direction movementDirection)
@@ -87,18 +68,19 @@ void draw::SnakeHead(Cell& cell, Direction movementDirection)
     }
 }
 
-void draw::GameCell(const Cell& cell, Color color)
-{
-    setPosition(cell.realX, cell.realY);
-    setColor(color);
-    cout << string(2, '#');
-}
-void draw::smth(string s, int lineNo)
-{
-    setPosition(0, lineNo);
-    setColor(Color::NORMAL);
-    std::cout << s;
-}
+//// функции для отладки
+//void draw::GameCell(const Cell& cell, Color color)
+//{
+//    setPosition(cell.realX, cell.realY);
+//    setColor(color);
+//    cout << string(2, '#');
+//}
+//void draw::smth(string s, int lineNo)
+//{
+//    setPosition(0, lineNo);
+//    setColor(Color::NORMAL);
+//    std::cout << s;
+//}
 
 void draw::Field(const vector<Cell>& field, int width, bool onlyPerimeter)
 {
@@ -125,9 +107,10 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
     int maxFieldWidth = min(91, nConsoleWidth / 2 - 2);
     int maxFieldHeight = min(91, nConsoleHeight - 2);
     PointOfNoReturn = nConsoleWidth / 2 * nConsoleHeight - 1;
-    fieldWidth = 10;
-    fieldHeight = 10;
-    return;
+
+//    fieldWidth = 10;
+//    fieldHeight = 10;
+//    return;
 
     string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";
     string phraseChooseHeight = "Выбери высоту поля (3 - " + to_string(maxFieldHeight) + ") => ";
@@ -199,9 +182,6 @@ void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
 
 void draw::EnterGamesAmount(int& gamesAmount)
 {
-//    gamesAmount = 1000;
-//    return;
-
     int gamesLimit = 1000;
     string phrase = "Введи количество игр (1 - " + to_string(gamesLimit) + ") => ";
     string input;
@@ -340,4 +320,107 @@ void draw::alert::Victory()
     setPosition(0, 0);
     setColor(Color::NORMAL);
     cout << alertMsg;
+}
+
+template<typename BoxSymbols>
+void draw::Box(int indentX, int indentY, int width, int height, int pileContentHeight, int pilesAmount, Color focusColor, int activePile)
+{
+    _setmode(_fileno(stdout), _O_U16TEXT);
+    if (activePile == 0) setColor(focusColor);
+    setPosition(indentX, indentY);
+    wcout << BoxSymbols::LEFT_UP_CORNER << wstring(width - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_UP_CORNER;
+    bool colorIsSet = false;
+    int tablePileLimit = height / (pileContentHeight + 1);
+    for (int pile = 0; pile < min(pilesAmount, tablePileLimit); ++pile) {
+        if (pile == activePile) {
+            colorIsSet = true;
+            setColor(focusColor);
+        }
+        else if (colorIsSet) {
+            colorIsSet = false;
+            setColor(Color::NORMAL);
+        }
+
+        for (int i = 0; i < pileContentHeight; ++i) {
+            setPosition(indentX, indentY + pile * (pileContentHeight + 1) + i + 1);
+            wcout << BoxSymbols::VERTICAL_LINE << wstring(width - 2, ' ') << BoxSymbols::VERTICAL_LINE;
+        }
+        setPosition(indentX, indentY + (pile + 1) * (pileContentHeight + 1));
+        if (pile == tablePileLimit - 1) wcout << BoxSymbols::LEFT_DOWN_CORNER << wstring(width - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_DOWN_CORNER;
+        else wcout << BoxSymbols::LEFT_TSHAPE << wstring(width - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_TSHAPE;
+    }
+    for (int pile = pilesAmount; pile < tablePileLimit; ++pile) {
+        for (int i = 0; i <= pileContentHeight; ++i) {
+            setPosition(indentX, indentY + pile * (pileContentHeight + 1) + i + 1);
+            wcout << BoxSymbols::VERTICAL_LINE << wstring(width - 2, ' ') << BoxSymbols::VERTICAL_LINE;
+        }
+        setPosition(indentX, indentY + (pile + 1) * (pileContentHeight + 1));
+        if (pile == tablePileLimit - 1) wcout << BoxSymbols::LEFT_DOWN_CORNER << wstring(width - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_DOWN_CORNER;
+    }
+    setColor(Color::NORMAL);
+    _setmode(_fileno(stdout), _O_TEXT);
+}
+template void draw::Box<Symbols::BoxLight>(int, int, int, int, int, int, Color, int);
+template void draw::Box<Symbols::BoxHeavy>(int, int, int, int, int, int, Color, int);
+
+template<typename BoxSymbols>
+void draw::BoxPile(int indentX, int indentY, int pileWidth, int pileHeight, Color color, bool isFirst, bool isLast)
+{
+    _setmode(_fileno(stdout), _O_U16TEXT);
+    setColor(color);
+    setPosition(indentX, indentY);
+    if (isFirst) wcout << BoxSymbols::LEFT_UP_CORNER << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_UP_CORNER;
+    else wcout << BoxSymbols::LEFT_TSHAPE << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_TSHAPE;
+    setPosition(indentX, indentY + pileHeight - 1);
+    if (isLast) wcout << BoxSymbols::LEFT_DOWN_CORNER << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_DOWN_CORNER;
+    else wcout << BoxSymbols::LEFT_TSHAPE << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_TSHAPE;
+    for (int i = 1; i <= pileHeight - 2; ++i) {
+        setPosition(indentX, indentY + i);
+        wcout << BoxSymbols::VERTICAL_LINE;
+        setPosition(indentX + pileWidth - 1, indentY + i);
+        wcout << BoxSymbols::VERTICAL_LINE;
+    }
+    setColor(Color::NORMAL);
+    _setmode(_fileno(stdout), _O_TEXT);
+}
+template void draw::BoxPile<Symbols::BoxLight>(int, int, int, int, Color, bool, bool);
+template void draw::BoxPile<Symbols::BoxHeavy>(int, int, int, int, Color, bool, bool);
+
+void draw::TableData(int indentX, int indentY, std::vector<std::string> data, Color color)
+{
+    setColor(color);
+    for (int i = 0; i < data.size(); ++i) {
+        setPosition(indentX, indentY + i);
+        cout << data[i];
+    }
+    setColor(Color::NORMAL);
+}
+
+void draw::Symbol(int x, int y, Color color)
+{
+    setPosition(x, y);
+    setColor(color);
+    cout << 's';
+    setColor(Color::NORMAL);
+}
+
+void draw::Symbol(std::vector<std::pair<int, int>> coords, std::vector<Color> colors)
+{
+    assert(coords.size() == colors.size());
+    for (int i = 0; i < coords.size(); ++i) {
+        setPosition(coords[i].first, coords[i].second);
+        setColor(colors[i]);
+        cout << 's';
+    }
+    setColor(Color::NORMAL);
+}
+
+void draw::Symbol(std::vector<std::pair<int, int>> coords, Color color)
+{
+    setColor(color);
+    for (int i = 0; i < coords.size(); ++i) {
+        setPosition(coords[i].first, coords[i].second);
+        cout << 's';
+    }
+    setColor(Color::NORMAL);
 }

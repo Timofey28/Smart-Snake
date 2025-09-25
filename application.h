@@ -1,7 +1,18 @@
 #pragma once
 
+#include <iostream>
+#include <unordered_set>
+#include <conio.h>
+
 #include "playground.h"
+#include "file_handler.h"
 #include "draw.h"
+#include "interface.h"
+#include "experiment.h"
+
+#include <thread>
+#include <chrono>
+#include <sstream>
 
 
 class Application

@@ -10,6 +10,7 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+
 #include "utils.h"
 
 namespace fs = std::filesystem;
@@ -18,14 +19,20 @@ namespace fs = std::filesystem;
 class FileHandler
 {
 public:
-    FileHandler();
+    static std::map<time_t, fs::path> s_dateFolders;
+    static std::map<time_t, int, std::greater<time_t>> s_experimentAmountsByDates;
+    static std::map<time_t, int, std::greater<time_t>>::iterator s_currExpAmountsByDatesIter;
+
+    static void Initialize();
+    inline static fs::path GetGamesFolder() { return GAMES_FOLDER; }
+    static time_t GetLastWriteTime(fs::path pathToFileOrFolder);
 
     /* ".initialdata"
     line 1) width, height, indentX, indentY, direction, snakeLength (from start), passCellsAmount (current pass cells + snakeLength)
     line 2) snakeTurns ((snakeLength - 1) Direction values)
     line 3) field cell types ((width * height) CellType values)
     */
-    void SaveInitialData(
+    static void SaveInitialData(
         int width,
         int height,
         int indentX,
@@ -41,7 +48,7 @@ public:
     line 1) firstFoodIndex, finalSnakeLength, crashDirection (0-3)
     line 2) head and food coordinates (xy) in number system with base 93
     */
-    void SaveLastGame(
+    static void SaveGame(
         int firstFoodIndex,
         int finalSnakeLength,
         Direction crashDirection,
@@ -49,7 +56,7 @@ public:
         int fieldWidth
     );
 
-    void ReadGame(
+    static void ReadGame(
         fs::path gameFilePath,
         int& fieldWidth, int& fieldHeight,
         int& indentX, int& indentY,
@@ -61,13 +68,18 @@ public:
         std::vector<int>& gameIndexes
     );
 
-    std::map<time_t, int> GetDatesAndExperimentAmounts();
+    static void UpdateDatesAndExperimentAmounts();
+    static void GetExperimentInitialData(
+        fs::path experimentFolderPath,
+        int& fieldWidth, int& fieldHeight,
+        int& initialSnakeLength, int& maxPossibleSnakeLength,
+        std::vector<int>& gameScores
+    );
 
 private:
-    const fs::path GAMES_FOLDER = "Games";
-    const fs::path INITIAL_DATA_FILE = ".initialdata";
-    fs::path currentDirectory_;
-    std::map<time_t, fs::path> dateFolders_;
+    static const fs::path GAMES_FOLDER;
+    static const fs::path INITIAL_DATA_FILE;
+    static fs::path s_currentDirectory_;
 
 //    static const map<int, string> monthNoToStr = {
 //        {0, "января"},
@@ -84,8 +96,8 @@ private:
 //        {11, "декабря"},
 //    };
 
-    void __CreateCurrentDirectory();
-    int __GetFoldersAmount(fs::path directory);
-    int __GetFilesAmount(fs::path directory);
-    fs::path __GetGameInitialDataFilePath(fs::path gameFilePath);
+    static void __CreateCurrentDirectory();
+    static int __GetFoldersAmount(fs::path directory);
+    static int __GetFilesAmount(fs::path directory);
+    static fs::path __GetGameInitialDataFilePath(fs::path gameFilePath);
 };

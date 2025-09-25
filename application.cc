@@ -1,13 +1,5 @@
 #include "application.h"
-
-#include <iostream>
-#include <unordered_set>
-#include <conio.h>
-
 using namespace std;
-
-#include <thread>
-#include <chrono>
 
 
 Application::Application()
@@ -24,10 +16,9 @@ void Application::Run()
         switch (option)
         {
             case '1': CreateGames(); break;
-            case '2': break;
+            case '2': ListOfGames(); break;
             case 27: return;
         }
-        break;
     }
 }
 
@@ -72,5 +63,10 @@ void Application::CreateGames()
 
 void Application::ListOfGames()
 {
+    FileHandler::UpdateDatesAndExperimentAmounts();
+    Experiment* experiment = Interface::DatesAndExperimentsList();
+    if (experiment == nullptr) return;
+
+    setPosition(0, 0); cout << "Experiment chosen!"; _getch();
 
 }

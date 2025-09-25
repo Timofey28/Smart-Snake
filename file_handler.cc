@@ -3,9 +3,26 @@
 using namespace std;
 
 
-FileHandler::FileHandler()
+const fs::path FileHandler::GAMES_FOLDER = "Games";
+const fs::path FileHandler::INITIAL_DATA_FILE = ".initialdata";
+map<time_t, fs::path> FileHandler::s_dateFolders;
+map<time_t, int, greater<time_t>> FileHandler::s_experimentAmountsByDates;
+map<time_t, int, greater<time_t>>::iterator FileHandler::s_currExpAmountsByDatesIter;
+fs::path FileHandler::s_currentDirectory_;
+
+
+void FileHandler::Initialize()
 {
     fs::create_directory(GAMES_FOLDER);
+}
+
+time_t FileHandler::GetLastWriteTime(fs::path pathToFileOrFolder)
+{
+    auto ftime = fs::last_write_time(pathToFileOrFolder);
+    auto ctp = chrono::time_point_cast<chrono::system_clock::duration>(
+        ftime - fs::file_time_type::clock::now() + chrono::system_clock::now()
+    );
+    return chrono::system_clock::to_time_t(ctp);
 }
 
 void FileHandler::SaveInitialData(
@@ -20,10 +37,10 @@ void FileHandler::SaveInitialData(
     vector<Cell>& field
 ) {
     __CreateCurrentDirectory();
-    ofstream fout(currentDirectory_ / INITIAL_DATA_FILE);
+    ofstream fout(s_currentDirectory_ / INITIAL_DATA_FILE);
     if (!fout.is_open()) {
         ostringstream oss;
-        oss << "Unable to open file \"" << currentDirectory_ / INITIAL_DATA_FILE << "\".";
+        oss << "Unable to open file \"" << s_currentDirectory_ / INITIAL_DATA_FILE << "\".";
         throw runtime_error(oss.str());
     }
 
@@ -39,20 +56,20 @@ void FileHandler::SaveInitialData(
     fout.close();
 }
 
-void FileHandler::SaveLastGame(
+void FileHandler::SaveGame(
     int firstFoodIndex,
     int finalSnakeLength,
     Direction crashDirection,
     vector<int> headAndFoodIndexes,
     int fieldWidth
 ) {
-    if (!fs::exists(currentDirectory_)) throw runtime_error("Current gaming directory was not found.");
-    int filesAmount = __GetFilesAmount(currentDirectory_);
+    if (!fs::exists(s_currentDirectory_)) throw runtime_error("Current gaming directory was not found.");
+    int filesAmount = __GetFilesAmount(s_currentDirectory_);
 
-    ofstream fout(currentDirectory_ / (to_string(filesAmount) + ".txt"));
+    ofstream fout(s_currentDirectory_ / (to_string(filesAmount) + ".txt"));
     if (!fout.is_open()) {
         ostringstream oss;
-        oss << "Unable to open file \"" << currentDirectory_ / (to_string(filesAmount) + ".txt") << "\".";
+        oss << "Unable to open file \"" << s_currentDirectory_ / (to_string(filesAmount) + ".txt") << "\".";
         throw runtime_error(oss.str());
     }
 
@@ -116,13 +133,13 @@ void FileHandler::ReadGame(
     }
 }
 
-map<time_t, int> FileHandler::GetDatesAndExperimentAmounts()
+void FileHandler::UpdateDatesAndExperimentAmounts()
 {
-    map<time_t, int> experimentAmountsByDates;
-    std::tm tm = {};
+    tm tm = {};
     time_t tt;
 
-    dateFolders_.clear();
+    s_dateFolders.clear();
+    s_experimentAmountsByDates.clear();
     for (const auto& entry : fs::directory_iterator(GAMES_FOLDER)) {
         if (!fs::is_directory(entry)) {
             cerr << "Not a directory encountered among date folders: " << entry;
@@ -130,18 +147,42 @@ map<time_t, int> FileHandler::GetDatesAndExperimentAmounts()
         }
 
         try {
-            istringstream ss(entry.path().string());
+            istringstream ss(entry.path().filename().string());
             ss >> std::get_time(&tm, "%Y-%m-%d");
-            if (ss.fail()) throw runtime_error("Error in date interpretation.");
+            if (ss.fail()) throw runtime_error("Error in date interpretation, expected format: \"yyyy-mm-dd\", received: \"" + entry.path().string() + "\"");
             tt = std::mktime(&tm);
-            experimentAmountsByDates[tt] = __GetFoldersAmount(GAMES_FOLDER / entry);
-            dateFolders_[tt] = GAMES_FOLDER / entry;
+            s_dateFolders[tt] = entry;
+            s_experimentAmountsByDates[tt] = __GetFoldersAmount(entry);
         } catch (const std::exception& e) {
             throw runtime_error(e.what());
         }
     }
+}
 
-    return experimentAmountsByDates;
+void FileHandler::GetExperimentInitialData(
+    fs::path experimentFolderPath,
+    int& fieldWidth, int& fieldHeight,
+    int& initialSnakeLength, int& maxPossibleSnakeLength,
+    std::vector<int>& gameScores
+) {
+    ifstream fin(experimentFolderPath / INITIAL_DATA_FILE);
+    if (!fin.is_open()) throw runtime_error("Unable to open file \"" + (experimentFolderPath / INITIAL_DATA_FILE).generic_string() + "\".");
+    int _;
+    fin >> fieldWidth >> fieldHeight >> _ >> _ >> _ >> initialSnakeLength >> maxPossibleSnakeLength;
+    fin.close();
+
+    gameScores.clear();
+    int gamesAmount = __GetFilesAmount(experimentFolderPath) - 1;
+    string fileName;
+    int finalSnakeLength;
+    for (int fileNo = 1; fileNo <= gamesAmount; ++fileNo) {
+        fileName = to_string(fileNo) + ".txt";
+        fin.open(experimentFolderPath / fileName);
+        if (!fin.is_open()) throw runtime_error("Unable to open file \"" + (experimentFolderPath / fileName).generic_string() + "\".");
+        fin >> _ >> finalSnakeLength;
+        fin.close();
+        gameScores.push_back(finalSnakeLength - initialSnakeLength);
+    }
 }
 
 
@@ -161,10 +202,10 @@ void FileHandler::__CreateCurrentDirectory()
     fs::path todayFolder = oss.str();
     if (fs::exists(GAMES_FOLDER / todayFolder)) {
         int foldersAmount = __GetFoldersAmount(GAMES_FOLDER / todayFolder);
-        currentDirectory_ = GAMES_FOLDER / todayFolder / to_string(foldersAmount + 1);
+        s_currentDirectory_ = GAMES_FOLDER / todayFolder / to_string(foldersAmount + 1);
     }
-    else currentDirectory_ = GAMES_FOLDER / todayFolder / "1";
-    fs::create_directories(currentDirectory_);
+    else s_currentDirectory_ = GAMES_FOLDER / todayFolder / "1";
+    fs::create_directories(s_currentDirectory_);
 }
 
 int FileHandler::__GetFoldersAmount(fs::path directory)

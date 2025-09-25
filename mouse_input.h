@@ -1,34 +1,49 @@
 #pragma once
 
 #include <windows.h>
+#include <cassert>
 
 extern DWORD prev_mode;
 
 
 enum ButtonPressed
 {
-    CTRL_LEFT,
-    CTRL_RIGHT,
+    // Mouse
     LEFT_BUTTON,
     RIGHT_BUTTON,
+    CTRL_LEFT,
+    CTRL_RIGHT,
     WHEEL,
+    WHEEL_UP,
+    WHEEL_DOWN,
+
+    // Keyboard
+    ARROW_LEFT,
+    ARROW_RIGHT,
+    ARROW_UP,
+    ARROW_DOWN,
+    BACKSPACE,
+    ESCAPE,
+    ENTER,
 };
 
 
 class MouseInput
 {
 public:
-    MouseInput() : handle_(GetStdHandle(STD_INPUT_HANDLE)) {}
-    void GetClickInfo();
-    void GetAnyClick();
+    static void Initialize() { handle_ = GetStdHandle(STD_INPUT_HANDLE); }
+    static void GetClickInfo();
+    static void GetAnyClick();
+    static void GetAnyEventInfo();
 
-    short X, Y;
-    ButtonPressed buttonPressed;
+    static bool isKeyboardEvent;
+    static short X, Y;
+    static ButtonPressed buttonPressed;
 
 private:
-    void __EnableMouseInput();
+    static HANDLE handle_;
+    static INPUT_RECORD inputRecord_;
+    static DWORD events_;
 
-    HANDLE handle_;
-    INPUT_RECORD inputRecord_;
-    DWORD events_;
+    static void __EnableMouseInput();
 };

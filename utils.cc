@@ -211,3 +211,49 @@ Direction toRightFrom(Direction direction)
     else if (direction == Direction::UP) return Direction::RIGHT;
     else return Direction::LEFT;
 }
+
+
+bool isToday(time_t timestamp)
+{
+    time_t now = time(nullptr);
+    tm tm_timestamp = *localtime(&timestamp);
+    tm* tm_today = localtime(&now);
+    return (tm_timestamp.tm_year == tm_today->tm_year) &&
+           (tm_timestamp.tm_mon == tm_today->tm_mon) &&
+           (tm_timestamp.tm_mday == tm_today->tm_mday);
+}
+
+bool isYesterday(time_t timestamp)
+{
+    time_t yesterday = time(nullptr) - 24 * 60 * 60;
+    tm tm_timestamp = *localtime(&timestamp);
+    tm* tm_yesterday = localtime(&yesterday);
+    return (tm_timestamp.tm_year == tm_yesterday->tm_year) &&
+           (tm_timestamp.tm_mon == tm_yesterday->tm_mon) &&
+           (tm_timestamp.tm_mday == tm_yesterday->tm_mday);
+}
+
+std::string _timestampToString(time_t timestamp, std::string format)
+{
+    std::ostringstream oss;
+    oss << std::put_time(localtime(&timestamp), format.c_str());
+    return oss.str();
+}
+std::string timestampToDateStr(time_t timestamp)          { return _timestampToString(timestamp, "%d.%m.%Y"); }
+std::string timestampToISOFormatDateStr(time_t timestamp) { return _timestampToString(timestamp, "%Y-%m-%d"); }
+std::string timestampToHourMinuteStr(time_t timestamp)    { return _timestampToString(timestamp, "%H:%M"); }
+
+time_t dateStrISOFormatToTimestamp(std::string dateStr)
+{
+    tm tm_struct = {};
+    std::istringstream ss(dateStr);
+    ss >> std::get_time(&tm_struct, "%Y-%m-%d");
+    return mktime(&tm_struct);
+}
+
+std::string doubleToStr(double value, int precision)
+{
+    std::stringstream ss;
+    ss << std::setprecision(precision) << value;
+    return ss.str();
+}

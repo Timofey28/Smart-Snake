@@ -30,6 +30,4 @@ private:
 
     std::stack<Direction> previousSnakeTurns_;
     int currentIndex_;
-
-    FileHandler fileHandler;
 };

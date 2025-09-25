@@ -8,7 +8,7 @@ Game::Game()
 
 void Game::Initialize(fs::path gameFilePath)
 {
-    fileHandler.ReadGame(
+    FileHandler::ReadGame(
         gameFilePath,
         width_, height_,
         indentX_, indentY_,

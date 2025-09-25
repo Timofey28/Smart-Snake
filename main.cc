@@ -2,9 +2,12 @@
 #include <windows.h>
 #include <stdexcept>
 #include "application.h"
+#include "file_handler.h"
+#include "mouse_input.h"
 #include "utils.h"
 
 #include <bits/stdc++.h>
+#include "experiment.h"
 namespace fs = std::filesystem;
 
 using namespace std;
@@ -22,13 +25,6 @@ void setColor(int color)
     SetConsoleTextAttribute(hStdOut, (WORD) color);
 }
 
-/*
-1) эксперимент
-2) сессия
-3) тест
-4) серия
-5) симуляция
-*/
 
 int main()
 {
@@ -36,12 +32,62 @@ int main()
     SetConsoleCP(866);
     SetConsoleOutputCP(866);
 
+    FileHandler::Initialize();
+    MouseInput::Initialize();
     initializeBase93Map();
     configureConsole();
     getConsoleWH();
 
     Application application;
     application.Run();
+
+//    Experiment e = Experiment("Games/2025-09-15/1");
+//    cout << e.creationTime << ' ' << timestampToHourMinuteStr(e.creationTime) << "\n";
+//    cout << "Количество игр: " << e.gamesAmount << "\n";
+//    cout << "Поле " << e.fieldWidth << "x" << e.fieldHeight << "\n";
+//    cout << "Нач. длина змеи: " << e.initialSnakeLength << "\n";
+//    cout << "Макс. длина змеи: " << e.maxPossibleSnakeLength << "\n";
+//    cout << "Результаты игр: "; for (int i = 0; i < e.gamesAmount; ++i) cout << e.gameScores[i] << ' '; cout << "\n";
+//    cout << "Лучший: " << e.bestScore << "\nСреднее: " << e.avgScore << " (" << doubleToStr(e.avgScore) << ")\n";
+
+//    // Проверка одновременного чтения мыши и клавиатуры
+//    MouseInput::Initialize();
+//    char left = 27, right = 26, up = 24, down = 25, backspace = 17;
+//    while (true) {
+//        MouseInput::GetAnyEventInfo();
+//        short x = MouseInput::X, y = MouseInput::Y;
+//        if (MouseInput::isKeyboardEvent) {
+//            switch (MouseInput::buttonPressed) {
+//                case ButtonPressed::ARROW_LEFT: cout << left; break;
+//                case ButtonPressed::ARROW_RIGHT: cout << right; break;
+//                case ButtonPressed::ARROW_UP: cout << up; break;
+//                case ButtonPressed::ARROW_DOWN: cout << down; break;
+//                case ButtonPressed::BACKSPACE: cout << backspace; break;
+//                case ButtonPressed::ESCAPE: cout << "Esc"; break;
+//                case ButtonPressed::ENTER: cout << "Enter"; break;
+//            }
+//            cout << "\n";
+//        }
+//        else {
+//            cout << "X=" << MouseInput::X << " Y=" << MouseInput::Y;
+//            switch (MouseInput::buttonPressed) {
+//                case ButtonPressed::LEFT_BUTTON: cout << " левая\n"; break;
+//                case ButtonPressed::RIGHT_BUTTON: cout << " правая\n"; break;
+//                case ButtonPressed::CTRL_LEFT: cout << " ctrl+левая\n"; break;
+//                case ButtonPressed::CTRL_RIGHT: cout << " ctrl+правая\n"; break;
+//                case ButtonPressed::WHEEL: cout << " колесико\n"; break;
+//                case ButtonPressed::WHEEL_UP: cout << " колесико вверх, x=" << x << " y=" << y << "\n"; break;
+//                case ButtonPressed::WHEEL_DOWN: cout << " колесико вниз, x=" << x << " y=" << y << "\n"; break;
+//            }
+//        }
+//    }
+
+//    string dateStr = "2025-09-10";
+//    tm tm_struct = {};
+//    istringstream ss(dateStr);
+//    ss >> get_time(&tm_struct, "%Y-%m-%d");
+//    time_t timestamp = mktime(&tm_struct);
+//    cout << timestamp;
 
 //    std::mt19937 generator(1);
 //    uniform_int_distribution<int> uid{0, 5};
@@ -50,11 +96,21 @@ int main()
 //    cout << uid2(generator);
 
 //    _setmode(_fileno(stdout), _O_U16TEXT);
-//    wcout << (wchar_t) 0x2591 << ' ' << (wchar_t) 0x2592 << ' ' << (wchar_t) 0x2593 << "\n";
-//    wcout << (wchar_t) 0x2500 << (wchar_t) 0x2500 << (wchar_t) 0x2500 << "\n";
-//    wcout << (wchar_t) 0x2502 << "\n" << (wchar_t) 0x2502 << "\n" << (wchar_t) 0x2502 << "\n";
-//    wcout << (wchar_t) 0x250C << (wchar_t) 0x2510 << "\n";
-//    wcout << (wchar_t) 0x2514 << (wchar_t) 0x2518 << "\n";
+////    wcout << (wchar_t) 0x2591 << ' ' << (wchar_t) 0x2592 << ' ' << (wchar_t) 0x2593 << "\n";  // shadows
+//    wcout << (wchar_t) 0x250F << (wchar_t) 0x2501 << (wchar_t) 0x2501 << (wchar_t) 0x2501 << (wchar_t) 0x2513 << "\n";
+//    wcout << (wchar_t) 0x2503 << "   " << (wchar_t) 0x2503 << "\n";
+//    wcout << (wchar_t) 0x2523 << (wchar_t) 0x2501 << (wchar_t) 0x2501 << (wchar_t) 0x2501 << (wchar_t) 0x252B << "\n";
+//    wcout << (wchar_t) 0x2517 << (wchar_t) 0x2501 << (wchar_t) 0x2501 << (wchar_t) 0x2501 << (wchar_t) 0x251B << "\n";
+//
+//    wcout << (wchar_t) 0x250C << (wchar_t) 0x2500 << (wchar_t) 0x2500 << (wchar_t) 0x2500 << (wchar_t) 0x2510 << "\n";
+//    wcout << (wchar_t) 0x2502 << "   " << (wchar_t) 0x2502 << "\n";
+//    wcout << (wchar_t) 0x251C << (wchar_t) 0x2500 << (wchar_t) 0x2500 << (wchar_t) 0x2500 << (wchar_t) 0x2524 << "\n";
+//    wcout << (wchar_t) 0x2514 << (wchar_t) 0x2500 << (wchar_t) 0x2500 << (wchar_t) 0x2500 << (wchar_t) 0x2518 << "\n";
+//
+////    wcout << (wchar_t) 0x2015 << (wchar_t) 0x2015 << (wchar_t) 0x2015 << "\n";
+////    wcout << (wchar_t) 0x2502 << "   " << (wchar_t) 0x2502 << "\n";
+////    wcout << (wchar_t) 0x2502 << "   " << (wchar_t) 0x2502 << "\n";
+////    wcout << (wchar_t) 0x2502 << "   " << (wchar_t) 0x2502 << "\n";
 //    _setmode(_fileno(stdout), _O_TEXT);
 
 //    auto start = chrono::high_resolution_clock::now();
