@@ -86,6 +86,10 @@ void MouseInput::GetAnyEventInfo()
                     case VK_RETURN:
                         MouseInput::buttonPressed = ButtonPressed::ENTER;
                         return;
+
+                    case VK_CONTROL:
+                        MouseInput::buttonPressed = ButtonPressed::CTRL;
+                        return;
                 }
             }
         }
@@ -129,12 +133,13 @@ void MouseInput::GetClickInfo()
     }
 }
 
-void MouseInput::GetAnyClick()
+void MouseInput::WaitForAnyEvent()
 {
     MouseInput::__EnableMouseInput();
     FlushConsoleInputBuffer(handle_);
     while (true) {
         ReadConsoleInput(handle_, &inputRecord_, 1, &events_);
+        if (inputRecord_.EventType == KEY_EVENT) return;
         if (inputRecord_.EventType == MOUSE_EVENT) {
             MOUSE_EVENT_RECORD mer = inputRecord_.Event.MouseEvent;
             if (mer.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED ||

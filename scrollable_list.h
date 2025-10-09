@@ -13,6 +13,7 @@ enum Operation
     SHIFT_PILES,  // value1: upperPileIndex, value2: cursorPileIndex
     ADD_SLIDER_PART,  // value1: sliderPos (index)
     REMOVE_SLIDER_PART,  // value1: sliderPos (index)
+    RESET_SCROLLBAR,
 };
 
 
@@ -31,6 +32,7 @@ enum Event
     EV_ARROW_UP,
     EV_ARROW_DOWN,
     EV_CLICK_PILE,
+    EV_CTRL_OR_RMB,  // Right Mouse Button
 };
 
 
@@ -48,4 +50,8 @@ public:
 private:
     int pilesAmount_, maxVisiblePiles_;
     int scrollbarSteps_;
+    bool specialSlider_;
+    std::map<int, int> pileIndexToSliderPos_;
+
+    void __InitPileIndexConverter();
 };

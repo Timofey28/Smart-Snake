@@ -91,7 +91,7 @@ void Playground::SaveInitialData()
     }
     initialSnakeAssIndex_ = cellIndex;
 
-    // stakeTurnsStacked - stack with the first element to take being the direction from snake last element to second last
+    // snakeTurnsStacked - stack with the first element to take being the direction from snake last element to second last
     FileHandler::SaveInitialData(
         width_, height_,
         indentX_, indentY_,
@@ -121,8 +121,8 @@ void Playground::ReinitializeStartingData()
 
     // recording the game
     firstFoodIndex_ = -1;
+    lastFoodIndex_ = -1;
     headAndFoodIndexes_.clear();
-    movesAmount_ = 0;
     averageMovesToFood_ = 0;
 }
 
@@ -130,9 +130,9 @@ void Playground::CalculateNextIteration()
 {
     if (foodIndex_ == -1) {
         foodIndex_ = currentPassCells_[randomUnder(currentPassCells_.size())];
+        field_[foodIndex_].type = CellType::FOOD;
         firstFoodIndex_ = foodIndex_;
     }
-    field_[foodIndex_].type = CellType::FOOD;
 
 //    // Общая инфа слева сверху
 //    ostringstream oss;
@@ -227,7 +227,6 @@ void Playground::CalculateNextIteration()
     }
 
     headAndFoodIndexes_.push_back(nextCellIndex);
-    movesAmount_++;
 
     // Update currentPassCells_ and nodes_
     vector<int>::iterator iter;
@@ -236,7 +235,6 @@ void Playground::CalculateNextIteration()
         if (iter == currentPassCells_.end()) {
 //            draw::Field(field_, width_);
 //            for (int i = 1; i < shortestPathToFood.size() - 1; ++i) draw::GameCell(field_[shortestPathToFood[i]], Color::BEIGE_ON_BLUE);
-
             setColor(Color::NORMAL);
 //            _getch();
             throw runtime_error("Next cell index not in currentPassCells_, but should be.");
@@ -257,6 +255,7 @@ void Playground::CalculateNextIteration()
     field_[nextCellIndex].type = CellType::SNAKE_HEAD;
 
     if (gotFood) {
+        lastFoodIndex_ = foodIndex_;
         if (currentPassCells_.size()) {
             foodIndex_ = currentPassCells_[randomUnder(currentPassCells_.size())];
             field_[foodIndex_].type = CellType::FOOD;
@@ -315,8 +314,9 @@ void Playground::CalculateNextIteration()
 void Playground::SaveLastGame()
 {
     FileHandler::SaveGame(
-        firstFoodIndex_,
         snakeTurns_.size() + 1,
+        firstFoodIndex_,
+        lastFoodIndex_,
         crashDirection_,
         headAndFoodIndexes_,
         width_
@@ -475,7 +475,7 @@ void Playground::__ArrangeFieldElements()
         if (needToRemoveAlert) {
             needToRemoveAlert = false;
             this_thread::sleep_for(chrono::seconds(1));
-            MouseInput::GetAnyClick();
+            MouseInput::WaitForAnyEvent();
             draw::alert::Remove();
             __MovePortalsBackToBorder();
         }

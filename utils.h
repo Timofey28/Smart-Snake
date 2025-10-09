@@ -118,6 +118,16 @@ std::string timestampToHourMinuteStr(time_t timestamp);  // -> HH:MM
 time_t dateStrISOFormatToTimestamp(std::string dateStr);
 std::string doubleToStr(double value, int precision = 2);
 
+template<typename... Args>
+std::string makeStr(Args... args)
+{
+    std::stringstream ss;
+    (ss << ... << args);
+    return ss.str();
+}
+
+int numberLength(int number);
+
 struct Cell
 {
     short fieldX, fieldY, realX, realY, num;
@@ -143,6 +153,9 @@ struct Cell
 
 struct Symbols
 {
+    static constexpr wchar_t PLUS_MINUS = 0x00B1;
+    static constexpr wchar_t HORIZONTAL_DOUBLE_LINE = 0x2550;
+
     struct BoxLight
     {
         static constexpr wchar_t HORIZONTAL_LINE = 0x2500;

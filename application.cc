@@ -12,7 +12,6 @@ void Application::Run()
     int option;
     while (true) {
         option = ChooseOption();
-//        option = '1';
         switch (option)
         {
             case '1': CreateGames(); break;
@@ -46,6 +45,7 @@ void Application::CreateGames()
 
     auto start = chrono::high_resolution_clock::now();
 
+    assert(gamesAmount_ <= 1000);
     draw::ProgressBar(0, gamesAmount_);
     for (int gameNumber = 1; gameNumber <= gamesAmount_; ++gameNumber) {
         playground_.ReinitializeStartingData();
@@ -58,15 +58,23 @@ void Application::CreateGames()
 
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
-    cout << "\n\tВремя выполнения: " << round(duration.count() * 100) / 100 << " секунд\n";
+    cout << "\n\n\tВыполнено за: " << round(duration.count() * 100) / 100 << " сек";
+    MouseInput::WaitForAnyEvent();
 }
 
 void Application::ListOfGames()
 {
     FileHandler::UpdateDatesAndExperimentAmounts();
-    Experiment* experiment = Interface::DatesAndExperimentsList();
-    if (experiment == nullptr) return;
+    while (true) {
+        bool experimentIsChosen = Interface::DatesAndExperimentsList();
+        if (!experimentIsChosen) return;
 
-    setPosition(0, 0); cout << "Experiment chosen!"; _getch();
-
+        while (true) {
+            Result result = Interface::GamesList();
+            if (result == Result::EXIT) return;
+            else if (result == Result::BACK) break;
+            else if (result == Result::GAME_CHOSEN) Interface::RunGame();
+            else throw runtime_error("invalid choosing game result");
+        }
+    }
 }

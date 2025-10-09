@@ -45,12 +45,13 @@ public:
     );
 
     /* "<n>.txt"
-    line 1) firstFoodIndex, finalSnakeLength, crashDirection (0-3)
+    line 1) finalSnakeLength, firstFoodIndex, lastFoodIndex, crashDirection (0-3)
     line 2) head and food coordinates (xy) in number system with base 93
     */
     static void SaveGame(
-        int firstFoodIndex,
         int finalSnakeLength,
+        int firstFoodIndex,
+        int lastFoodIndex,
         Direction crashDirection,
         std::vector<int> headAndFoodIndexes,
         int fieldWidth
@@ -64,7 +65,7 @@ public:
         std::queue<Direction>& snakeTurns,
         Direction& startingDirection, Direction& crashDirection,
         int& startingsnakeLength, int& finalSnakeLength, int& maxPossibleSnakeLength,
-        int& firstFoodIndex,
+        int& firstFoodIndex, int& lastFoodIndex,
         std::vector<int>& gameIndexes
     );
 

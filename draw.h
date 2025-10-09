@@ -7,6 +7,7 @@
 #include <cassert>
 #include <fcntl.h>
 #include <iomanip>
+#include <sstream>
 
 #include "utils.h"
 #include "file_handler.h"
@@ -39,12 +40,15 @@ namespace draw
     void Box(int indentX, int indentY, int width, int height, int pileContentHeight, int pilesAmount, Color focusColor, int activePile = 0);
 
     template<typename BoxSymbols>
-    void BoxPile(int indentX, int indentY, int pileWidth, int pileHeight, Color color, bool isFirst, bool isLast);
+    void BoxPile(int indentX, int indentY, int pileWidth, int pileHeight, Color color, bool isFirst, bool isLast, bool careful = false);
 
     void TableData(int indentX, int indentY, std::vector<std::string> data, Color color);
     void Symbol(int x, int y, Color color);
     void Symbol(std::vector<std::pair<int, int>> coords, std::vector<Color> colors);
     void Symbol(std::vector<std::pair<int, int>> coords, Color color);
+
+    template<typename... Args>
+    void Info(std::pair<int, int> xy, Args... args, Color color = Color::NORMAL);
 
     namespace alert
     {

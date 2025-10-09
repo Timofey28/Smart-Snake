@@ -3,10 +3,6 @@
 #include <vector>
 #include "utils.h"
 
-//#include "draw.h"
-//#include <sstream>
-//#include <thread>
-
 
 class Validation
 {

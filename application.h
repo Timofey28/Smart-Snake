@@ -8,7 +8,7 @@
 #include "file_handler.h"
 #include "draw.h"
 #include "interface.h"
-#include "experiment.h"
+#include "mouse_input.h"
 
 #include <thread>
 #include <chrono>

@@ -2,12 +2,11 @@
 
 using namespace std;
 
-
 const fs::path FileHandler::GAMES_FOLDER = "Games";
 const fs::path FileHandler::INITIAL_DATA_FILE = ".initialdata";
 map<time_t, fs::path> FileHandler::s_dateFolders;
 map<time_t, int, greater<time_t>> FileHandler::s_experimentAmountsByDates;
-map<time_t, int, greater<time_t>>::iterator FileHandler::s_currExpAmountsByDatesIter;
+map<time_t, int, greater<time_t>>::iterator FileHandler::s_currExpAmountsByDatesIter = FileHandler::s_experimentAmountsByDates.end();
 fs::path FileHandler::s_currentDirectory_;
 
 
@@ -57,8 +56,9 @@ void FileHandler::SaveInitialData(
 }
 
 void FileHandler::SaveGame(
-    int firstFoodIndex,
     int finalSnakeLength,
+    int firstFoodIndex,
+    int lastFoodIndex,
     Direction crashDirection,
     vector<int> headAndFoodIndexes,
     int fieldWidth
@@ -73,7 +73,7 @@ void FileHandler::SaveGame(
         throw runtime_error(oss.str());
     }
 
-    fout << firstFoodIndex << ' ' << finalSnakeLength << ' ' << crashDirection << '\n';
+    fout << finalSnakeLength << ' ' << firstFoodIndex << ' ' << lastFoodIndex << ' ' << crashDirection << '\n';
     for (const auto& headOrFoodIndex : headAndFoodIndexes) {
         fout << toBase93(headOrFoodIndex % fieldWidth) << toBase93(headOrFoodIndex / fieldWidth);
     }
@@ -89,7 +89,7 @@ void FileHandler::ReadGame(
     queue<Direction>& snakeTurns,
     Direction& startingDirection, Direction& crashDirection,
     int& startingSnakeLength, int& finalSnakeLength, int& maxPossibleSnakeLength,
-    int& firstFoodIndex,
+    int& firstFoodIndex, int& lastFoodIndex,
     vector<int>& gameIndexes
 ) {
     fs::path initialDataFilePath = __GetGameInitialDataFilePath(gameFilePath);
@@ -123,7 +123,7 @@ void FileHandler::ReadGame(
     if (!fin.is_open()) throw runtime_error("Unable to open game file.");
 
     // game file, line 1
-    fin >> firstFoodIndex >> finalSnakeLength >> directionValue;
+    fin >> finalSnakeLength >> firstFoodIndex >> lastFoodIndex >> directionValue;
     crashDirection = static_cast<Direction>(directionValue - 48);
 
     // game file, line 2
@@ -179,7 +179,7 @@ void FileHandler::GetExperimentInitialData(
         fileName = to_string(fileNo) + ".txt";
         fin.open(experimentFolderPath / fileName);
         if (!fin.is_open()) throw runtime_error("Unable to open file \"" + (experimentFolderPath / fileName).generic_string() + "\".");
-        fin >> _ >> finalSnakeLength;
+        fin >> finalSnakeLength;
         fin.close();
         gameScores.push_back(finalSnakeLength - initialSnakeLength);
     }

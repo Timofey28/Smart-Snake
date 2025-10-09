@@ -1,7 +1,5 @@
 #include "draw.h"
-
 using namespace std;
-
 
 int PointOfNoReturn;
 static int previousBarValue = -1;
@@ -79,7 +77,7 @@ void draw::SnakeHead(Cell& cell, Direction movementDirection)
 //{
 //    setPosition(0, lineNo);
 //    setColor(Color::NORMAL);
-//    std::cout << s;
+//    cout << s;
 //}
 
 void draw::Field(const vector<Cell>& field, int width, bool onlyPerimeter)
@@ -329,26 +327,19 @@ void draw::Box(int indentX, int indentY, int width, int height, int pileContentH
     if (activePile == 0) setColor(focusColor);
     setPosition(indentX, indentY);
     wcout << BoxSymbols::LEFT_UP_CORNER << wstring(width - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_UP_CORNER;
-    bool colorIsSet = false;
     int tablePileLimit = height / (pileContentHeight + 1);
     for (int pile = 0; pile < min(pilesAmount, tablePileLimit); ++pile) {
-        if (pile == activePile) {
-            colorIsSet = true;
-            setColor(focusColor);
-        }
-        else if (colorIsSet) {
-            colorIsSet = false;
-            setColor(Color::NORMAL);
-        }
-
+        if (pile != activePile) setColor(Color::NORMAL);
         for (int i = 0; i < pileContentHeight; ++i) {
             setPosition(indentX, indentY + pile * (pileContentHeight + 1) + i + 1);
             wcout << BoxSymbols::VERTICAL_LINE << wstring(width - 2, ' ') << BoxSymbols::VERTICAL_LINE;
         }
+        if (pile + 1 == activePile) setColor(focusColor);
         setPosition(indentX, indentY + (pile + 1) * (pileContentHeight + 1));
         if (pile == tablePileLimit - 1) wcout << BoxSymbols::LEFT_DOWN_CORNER << wstring(width - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_DOWN_CORNER;
         else wcout << BoxSymbols::LEFT_TSHAPE << wstring(width - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_TSHAPE;
     }
+    setColor(Color::NORMAL);
     for (int pile = pilesAmount; pile < tablePileLimit; ++pile) {
         for (int i = 0; i <= pileContentHeight; ++i) {
             setPosition(indentX, indentY + pile * (pileContentHeight + 1) + i + 1);
@@ -357,23 +348,24 @@ void draw::Box(int indentX, int indentY, int width, int height, int pileContentH
         setPosition(indentX, indentY + (pile + 1) * (pileContentHeight + 1));
         if (pile == tablePileLimit - 1) wcout << BoxSymbols::LEFT_DOWN_CORNER << wstring(width - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_DOWN_CORNER;
     }
-    setColor(Color::NORMAL);
     _setmode(_fileno(stdout), _O_TEXT);
 }
 template void draw::Box<Symbols::BoxLight>(int, int, int, int, int, int, Color, int);
 template void draw::Box<Symbols::BoxHeavy>(int, int, int, int, int, int, Color, int);
 
 template<typename BoxSymbols>
-void draw::BoxPile(int indentX, int indentY, int pileWidth, int pileHeight, Color color, bool isFirst, bool isLast)
+void draw::BoxPile(int indentX, int indentY, int pileWidth, int pileHeight, Color color, bool isFirst, bool isLast, bool careful)
 {
     _setmode(_fileno(stdout), _O_U16TEXT);
     setColor(color);
-    setPosition(indentX, indentY);
-    if (isFirst) wcout << BoxSymbols::LEFT_UP_CORNER << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_UP_CORNER;
-    else wcout << BoxSymbols::LEFT_TSHAPE << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_TSHAPE;
-    setPosition(indentX, indentY + pileHeight - 1);
-    if (isLast) wcout << BoxSymbols::LEFT_DOWN_CORNER << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_DOWN_CORNER;
-    else wcout << BoxSymbols::LEFT_TSHAPE << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_TSHAPE;
+    if (!careful) {
+        setPosition(indentX, indentY);
+        if (isFirst) wcout << BoxSymbols::LEFT_UP_CORNER << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_UP_CORNER;
+        else wcout << BoxSymbols::LEFT_TSHAPE << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_TSHAPE;
+        setPosition(indentX, indentY + pileHeight - 1);
+        if (isLast) wcout << BoxSymbols::LEFT_DOWN_CORNER << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_DOWN_CORNER;
+        else wcout << BoxSymbols::LEFT_TSHAPE << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_TSHAPE;
+    }
     for (int i = 1; i <= pileHeight - 2; ++i) {
         setPosition(indentX, indentY + i);
         wcout << BoxSymbols::VERTICAL_LINE;
@@ -383,10 +375,10 @@ void draw::BoxPile(int indentX, int indentY, int pileWidth, int pileHeight, Colo
     setColor(Color::NORMAL);
     _setmode(_fileno(stdout), _O_TEXT);
 }
-template void draw::BoxPile<Symbols::BoxLight>(int, int, int, int, Color, bool, bool);
-template void draw::BoxPile<Symbols::BoxHeavy>(int, int, int, int, Color, bool, bool);
+template void draw::BoxPile<Symbols::BoxLight>(int, int, int, int, Color, bool, bool, bool);
+template void draw::BoxPile<Symbols::BoxHeavy>(int, int, int, int, Color, bool, bool, bool);
 
-void draw::TableData(int indentX, int indentY, std::vector<std::string> data, Color color)
+void draw::TableData(int indentX, int indentY, vector<string> data, Color color)
 {
     setColor(color);
     for (int i = 0; i < data.size(); ++i) {
@@ -404,7 +396,7 @@ void draw::Symbol(int x, int y, Color color)
     setColor(Color::NORMAL);
 }
 
-void draw::Symbol(std::vector<std::pair<int, int>> coords, std::vector<Color> colors)
+void draw::Symbol(vector<pair<int, int>> coords, vector<Color> colors)
 {
     assert(coords.size() == colors.size());
     for (int i = 0; i < coords.size(); ++i) {
@@ -415,12 +407,23 @@ void draw::Symbol(std::vector<std::pair<int, int>> coords, std::vector<Color> co
     setColor(Color::NORMAL);
 }
 
-void draw::Symbol(std::vector<std::pair<int, int>> coords, Color color)
+void draw::Symbol(vector<pair<int, int>> coords, Color color)
 {
     setColor(color);
     for (int i = 0; i < coords.size(); ++i) {
         setPosition(coords[i].first, coords[i].second);
         cout << 's';
     }
+    setColor(Color::NORMAL);
+}
+
+template<typename... Args>
+void draw::Info(pair<int, int> xy, Args... args, Color color)
+{
+    setColor(color);
+    setPosition(xy.first, xy.second);
+    stringstream ss;
+    (ss << ... << args);
+    cout << ss.str();
     setColor(Color::NORMAL);
 }

@@ -3,8 +3,10 @@
 #include <iostream>
 #include <filesystem>
 #include <vector>
+#include <cmath>
 
 #include "file_handler.h"
+#include "utils.h"
 
 namespace fs = std::filesystem;
 
@@ -16,12 +18,16 @@ public:
     int gamesAmount;
     int fieldWidth, fieldHeight;
     int initialSnakeLength, maxPossibleSnakeLength;
-    std::vector<int> gameScores, avgPathsToFood;
-    int bestScore;
-    double avgScore;
+    std::vector<int> gameScores;  // gained length only
+    int bestScore, worstScore;
+    int bestScoreNo, worstScoreNo;
+    double avgScore, stdScore;
 
     Experiment(fs::path experimentFolderPath);
+    int CalculateGamePileContentWidth() { return maxGameNoLength_ + maxScoreLength_ + maxPossibleScoreLength_ + maxGainPercentLength_ + 6; }
+    fs::path Path() { return path_; }
 
 private:
     fs::path path_;
+    int maxGameNoLength_, maxScoreLength_, maxPossibleScoreLength_, maxGainPercentLength_;
 };

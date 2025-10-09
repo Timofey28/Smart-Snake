@@ -7,11 +7,32 @@ Experiment::Experiment(fs::path experimentFolderPath)
     creationTime = FileHandler::GetLastWriteTime(experimentFolderPath);
     FileHandler::GetExperimentInitialData(path_, fieldWidth, fieldHeight, initialSnakeLength, maxPossibleSnakeLength, gameScores);
     gamesAmount = gameScores.size();
-    bestScore = gameScores[0];
     avgScore = 0.0f;
+    bestScore = gameScores[0];
+    worstScore = gameScores[0];
+    bestScoreNo = 0;
+    worstScoreNo = 0;
+    maxScoreLength_ = 0;
+    maxPossibleScoreLength_ = numberLength(maxPossibleSnakeLength - initialSnakeLength);
+    maxGainPercentLength_ = 0;
+    maxGameNoLength_ = numberLength(gamesAmount);
     for (int game = 0; game < gamesAmount; ++game) {
-        bestScore = max(bestScore, gameScores[game]);
         avgScore += gameScores[game];
+        if (gameScores[game] > bestScore) {
+            bestScore = gameScores[game];
+            bestScoreNo = game;
+        }
+        if (gameScores[game] < worstScore) {
+            worstScore = gameScores[game];
+            worstScoreNo = game;
+        }
+
+        maxScoreLength_ = max(maxScoreLength_, numberLength(gameScores[game]));
+        maxGainPercentLength_ = max(maxGainPercentLength_, numberLength(gameScores[game] * 100 / (maxPossibleSnakeLength - initialSnakeLength)));
     }
     avgScore /= gamesAmount;
+
+    stdScore = 0.0f;
+    for (int game = 0; game < gamesAmount; ++game) stdScore += pow(gameScores[game] - avgScore, 2);
+    stdScore = sqrt(stdScore / gamesAmount);
 }

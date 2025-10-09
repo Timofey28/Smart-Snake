@@ -45,11 +45,10 @@ private:
 
     Validation validation;
 
-    // vars to record the game
-    int firstFoodIndex_;
+    // variables to record the game
+    int firstFoodIndex_, lastFoodIndex_;
     std::vector<int> headAndFoodIndexes_;
     Direction crashDirection_;
-    int movesAmount_;
     float averageMovesToFood_;
 
     void __Init();

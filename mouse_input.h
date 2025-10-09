@@ -25,6 +25,7 @@ enum ButtonPressed
     BACKSPACE,
     ESCAPE,
     ENTER,
+    CTRL,
 };
 
 
@@ -33,7 +34,7 @@ class MouseInput
 public:
     static void Initialize() { handle_ = GetStdHandle(STD_INPUT_HANDLE); }
     static void GetClickInfo();
-    static void GetAnyClick();
+    static void WaitForAnyEvent();
     static void GetAnyEventInfo();
 
     static bool isKeyboardEvent;

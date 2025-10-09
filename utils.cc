@@ -17,8 +17,8 @@ std::map<CellType, Color> CELL_COLOR = {
     {CellType::SNAKE_BODY, Color::BRIGHT_MAGENTA},
     {CellType::SNAKE_HEAD, Color::MAGENTA},
 };
-//std::mt19937 generator(time(nullptr));
-std::mt19937 generator(1);
+std::mt19937 generator(time(nullptr));
+//std::mt19937 generator(1);
 std::uniform_int_distribution<int> uid2{0, 1};
 
 std::string toString(CellType cellType)
@@ -254,6 +254,23 @@ time_t dateStrISOFormatToTimestamp(std::string dateStr)
 std::string doubleToStr(double value, int precision)
 {
     std::stringstream ss;
-    ss << std::setprecision(precision) << value;
-    return ss.str();
+    ss << std::fixed << std::setprecision(precision) << value;
+    std::string result = ss.str();
+    while (result.back() == '0') result.pop_back();
+    if (result.back() == '.') result.pop_back();
+    return result;
+}
+
+int numberLength(int number)
+{
+    if (number > 1000000000) return 10;
+    if (number > 100000000) return 9;
+    if (number > 10000000) return 8;
+    if (number > 1000000) return 7;
+    if (number > 100000) return 6;
+    if (number > 10000) return 5;
+    if (number > 1000) return 4;
+    if (number > 100) return 3;
+    if (number > 10) return 2;
+    return 1;
 }
