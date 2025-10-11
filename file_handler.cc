@@ -86,7 +86,7 @@ void FileHandler::ReadGame(
     int& fieldWidth, int& fieldHeight,
     int& indentX, int& indentY,
     vector<Cell>& field,
-    queue<Direction>& snakeTurns,
+    deque<Direction>& snakeTurns,
     Direction& startingDirection, Direction& crashDirection,
     int& startingSnakeLength, int& finalSnakeLength, int& maxPossibleSnakeLength,
     int& firstFoodIndex, int& lastFoodIndex,
@@ -102,11 +102,13 @@ void FileHandler::ReadGame(
     fin >> fieldWidth >> fieldHeight >> indentX >> indentY >> directionValue >> startingSnakeLength >> maxPossibleSnakeLength;
     startingDirection = static_cast<Direction>(directionValue - 48);
 
+    fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // skip line break character
+
     // .initialdata, line 2
     snakeTurns = {};
     while (fin.peek() != '\n') {
         fin >> directionValue;
-        snakeTurns.push(static_cast<Direction>(directionValue - 48));
+        snakeTurns.push_front(static_cast<Direction>(directionValue - 48));
     }
 
     // .initialdata, line 3

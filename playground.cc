@@ -308,6 +308,7 @@ void Playground::CalculateNextIteration()
     if (!currentPassCells_.size()) {
         gameOn_ = false;
         victory_ = true;
+        crashDirection_ = Direction::NONE;
     }
 }
 
@@ -321,50 +322,6 @@ void Playground::SaveLastGame()
         headAndFoodIndexes_,
         width_
     );
-}
-
-Direction Playground::__FindMovementDirection(int fromIndex, int toIndex)
-{
-    int fromX, fromY, toX, toY;
-    fromX = fromIndex % width_;
-    fromY = fromIndex / width_;
-    toX = toIndex % width_;
-    toY = toIndex / width_;
-
-    if (fromY == toY) {
-        if (abs(fromX - toX) == 1) {
-            if (toX < fromX) return Direction::LEFT;
-            else return Direction::RIGHT;
-        }
-        else {
-            if (toX < fromX) return Direction::RIGHT;
-            else return Direction::LEFT;
-        }
-    }
-    else {  // fromX == toX
-        if (abs(fromY - toY) == 1) {
-            if (toY < fromY) return Direction::UP;
-            else return Direction::DOWN;
-        }
-        else {
-            if (toY < fromY) return Direction::DOWN;
-            else return Direction::UP;
-        }
-    }
-}
-
-int Playground::__FindCellFromMovementDirection(int cellIndex, Direction movementDirection)
-{
-    if (movementDirection == Direction::LEFT) cellIndex--;
-    else if (movementDirection == Direction::RIGHT) cellIndex++;
-    else if (movementDirection == Direction::UP) cellIndex -= width_;
-    else cellIndex += width_;
-
-    if (field_[cellIndex].type == CellType::PORTAL) {
-        int possibleCellIndex = __GetPortalExitIndex(cellIndex, movementDirection);
-        if (possibleCellIndex != -1) return possibleCellIndex;
-    }
-    return cellIndex;
 }
 
 vector<int> Playground::__GetCellVicinityByIndexes(int cellIndex)
@@ -385,84 +342,6 @@ vector<int> Playground::__GetCellVicinityByIndexes(int cellIndex)
     return {leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex};
 }
 
-int Playground::__GetPortalExitIndex(int portalEnterIndex, Direction movementDirection)
-{
-    assert(field_[portalEnterIndex].type == CellType::PORTAL);
-    int possibleExitIndex, nextCellIndex;
-    int enterX = portalEnterIndex % width_,
-        enterY = portalEnterIndex / width_;
-
-    if (movementDirection == Direction::LEFT) {
-        nextCellIndex = enterY * width_ + (enterX - 1);
-        if (portalEnterIndex % width_) {  // check if portal is correct for this orientation (horizontal)
-            while (nextCellIndex % width_) {
-                if (field_[nextCellIndex].type != CellType::WALL &&
-                    field_[nextCellIndex].type != CellType::PORTAL) return -1;
-                nextCellIndex--;
-            }
-        }
-        possibleExitIndex = enterY * width_ + (width_ - 1);
-        while (possibleExitIndex != portalEnterIndex) {
-            if (field_[possibleExitIndex].type == CellType::PORTAL &&
-                field_[possibleExitIndex - 1].type != CellType::PORTAL &&
-                field_[possibleExitIndex - 1].type != CellType::WALL) return (possibleExitIndex - 1);
-            possibleExitIndex--;
-        }
-    }
-
-    else if (movementDirection == Direction::RIGHT) {
-        nextCellIndex = enterY * width_ + (enterX + 1);
-        if (portalEnterIndex % width_ < width_ - 1) {  // check if portal is correct for this orientation (horizontal)
-            while (nextCellIndex % width_ < width_ - 1) {
-                if (field_[nextCellIndex].type != CellType::WALL &&
-                    field_[nextCellIndex].type != CellType::PORTAL) return -1;
-                nextCellIndex++;
-            }
-        }
-        possibleExitIndex = enterY * width_;
-        while (possibleExitIndex != portalEnterIndex) {
-            if (field_[possibleExitIndex].type == CellType::PORTAL &&
-                field_[possibleExitIndex + 1].type != CellType::PORTAL &&
-                field_[possibleExitIndex + 1].type != CellType::WALL) return (possibleExitIndex + 1);
-            possibleExitIndex++;
-        }
-    }
-
-    else if (movementDirection == Direction::UP) {
-        nextCellIndex = portalEnterIndex - width_;
-        while (nextCellIndex / width_ > 0) {  // check if portal is correct for this orientation (vertical)
-            if (field_[nextCellIndex].type != CellType::WALL &&
-                field_[nextCellIndex].type != CellType::PORTAL) return -1;
-            nextCellIndex -= width_;
-        }
-        possibleExitIndex = (height_ - 1) * width_ + enterX;
-        while (possibleExitIndex != portalEnterIndex) {
-            if (field_[possibleExitIndex].type == CellType::PORTAL &&
-                field_[possibleExitIndex - width_].type != CellType::PORTAL &&
-                field_[possibleExitIndex - width_].type != CellType::WALL) return (possibleExitIndex - width_);
-            possibleExitIndex -= width_;
-        }
-    }
-
-    else {  // movementDirection == Direction::DOWN
-        nextCellIndex = portalEnterIndex + width_;
-        while (nextCellIndex / width_ < height_ - 1) {  // check if portal is correct for this orientation (vertical)
-            if (field_[nextCellIndex].type != CellType::WALL &&
-                field_[nextCellIndex].type != CellType::PORTAL) return -1;
-            nextCellIndex += width_;
-        }
-        possibleExitIndex = enterX;
-        while (possibleExitIndex != portalEnterIndex) {
-            if (field_[possibleExitIndex].type == CellType::PORTAL &&
-                field_[possibleExitIndex + width_].type != CellType::PORTAL &&
-                field_[possibleExitIndex + width_].type != CellType::WALL) return (possibleExitIndex + width_);
-            possibleExitIndex += width_;
-        }
-    }
-
-    return -1;
-}
-
 void Playground::__ArrangeFieldElements()
 {
     // Draw empty field
@@ -477,6 +356,7 @@ void Playground::__ArrangeFieldElements()
             this_thread::sleep_for(chrono::seconds(1));
             MouseInput::WaitForAnyEvent();
             draw::alert::Remove();
+            draw::Field(field_, width_);
             __MovePortalsBackToBorder();
         }
 

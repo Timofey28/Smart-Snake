@@ -1,17 +1,18 @@
 #include <iostream>
 #include <windows.h>
 #include <stdexcept>
+
 #include "application.h"
 #include "file_handler.h"
 #include "mouse_input.h"
 #include "utils.h"
 
 #include <bits/stdc++.h>
-#include "experiment.h"
 namespace fs = std::filesystem;
 
 using namespace std;
 
+extern int PointOfNoReturn;
 int nConsoleWidth, nConsoleHeight;
 DWORD prev_mode;
 
@@ -37,7 +38,9 @@ int main()
     initializeBase93Map();
     configureConsole();
     getConsoleWH();
+    PointOfNoReturn = ::nConsoleWidth / 2 * ::nConsoleHeight - 1;
 
+//    cout << nConsoleWidth << "x" << nConsoleHeight;
     Application application;
     application.Run();
 
@@ -68,8 +71,8 @@ int main()
 //        if (next == pileIndexToSliderPos_.end()) cout << it->first;
 //    } cout<<" ("<<(--it)->first-lastValue+1<<")\n"<<scrollbarHeight-1<<": "<<scrollbarSteps_-1<<"\n";
 
-//    int i = 417, j = 848;
-//    int w = 50;
+//    int i = 7, j = 16;
+//    int w = 5;
 //    cout << toBase93(i % w) << toBase93(i / w) << ' ' << toBase93(j % w) << toBase93(j / w);
 
 //    vector<int> v = {6, 7, 8, 7, 9};

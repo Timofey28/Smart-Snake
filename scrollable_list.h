@@ -1,9 +1,8 @@
 #pragma once
 
 #include <vector>
-
-#include "draw.h"
-#include <conio.h>
+#include <map>
+#include <cassert>
 
 
 enum Operation

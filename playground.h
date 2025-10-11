@@ -62,10 +62,16 @@ private:
 
     void __InitializePlayground();
     void __FillAdjacencyList();
-    int __GetPortalExitIndex(int portalEnterIndex, Direction movementDirection);
     void __FillSnakeTurnsQueue();
 
-    Direction __FindMovementDirection(int fromIndex, int toIndex);
-    int __FindCellFromMovementDirection(int fromIndex, Direction movementDirection);
+    Direction __FindMovementDirection(int fromIndex, int toIndex) {
+        return findMovementDirection(fromIndex, toIndex, width_);
+    }
+    int __FindCellFromMovementDirection(int fromIndex, Direction movementDirection) {
+        return findCellFromMovementDirection(fromIndex, movementDirection, field_, width_, height_);
+    }
+    int __GetPortalExitIndex(int portalEnterIndex, Direction movementDirection) {
+        return getPortalExitIndex(portalEnterIndex, movementDirection, field_, width_, height_);
+    }
     std::vector<int> __GetCellVicinityByIndexes(int cellIndex);
 };

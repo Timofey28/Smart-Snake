@@ -17,6 +17,11 @@ void setPosition(short x, short y)
     }
 }
 
+void setPosition(const Cell& cell, bool secondPart)
+{
+    setPosition(cell.realX + secondPart, cell.realY);
+}
+
 void setColor(Color color)
 {
     static HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -39,29 +44,20 @@ void draw::GameCell(const Cell& cell, int stretch)
 {
     if (cell.num == PointOfNoReturn) return;
     setPosition(cell.realX, cell.realY);
-//    if (cell.type == CellType::PASS) {
-//        setColor(Color::NORMAL);
-//        _setmode(_fileno(stdout), _O_U16TEXT);
-//        wcout << wstring(min(stretch, PointOfNoReturn - cell.num) * 2, (wchar_t) 0x2591);
-//        _setmode(_fileno(stdout), _O_TEXT);
-//    }
-//    else {
     setColor(CELL_COLOR[cell.type]);
-    cout << string(min(stretch, PointOfNoReturn - cell.num) * 2, ' ');
-//    }
+    cout << string(max(1, min(stretch, PointOfNoReturn - cell.num)) * 2, ' ');  // (from 1 to whatever is smaller) * 2
 }
 
-void draw::SnakeHead(Cell& cell, Direction movementDirection)
+void draw::SnakeHead(const Cell& cell, Direction movementDirection)
 {
-    cell.type = CellType::SNAKE_HEAD;
     setPosition(cell.realX, cell.realY);
-    setColor(Color::SNAKE_EYES);
+    setColor(CELL_COLOR[cell.type]);
     if (movementDirection == Direction::LEFT) cout << ": ";
     else if (movementDirection == Direction::RIGHT) cout << " :";
     else if (movementDirection == Direction::DOWN) cout << "..";
-    else {
+    else if (movementDirection == Direction::UP) {
         _setmode(_fileno(stdout), _O_U16TEXT);
-        wcout << (wchar_t) 0x02D9 << (wchar_t) 0x02D9;
+        wcout << Symbols::DOT_ABOVE << Symbols::DOT_ABOVE;
         _setmode(_fileno(stdout), _O_TEXT);
     }
 }
@@ -99,16 +95,61 @@ void draw::Field(const vector<Cell>& field, int width, bool onlyPerimeter)
     }
 }
 
+void draw::Crash(bool paint, const vector<Cell>& field, int width, int snakeHeadIndex)
+{
+    if (snakeHeadIndex == -1) {
+        for (int i = 0; i < field.size(); ++i) {
+            if (field[i].type == CellType::SNAKE_HEAD) {
+                snakeHeadIndex = i;
+                break;
+            }
+        }
+    }
+    using BoxSymbols = Symbols::BoxHeavy;
+    _setmode(_fileno(stdout), _O_U16TEXT);
+
+    // upper cells
+    setPosition(field[snakeHeadIndex - width - 1], true);
+    setColor(CELL_COLOR[field[snakeHeadIndex - width - 1].type]);
+    if (paint) wcout << BoxSymbols::LEFT_UP_CORNER;
+    else wcout << ' ';
+    setColor(CELL_COLOR[field[snakeHeadIndex - width].type]);
+    if (paint) wcout << wstring(2, BoxSymbols::HORIZONTAL_LINE);
+    else wcout << "  ";
+    setColor(CELL_COLOR[field[snakeHeadIndex - width + 1].type]);
+    if (paint) wcout << BoxSymbols::RIGHT_UP_CORNER;
+    else wcout << ' ';
+
+    // lower cells
+    setPosition(field[snakeHeadIndex + width - 1], true);
+    setColor(CELL_COLOR[field[snakeHeadIndex + width - 1].type]);
+    if (paint) wcout << BoxSymbols::LEFT_DOWN_CORNER;
+    else wcout << ' ';
+    setColor(CELL_COLOR[field[snakeHeadIndex + width].type]);
+    if (paint) wcout << wstring(2, BoxSymbols::HORIZONTAL_LINE);
+    else wcout << "  ";
+    setColor(CELL_COLOR[field[snakeHeadIndex + width + 1].type]);
+    if (paint) wcout << BoxSymbols::RIGHT_DOWN_CORNER;
+    else wcout << ' ';
+
+    // middle cells
+    setPosition(field[snakeHeadIndex - 1], true);
+    setColor(CELL_COLOR[field[snakeHeadIndex - 1].type]);
+    if (paint) wcout << BoxSymbols::VERTICAL_LINE;
+    else wcout << ' ';
+    setPosition(field[snakeHeadIndex + 1]);
+    setColor(CELL_COLOR[field[snakeHeadIndex + 1].type]);
+    if (paint) wcout << BoxSymbols::VERTICAL_LINE;
+    else wcout << ' ';
+
+    _setmode(_fileno(stdout), _O_TEXT);
+}
+
 void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
 {
     assert(fieldWidth == 0 && fieldHeight == 0);
     int maxFieldWidth = min(91, nConsoleWidth / 2 - 2);
     int maxFieldHeight = min(91, nConsoleHeight - 2);
-    PointOfNoReturn = nConsoleWidth / 2 * nConsoleHeight - 1;
-
-//    fieldWidth = 10;
-//    fieldHeight = 10;
-//    return;
 
     string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";
     string phraseChooseHeight = "Выбери высоту поля (3 - " + to_string(maxFieldHeight) + ") => ";

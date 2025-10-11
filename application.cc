@@ -30,7 +30,7 @@ int Application::ChooseOption()
     unordered_set<int> POSSIBLE_OPTIONS = {'1', '2', 27};
     int option;
     while (true) {
-        option = getch();
+        option = _getch();
         if (POSSIBLE_OPTIONS.find(option) != POSSIBLE_OPTIONS.end()) return option;
     }
 }

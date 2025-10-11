@@ -458,6 +458,7 @@ Result Interface::GamesList()
             }
 
             else if (bp == ButtonPressed::LEFT_BUTTON && !clickInfo.isBorder && !clickInfo.isInnerBorder) {
+                s_listGames_.value().cursorPileIndex = s_listGames_.value().upperPileIndex + clickInfo.screenPileIndex;
                 s_chosenGameIndex_ = s_listGames_.value().upperPileIndex + clickInfo.screenPileIndex;
                 return Result::GAME_CHOSEN;
             }
@@ -474,7 +475,27 @@ Result Interface::GamesList()
 void Interface::RunGame()
 {
     system("cls");
-    cout << "Game play interface!!!!!!!!";
+    Game& game = s_selectedGames_[s_chosenGameIndex_];
+    game.Load();
+    game.PrintFirstFrame();
+
+    while (true) {
+        MouseInput::GetAnyEventInfo();
+        ButtonPressed bp = MouseInput::buttonPressed;
+        if (MouseInput::isKeyboardEvent) {
+            if (bp == ButtonPressed::ARROW_LEFT) {
+                if (!game.PrintPreviousFrame());
+            }
+            else if (bp == ButtonPressed::ARROW_RIGHT) {
+                if (!game.PrintNextFrame());
+            }
+            else if (bp == ButtonPressed::ESCAPE) {
+                setColor(Color::NORMAL);
+                return;
+            }
+        }
+    }
+
     this_thread::sleep_for(100ms);
     MouseInput::WaitForAnyEvent();
 }
@@ -537,10 +558,10 @@ vector<string> Interface::__MakePileData(
 vector<string> Interface::__MakePileData(Experiment e, int cursorPileIndex)
 {
     int maxPossibleGain = e.maxPossibleSnakeLength - e.initialSnakeLength;
-    double bestToMaxPossiblePercent = (double) e.bestScore / maxPossibleGain * 100;
+    double bestToMaxPossiblePercent = (double) e.bestScore * 100 / maxPossibleGain;
     vector<string> result = {
 //                to_string(cursorPileIndex + 1) + ". Создан в " + timestampToHourMinuteStr(e.creationTime),
-        to_string(cursorPileIndex + 1) + ". Поле " + to_string(e.fieldWidth - 2) + "x" + to_string(e.fieldHeight - 2),
+        to_string(cursorPileIndex + 1) + ". Поле " + to_string(e.fieldWidth - 2) + "x" + to_string(e.fieldHeight - 2) + ", " + timestampToHourMinuteStr(e.creationTime),
 //                to_string(cursorPileIndex + 1) + ". " + timestampToHourMinuteStr(e.creationTime) + ", поле " + to_string(e.fieldWidth - 2) + "x" + to_string(e.fieldHeight - 2),
         "  Игр: " + to_string(e.gamesAmount),
         "  Нач. длина змеи: " + to_string(e.initialSnakeLength),
@@ -559,6 +580,7 @@ vector<string> Interface::__MakePileData(int gameNo, int score, int maxPossibleS
 {
     int percent = score * 100 / maxPossibleScore;
     string result = format("{}. {}/{}, {}%", gameNo, score, maxPossibleScore, percent);
+    assert(s_gamePileContentWidth_ >= result.size());
     result += string(s_gamePileContentWidth_ - result.size(), ' ');
     return {result};
 }

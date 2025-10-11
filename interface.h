@@ -17,8 +17,6 @@
 #include "mouse_input.h"
 #include "game.h"
 
-#include <conio.h>
-
 extern int nConsoleWidth, nConsoleHeight;
 using BoxStyle = Symbols::BoxLight;
 

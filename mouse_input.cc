@@ -12,6 +12,7 @@ DWORD MouseInput::events_;
 void MouseInput::GetAnyEventInfo()
 {
     MouseInput::__EnableMouseInput();
+    FlushConsoleInputBuffer(handle_);
 
     while (true) {
         ReadConsoleInput(handle_, &inputRecord_, 1, &events_);
@@ -99,6 +100,7 @@ void MouseInput::GetAnyEventInfo()
 void MouseInput::GetClickInfo()
 {
     MouseInput::__EnableMouseInput();
+    FlushConsoleInputBuffer(handle_);
 
     while (true) {
         ReadConsoleInput(handle_, &inputRecord_, 1, &events_);
@@ -137,6 +139,7 @@ void MouseInput::WaitForAnyEvent()
 {
     MouseInput::__EnableMouseInput();
     FlushConsoleInputBuffer(handle_);
+
     while (true) {
         ReadConsoleInput(handle_, &inputRecord_, 1, &events_);
         if (inputRecord_.EventType == KEY_EVENT) return;

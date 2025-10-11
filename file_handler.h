@@ -3,7 +3,7 @@
 #include <iostream>
 #include <stack>
 #include <vector>
-#include <queue>
+#include <deque>
 #include <map>
 #include <filesystem>
 #include <fstream>
@@ -45,7 +45,7 @@ public:
     );
 
     /* "<n>.txt"
-    line 1) finalSnakeLength, firstFoodIndex, lastFoodIndex, crashDirection (0-3)
+    line 1) finalSnakeLength, firstFoodIndex, lastFoodIndex, crashDirection (0-4, 4 is NONE)
     line 2) head and food coordinates (xy) in number system with base 93
     */
     static void SaveGame(
@@ -62,7 +62,7 @@ public:
         int& fieldWidth, int& fieldHeight,
         int& indentX, int& indentY,
         std::vector<Cell>& field,
-        std::queue<Direction>& snakeTurns,
+        std::deque<Direction>& snakeTurns,
         Direction& startingDirection, Direction& crashDirection,
         int& startingsnakeLength, int& finalSnakeLength, int& maxPossibleSnakeLength,
         int& firstFoodIndex, int& lastFoodIndex,

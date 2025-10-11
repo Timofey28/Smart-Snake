@@ -18,14 +18,16 @@ extern int PointOfNoReturn;
 const int TAB_WIDTH = 8;
 
 void setPosition(short, short);
+void setPosition(const Cell& cell, bool secondPart = false);
 void setColor(Color);
 void getPosition(short& x, short& y);
 
 namespace draw
 {
     void GameCell(const Cell& cell, int stretch = 1);
-    void SnakeHead(Cell& cell, Direction movementDirection);
+    void SnakeHead(const Cell& cell, Direction movementDirection);
     void Field(const std::vector<Cell>& field, int width, bool onlyPerimeter = false);
+    void Crash(bool paint, const std::vector<Cell>& field, int width, int snakeHeadIndex = -1);
 
     void EnterFieldDimensions(int& fieldWidth, int& fieldHeight);
     void EnterGamesAmount(int& gamesAmount);

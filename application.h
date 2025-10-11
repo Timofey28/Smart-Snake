@@ -10,10 +10,6 @@
 #include "interface.h"
 #include "mouse_input.h"
 
-#include <thread>
-#include <chrono>
-#include <sstream>
-
 
 class Application
 {

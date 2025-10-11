@@ -1,21 +1,15 @@
 #include "utils.h"
 
-#include <map>
-#include <unordered_map>
-#include <string>
-#include <cassert>
-
-
 static const std::string BASE93_DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./:;<=>?@[]^_`{|}~";
 static std::unordered_map<char, int> BASE93_TO_INT;
 
 std::map<CellType, Color> CELL_COLOR = {
-    {CellType::PASS, Color::BLUE},
-    {CellType::WALL, Color::CYAN},
-    {CellType::PORTAL, Color::BRIGHT_GREEN},
-    {CellType::FOOD, Color::RED},
-    {CellType::SNAKE_BODY, Color::BRIGHT_MAGENTA},
-    {CellType::SNAKE_HEAD, Color::MAGENTA},
+    {CellType::PASS, Color::BLACK_ON_BLUE},
+    {CellType::WALL, Color::BLACK_ON_CYAN},
+    {CellType::PORTAL, Color::BLACK_ON_BRIGHT_GREEN},
+    {CellType::FOOD, Color::BLACK_ON_RED},
+    {CellType::SNAKE_BODY, Color::BLACK_ON_BRIGHT_MAGENTA},
+    {CellType::SNAKE_HEAD, Color::BLACK_ON_MAGENTA},
 };
 std::mt19937 generator(time(nullptr));
 //std::mt19937 generator(1);
@@ -40,6 +34,7 @@ std::string toString(Direction direction)
         case Direction::RIGHT: return "Right";
         case Direction::UP: return "Up";
         case Direction::DOWN: return "Down";
+        case Direction::NONE: return "None";
         default: return "Unknown";
     }
 }
@@ -60,6 +55,131 @@ char toBase93(int num)
 int fromBase93ToDecimal(char numChar)
 {
     return BASE93_TO_INT[numChar];
+}
+
+
+Direction findMovementDirection(int fromIndex, int toIndex, int width)
+{
+    int fromX, fromY, toX, toY;
+    fromX = fromIndex % width;
+    fromY = fromIndex / width;
+    toX = toIndex % width;
+    toY = toIndex / width;
+
+    if (fromY == toY) {
+        if (abs(fromX - toX) == 1) {
+            if (toX < fromX) return Direction::LEFT;
+            else return Direction::RIGHT;
+        }
+        else {
+            if (toX < fromX) return Direction::RIGHT;
+            else return Direction::LEFT;
+        }
+    }
+    else {  // fromX == toX
+        if (abs(fromY - toY) == 1) {
+            if (toY < fromY) return Direction::UP;
+            else return Direction::DOWN;
+        }
+        else {
+            if (toY < fromY) return Direction::DOWN;
+            else return Direction::UP;
+        }
+    }
+}
+
+int findCellFromMovementDirection(int cellIndex, Direction movementDirection, const std::vector<Cell>& field, int width, int height)
+{
+    if (movementDirection == Direction::LEFT) cellIndex--;
+    else if (movementDirection == Direction::RIGHT) cellIndex++;
+    else if (movementDirection == Direction::UP) cellIndex -= width;
+    else if (movementDirection == Direction::DOWN) cellIndex += width;
+    else throw std::runtime_error("Unknown direction.");
+
+    if (field[cellIndex].type == CellType::PORTAL) {
+        int possibleCellIndex = getPortalExitIndex(cellIndex, movementDirection, field, width, height);
+        if (possibleCellIndex != -1) return possibleCellIndex;
+    }
+    return cellIndex;
+}
+
+int getPortalExitIndex(int portalEnterIndex, Direction movementDirection, const std::vector<Cell>& field, int width, int height)
+{
+    assert(field[portalEnterIndex].type == CellType::PORTAL);
+    int possibleExitIndex, nextCellIndex;
+    int enterX = portalEnterIndex % width,
+        enterY = portalEnterIndex / width;
+
+    if (movementDirection == Direction::LEFT) {
+        nextCellIndex = enterY * width + (enterX - 1);
+        if (portalEnterIndex % width) {  // check if portal is correct for this orientation (horizontal)
+            while (nextCellIndex % width) {
+                if (field[nextCellIndex].type != CellType::WALL &&
+                    field[nextCellIndex].type != CellType::PORTAL) return -1;
+                nextCellIndex--;
+            }
+        }
+        possibleExitIndex = enterY * width + (width - 1);
+        while (possibleExitIndex != portalEnterIndex) {
+            if (field[possibleExitIndex].type == CellType::PORTAL &&
+                field[possibleExitIndex - 1].type != CellType::PORTAL &&
+                field[possibleExitIndex - 1].type != CellType::WALL) return (possibleExitIndex - 1);
+            possibleExitIndex--;
+        }
+    }
+
+    else if (movementDirection == Direction::RIGHT) {
+        nextCellIndex = enterY * width + (enterX + 1);
+        if (portalEnterIndex % width < width - 1) {  // check if portal is correct for this orientation (horizontal)
+            while (nextCellIndex % width < width - 1) {
+                if (field[nextCellIndex].type != CellType::WALL &&
+                    field[nextCellIndex].type != CellType::PORTAL) return -1;
+                nextCellIndex++;
+            }
+        }
+        possibleExitIndex = enterY * width;
+        while (possibleExitIndex != portalEnterIndex) {
+            if (field[possibleExitIndex].type == CellType::PORTAL &&
+                field[possibleExitIndex + 1].type != CellType::PORTAL &&
+                field[possibleExitIndex + 1].type != CellType::WALL) return (possibleExitIndex + 1);
+            possibleExitIndex++;
+        }
+    }
+
+    else if (movementDirection == Direction::UP) {
+        nextCellIndex = portalEnterIndex - width;
+        while (nextCellIndex / width > 0) {  // check if portal is correct for this orientation (vertical)
+            if (field[nextCellIndex].type != CellType::WALL &&
+                field[nextCellIndex].type != CellType::PORTAL) return -1;
+            nextCellIndex -= width;
+        }
+        possibleExitIndex = (height - 1) * width + enterX;
+        while (possibleExitIndex != portalEnterIndex) {
+            if (field[possibleExitIndex].type == CellType::PORTAL &&
+                field[possibleExitIndex - width].type != CellType::PORTAL &&
+                field[possibleExitIndex - width].type != CellType::WALL) return (possibleExitIndex - width);
+            possibleExitIndex -= width;
+        }
+    }
+
+    else if (movementDirection == Direction::DOWN) {
+        nextCellIndex = portalEnterIndex + width;
+        while (nextCellIndex / width < height - 1) {  // check if portal is correct for this orientation (vertical)
+            if (field[nextCellIndex].type != CellType::WALL &&
+                field[nextCellIndex].type != CellType::PORTAL) return -1;
+            nextCellIndex += width;
+        }
+        possibleExitIndex = enterX;
+        while (possibleExitIndex != portalEnterIndex) {
+            if (field[possibleExitIndex].type == CellType::PORTAL &&
+                field[possibleExitIndex + width].type != CellType::PORTAL &&
+                field[possibleExitIndex + width].type != CellType::WALL) return (possibleExitIndex + width);
+            possibleExitIndex += width;
+        }
+    }
+    else throw std::runtime_error("Unknown direction.");
+
+    return -1;
 }
 
 
@@ -188,12 +308,9 @@ void getPairedAdjacentCellAndCornerCellIndex(
 
 int randomUnder(int num)
 {
+    if (num == 2) return uid2(generator);
     std::uniform_int_distribution<int> uid{0, num - 1};
     return uid(generator);
-
-//    if (num == 2) return uid2(generator);
-//    std::uniform_int_distribution<int> uid{0, num - 1};
-//    return uid(generator);
 }
 
 Direction toLeftFrom(Direction direction)
@@ -201,7 +318,8 @@ Direction toLeftFrom(Direction direction)
     if (direction == Direction::LEFT) return Direction::DOWN;
     else if (direction == Direction::RIGHT) return Direction::UP;
     else if (direction == Direction::UP) return Direction::LEFT;
-    else return Direction::RIGHT;
+    else if (direction == Direction::DOWN) return Direction::RIGHT;
+    else throw std::runtime_error("Unknown direction.");
 }
 
 Direction toRightFrom(Direction direction)
@@ -209,7 +327,17 @@ Direction toRightFrom(Direction direction)
     if (direction == Direction::LEFT) return Direction::UP;
     else if (direction == Direction::RIGHT) return Direction::DOWN;
     else if (direction == Direction::UP) return Direction::RIGHT;
-    else return Direction::LEFT;
+    else if (direction == Direction::DOWN) return Direction::LEFT;
+    else throw std::runtime_error("Unknown direction.");
+}
+
+Direction opposite(Direction direction)
+{
+    if (direction == Direction::LEFT) return Direction::RIGHT;
+    else if (direction == Direction::RIGHT) return Direction::LEFT;
+    else if (direction == Direction::UP) return Direction::DOWN;
+    else if (direction == Direction::DOWN) return Direction::UP;
+    else throw std::runtime_error("Unknown direction.");
 }
 
 
@@ -256,6 +384,7 @@ std::string doubleToStr(double value, int precision)
     std::stringstream ss;
     ss << std::fixed << std::setprecision(precision) << value;
     std::string result = ss.str();
+    if (result.find('.') == std::string::npos) return result;
     while (result.back() == '0') result.pop_back();
     if (result.back() == '.') result.pop_back();
     return result;
@@ -263,14 +392,14 @@ std::string doubleToStr(double value, int precision)
 
 int numberLength(int number)
 {
-    if (number > 1000000000) return 10;
-    if (number > 100000000) return 9;
-    if (number > 10000000) return 8;
-    if (number > 1000000) return 7;
-    if (number > 100000) return 6;
-    if (number > 10000) return 5;
-    if (number > 1000) return 4;
-    if (number > 100) return 3;
-    if (number > 10) return 2;
+    if (number >= 1000000000) return 10;
+    if (number >= 100000000) return 9;
+    if (number >= 10000000) return 8;
+    if (number >= 1000000) return 7;
+    if (number >= 100000) return 6;
+    if (number >= 10000) return 5;
+    if (number >= 1000) return 4;
+    if (number >= 100) return 3;
+    if (number >= 10) return 2;
     return 1;
 }

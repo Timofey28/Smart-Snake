@@ -2,7 +2,10 @@
 
 #include <iostream>
 #include <map>
+#include <unordered_map>
 #include <vector>
+#include <string>
+#include <cassert>
 #include <ctime>
 #include <iomanip>
 #include <random>
@@ -30,6 +33,23 @@ enum Color {
     BEIGE = 238,
     WHITE = 255,
 
+    // black on colored background
+    BLACK_ON_BLUE = 16,
+    BLACK_ON_GREEN = 32,
+    BLACK_ON_CYAN = 48,
+    BLACK_ON_RED = 64,
+    BLACK_ON_MAGENTA = 80,
+    BLACK_ON_GOLD = 96,
+    BLACK_ON_ALMOST_WHITE = 112,
+    BLACK_ON_GRAY = 128,
+    BLACK_ON_BRIGHT_BLUE = 144,
+    BLACK_ON_BRIGHT_GREEN = 160,
+    BLACK_ON_SEA_WAVE = 176,
+    BLACK_ON_BRIGHT_RED = 192,
+    BLACK_ON_BRIGHT_MAGENTA = 208,
+    BLACK_ON_BEIGE = 224,
+    BLACK_ON_WHITE = 240,
+
     // on black background
     BLUE_ON_BLACK = 1,
     GREEN_ON_BLACK = 2,
@@ -47,9 +67,7 @@ enum Color {
     BEIGE_ON_BLACK = 14,
     WHITE_ON_BLACK = 15,
 
-    SNAKE_EYES = 80,
     BEIGE_ON_BLUE = 19,
-    BLACK_ON_GREEN = 2*16,
 };
 
 enum CellType
@@ -69,6 +87,7 @@ enum Direction
     RIGHT,
     UP,
     DOWN,
+    NONE
 };
 
 enum Orientation
@@ -107,6 +126,7 @@ void getPairedAdjacentCellAndCornerCellIndex(
 int randomUnder(int num);
 Direction toLeftFrom(Direction direction);
 Direction toRightFrom(Direction direction);
+Direction opposite(Direction direction);
 
 bool isToday(time_t timestamp);
 bool isYesterday(time_t timestamp);
@@ -151,10 +171,15 @@ struct Cell
     bool isNone() { return type == CellType::UNKNOWN; }
 };
 
+Direction findMovementDirection(int fromIndex, int toIndex, int width);
+int findCellFromMovementDirection(int cellIndex, Direction movementDirection, const std::vector<Cell>& field, int width, int height);
+int getPortalExitIndex(int portalEnterIndex, Direction movementDirection, const std::vector<Cell>& field, int width, int height);
+
 struct Symbols
 {
     static constexpr wchar_t PLUS_MINUS = 0x00B1;
     static constexpr wchar_t HORIZONTAL_DOUBLE_LINE = 0x2550;
+    static constexpr wchar_t DOT_ABOVE = 0x02D9;
 
     struct BoxLight
     {
