@@ -5,25 +5,25 @@
 #include <unordered_set>
 #include <stack>
 
+#include "console.h"
 #include "utils.h"
 #include "mouse_input.h"
 #include "draw.h"
 #include "validation.h"
 #include "file_handler.h"
 #include "algorithm.h"
+#include "caption_init.h"
+#include "alert.h"
 
 //#include <sstream>
 //#include <iostream>
-
-
-extern int nConsoleWidth, nConsoleHeight;
-const int SCREEN_WIDTH = nConsoleWidth / 2;
+//#include <conio.h>
 
 
 class Playground
 {
 public:
-    Playground() { __Init(); }
+    Playground() : caption(CAPTION_FIELD_ELEMENTS_ARRANGEMENT) { __Init(); }
     void FieldParametersInputForm();
     void SaveInitialData();
     void SaveLastGame();
@@ -42,8 +42,11 @@ private:
     std::queue<Direction> snakeTurns_, initialSnakeTurns_;
     bool gameOn_, victory_;
     int foodIndex_, snakeHeadIndex_, snakeAssIndex_, initialSnakeHeadIndex_, initialSnakeAssIndex_;
+    const Caption& caption;
+    std::unordered_set<int> borderPortalIndexes_, fieldPortalIndexes_;
 
     Validation validation;
+    Alert alert;
 
     // variables to record the game
     int firstFoodIndex_, lastFoodIndex_;
@@ -59,6 +62,8 @@ private:
     bool __WholeAxisIsAWall(Orientation orientation, int axisValue);
     void __MovePortalsBackToBorder();
     void __RepaintSnakeCells();
+    void __ShowAlert(AlertType alertType);
+    void __GetBorderPortals();
 
     void __InitializePlayground();
     void __FillAdjacencyList();
@@ -75,3 +80,11 @@ private:
     }
     std::vector<int> __GetCellVicinityByIndexes(int cellIndex);
 };
+
+
+inline void Playground::__ShowAlert(AlertType alertType)
+{
+    auto cMovePortalsBackToBorder = std::bind(&Playground::__MovePortalsBackToBorder, this);
+    auto cDrawCaption = std::bind(&Caption::Draw, &this->caption);
+    alert.Show(alertType, &field_, width_, cMovePortalsBackToBorder, cDrawCaption);
+}

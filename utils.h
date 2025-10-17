@@ -11,6 +11,9 @@
 #include <random>
 #include <sstream>
 
+#include <mutex>
+#include <thread>
+
 
 enum Color {
     NORMAL = 15,
@@ -97,7 +100,17 @@ enum Orientation
 };
 
 
-extern std::map<CellType, Color> CELL_COLOR;
+inline std::mutex mtx;
+inline std::recursive_mutex rmtx;
+inline std::map<CellType, Color> CELL_COLOR = {
+    {CellType::PASS, Color::BLACK_ON_BLUE},
+    {CellType::WALL, Color::BLACK_ON_CYAN},
+    {CellType::PORTAL, Color::BLACK_ON_BRIGHT_GREEN},
+    {CellType::FOOD, Color::BLACK_ON_RED},
+    {CellType::SNAKE_BODY, Color::BLACK_ON_BRIGHT_MAGENTA},
+    {CellType::SNAKE_HEAD, Color::BLACK_ON_MAGENTA},
+};
+
 std::string toString(CellType cellType);
 std::string toString(Direction direction);
 

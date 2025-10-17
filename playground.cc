@@ -7,8 +7,6 @@
 
 using namespace std;
 
-//#include <conio.h>
-
 
 void Playground::__Init()
 {
@@ -16,12 +14,16 @@ void Playground::__Init()
     height_ = 0;
     gameOn_ = true;
     foodIndex_ = -1;
+    borderPortalIndexes_.clear();
+    fieldPortalIndexes_.clear();
 }
 
 void Playground::__InitializeFieldFromDimensions()
 {
-    indentX_ = (nConsoleWidth / 2 - width_) / 2;
-    indentY_ = (nConsoleHeight - height_) / 2;
+    int spaceBetween = min((Console::s_dimensions.width - width_ * 2 - caption.Width()) / 3, 4);
+    indentX_ = (Console::s_dimensions.width / 2 - (width_ * 2 + caption.Width() + spaceBetween) / 2) / 2;
+    indentY_ = (Console::s_dimensions.height - height_) / 2;
+    caption.SetIndents(indentX_ * 2 + width_ * 2 + spaceBetween, indentY_);
 
     // Putting walls around perimeter
     field_.resize(width_ * height_);
@@ -38,69 +40,11 @@ void Playground::FieldParametersInputForm()
     __Init();
 
     // Enter size of playing field
-    draw::EnterFieldDimensions(width_, height_);
+    draw::EnterFieldDimensions(width_, height_, caption.Width());
     __InitializeFieldFromDimensions();
 
     // Arrangement of walls, portals and snake itself
     __ArrangeFieldElements();
-}
-
-void Playground::SaveInitialData()
-{
-    stack<Direction> snakeTurnsStacked;
-    queue<int> traversalOrder;
-    traversalOrder.push(validation.startingCellIndex);
-    unordered_set<int> passed = {validation.startingCellIndex};
-    int cellIndex, x, y;
-    int leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
-    int snakeLength = 0;
-
-    initialSnakeHeadIndex_ = validation.startingCellIndex;
-    while (!traversalOrder.empty()) {
-        snakeLength++;
-        cellIndex = traversalOrder.front();
-        traversalOrder.pop();
-        x = cellIndex % width_;
-        y = cellIndex / width_;
-
-        leftCellIndex = y * width_ + (x - 1);
-        rightCellIndex = y * width_ + (x + 1);
-        topCellIndex = (y - 1) * width_ + x;
-        bottomCellIndex = (y + 1) * width_ + x;
-
-        if (field_[leftCellIndex].type == CellType::SNAKE_BODY && !passed.count(leftCellIndex)) {
-            passed.insert(leftCellIndex);
-            snakeTurnsStacked.push(Direction::RIGHT);
-            traversalOrder.push(leftCellIndex);
-        }
-        else if (field_[rightCellIndex].type == CellType::SNAKE_BODY && !passed.count(rightCellIndex)) {
-            passed.insert(rightCellIndex);
-            snakeTurnsStacked.push(Direction::LEFT);
-            traversalOrder.push(rightCellIndex);
-        }
-        else if (field_[topCellIndex].type == CellType::SNAKE_BODY && !passed.count(topCellIndex)) {
-            passed.insert(topCellIndex);
-            snakeTurnsStacked.push(Direction::DOWN);
-            traversalOrder.push(topCellIndex);
-        }
-        else if (field_[bottomCellIndex].type == CellType::SNAKE_BODY && !passed.count(bottomCellIndex)) {
-            passed.insert(bottomCellIndex);
-            snakeTurnsStacked.push(Direction::UP);
-            traversalOrder.push(bottomCellIndex);
-        }
-    }
-    initialSnakeAssIndex_ = cellIndex;
-
-    // snakeTurnsStacked - stack with the first element to take being the direction from snake last element to second last
-    FileHandler::SaveInitialData(
-        width_, height_,
-        indentX_, indentY_,
-        validation.startingDirection,
-        snakeLength,
-        currentPassCells_.size() + snakeLength,
-        snakeTurnsStacked,
-        field_
-    );
 }
 
 void Playground::ReinitializeStartingData()
@@ -124,6 +68,7 @@ void Playground::ReinitializeStartingData()
     lastFoodIndex_ = -1;
     headAndFoodIndexes_.clear();
     averageMovesToFood_ = 0;
+    crashDirection_ = Direction::NONE;
 }
 
 void Playground::CalculateNextIteration()
@@ -142,7 +87,7 @@ void Playground::CalculateNextIteration()
 //    oss << "| [" << nodes_[snakeHeadIndex_].size() << "]";
 //    oss << string(30, ' ');
 //    draw::smth(oss.str());
-//
+
 //    // Запись значений nodes_ в файл
 //    ofstream file("log.txt", ios::app);
 //    file << "\n\n\n";
@@ -288,9 +233,11 @@ void Playground::CalculateNextIteration()
                 if (iter == nodes_[index].end()) nodes_[index].push_back(nextAssIndex);
             }
         }
-        int newSecondLastIndex = __FindCellFromMovementDirection(nextAssIndex, snakeTurns_.front());
-        iter = find(nodes_[nextAssIndex].begin(), nodes_[nextAssIndex].end(), newSecondLastIndex);
-        if (iter == nodes_[nextAssIndex].end()) nodes_[nextAssIndex].push_back(newSecondLastIndex);
+        if (snakeTurns_.size()) {
+            int newSecondLastIndex = __FindCellFromMovementDirection(nextAssIndex, snakeTurns_.front());
+            iter = find(nodes_[nextAssIndex].begin(), nodes_[nextAssIndex].end(), newSecondLastIndex);
+            if (iter == nodes_[nextAssIndex].end()) nodes_[nextAssIndex].push_back(newSecondLastIndex);
+        }
 
         snakeAssIndex_ = nextAssIndex;
     }
@@ -308,8 +255,65 @@ void Playground::CalculateNextIteration()
     if (!currentPassCells_.size()) {
         gameOn_ = false;
         victory_ = true;
-        crashDirection_ = Direction::NONE;
     }
+}
+
+void Playground::SaveInitialData()
+{
+    stack<Direction> snakeTurnsStacked;
+    queue<int> traversalOrder;
+    traversalOrder.push(validation.startingCellIndex);
+    unordered_set<int> passed = {validation.startingCellIndex};
+    int cellIndex, x, y;
+    int leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
+    int snakeLength = 0;
+
+    initialSnakeHeadIndex_ = validation.startingCellIndex;
+    while (!traversalOrder.empty()) {
+        snakeLength++;
+        cellIndex = traversalOrder.front();
+        traversalOrder.pop();
+        x = cellIndex % width_;
+        y = cellIndex / width_;
+
+        leftCellIndex = y * width_ + (x - 1);
+        rightCellIndex = y * width_ + (x + 1);
+        topCellIndex = (y - 1) * width_ + x;
+        bottomCellIndex = (y + 1) * width_ + x;
+
+        if (field_[leftCellIndex].type == CellType::SNAKE_BODY && !passed.count(leftCellIndex)) {
+            passed.insert(leftCellIndex);
+            snakeTurnsStacked.push(Direction::RIGHT);
+            traversalOrder.push(leftCellIndex);
+        }
+        else if (field_[rightCellIndex].type == CellType::SNAKE_BODY && !passed.count(rightCellIndex)) {
+            passed.insert(rightCellIndex);
+            snakeTurnsStacked.push(Direction::LEFT);
+            traversalOrder.push(rightCellIndex);
+        }
+        else if (field_[topCellIndex].type == CellType::SNAKE_BODY && !passed.count(topCellIndex)) {
+            passed.insert(topCellIndex);
+            snakeTurnsStacked.push(Direction::DOWN);
+            traversalOrder.push(topCellIndex);
+        }
+        else if (field_[bottomCellIndex].type == CellType::SNAKE_BODY && !passed.count(bottomCellIndex)) {
+            passed.insert(bottomCellIndex);
+            snakeTurnsStacked.push(Direction::UP);
+            traversalOrder.push(bottomCellIndex);
+        }
+    }
+    initialSnakeAssIndex_ = cellIndex;
+
+    // snakeTurnsStacked - stack with the first element to take being the direction from snake last element to second last
+    FileHandler::SaveInitialData(
+        width_, height_,
+        indentX_, indentY_,
+        validation.startingDirection,
+        snakeLength,
+        currentPassCells_.size() + snakeLength,
+        snakeTurnsStacked,
+        field_
+    );
 }
 
 void Playground::SaveLastGame()
@@ -345,20 +349,14 @@ vector<int> Playground::__GetCellVicinityByIndexes(int cellIndex)
 void Playground::__ArrangeFieldElements()
 {
     // Draw empty field
+    system("cls");
     draw::Field(field_, width_, true);
+    caption.Draw();
 
     bool isBorder, isCorner, isAdjacentToCorner;
     int cellIndex;
     bool needToRemoveAlert = false;
     while (true) {
-        if (needToRemoveAlert) {
-            needToRemoveAlert = false;
-            this_thread::sleep_for(chrono::seconds(1));
-            MouseInput::WaitForAnyEvent();
-            draw::alert::Remove();
-            draw::Field(field_, width_);
-            __MovePortalsBackToBorder();
-        }
 
         // Arrangement of remaining elements
         while (true) {
@@ -367,7 +365,7 @@ void Playground::__ArrangeFieldElements()
             int clickedY = MouseInput::Y;
 
             if (MouseInput::buttonPressed == ButtonPressed::WHEEL ||
-                clickedX == nConsoleWidth / 2 - 1 && clickedY == nConsoleHeight - 1)  // cheatcode to continue
+                clickedX == Console::s_dimensions.width / 2 - 1 && clickedY == Console::s_dimensions.height - 1)  // cheatcode to continue
             {
                 setColor(Color::NORMAL);
                 break;
@@ -451,6 +449,7 @@ void Playground::__ArrangeFieldElements()
                         draw::GameCell(field_[cellIndex]);
                     }
                     else if (MouseInput::buttonPressed == ButtonPressed::RIGHT_BUTTON) {
+
                         field_[cellIndex].type = CellType::PASS;
                         draw::GameCell(field_[cellIndex]);
                     }
@@ -459,43 +458,41 @@ void Playground::__ArrangeFieldElements()
                         draw::GameCell(field_[cellIndex]);
                     }
                     else if (MouseInput::buttonPressed == ButtonPressed::CTRL_RIGHT) {
-                        if (field_[cellIndex].type == CellType::SNAKE_BODY) {
-                            field_[cellIndex].type = CellType::SNAKE_HEAD;
-                            draw::GameCell(field_[cellIndex]);
-                        }
+                        field_[cellIndex].type = CellType::SNAKE_HEAD;
+                        draw::GameCell(field_[cellIndex]);
                     }
                 }
             }
         }
 
-        __AdjustPortals();
+        // else alert thread was interrupted by another alert thread, sets haven't been cleaned up, portal adjustment is not needed
+        if (borderPortalIndexes_.empty()) {
+            __GetBorderPortals();
+            __AdjustPortals();
+        }
 
         // Validation
         if (!validation.SnakeSingularityAndCorrectness(field_, width_)) {
             if (validation.snakesAmount != 1) {
-                draw::alert::MultimpleOrNoneSnakes(validation.snakesAmount);
-                needToRemoveAlert = true;
+                if (!validation.snakesAmount) __ShowAlert(AlertType::MULTIPLE_SNAKES);
+                else __ShowAlert(AlertType::NO_SNAKES);
                 continue;
             }
             else if (!validation.snakeIsCorrect) {
-                draw::alert::IncorrectSnake();
-                needToRemoveAlert = true;
+                __ShowAlert(AlertType::INCORRECT_SNAKE);
                 continue;
             }
             else if (validation.snakeIsLooped) {
-                draw::alert::LoopedSnake();
-                needToRemoveAlert = true;
+                __ShowAlert(AlertType::LOOPED_SNAKE);
                 continue;
             }
         }
         if (!validation.ClosedSpacesExistence(field_, width_)) {
-            draw::alert::ClosedSpaces();
-            needToRemoveAlert = true;
+            __ShowAlert(AlertType::CLOSED_SPACES);
             continue;
         }
         if (!validation.SnakeHeadIdentification(field_, width_)) {
-            draw::alert::NoPossibleStart();
-            needToRemoveAlert = true;
+            __ShowAlert(AlertType::NO_POSSIBLE_START);
             continue;
         }
 
@@ -534,112 +531,106 @@ void Playground::__InitializePlayground()
 
 void Playground::__FillAdjacencyList()
 {
-    int spaceIndex = -1;
-    for (int i = 0; i < field_.size(); ++i) {
-        if (field_[i].type == CellType::PASS) {
-            spaceIndex = i;
-            break;
-        }
-    }
-    if (spaceIndex == -1) {
-        throw runtime_error("Unable to find space index while filling adjacency list (should be impossible to end up here)");
-    }
-
-//    // вывод типов клеток поля
-//    setPosition(0, 0);
-//    setColor(Color::NORMAL);
-//    for (int i = 0; i < field_.size(); ++i) {
-//        cout << toString(field_[i].type) << '\t';
-//        if ((i + 1) % width_ == 0) cout << '\n';
-//    }
-//    _getch();
-
-    queue<int> traversalOrder;
-    traversalOrder.push(spaceIndex);
-    vector<bool> passed(field_.size());
-    passed[spaceIndex] = true;
-    currentPassCells_.push_back(spaceIndex);
-    int cellIndex, x, y;
-    int leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
-    int portalExit;
-
-    while (!traversalOrder.empty()) {
-        cellIndex = traversalOrder.front();
-        traversalOrder.pop();
-        x = cellIndex % width_;
-        y = cellIndex / width_;
-
-        leftCellIndex = y * width_ + (x - 1);
-        rightCellIndex = y * width_ + (x + 1);
-        topCellIndex = (y - 1) * width_ + x;
-        bottomCellIndex = (y + 1) * width_ + x;
-
-        if (field_[leftCellIndex].type == CellType::PORTAL) {
-            portalExit = __GetPortalExitIndex(leftCellIndex, Direction::LEFT);
-            if (portalExit != -1) leftCellIndex = portalExit;
-        }
-        if (field_[rightCellIndex].type == CellType::PORTAL) {
-            portalExit = __GetPortalExitIndex(rightCellIndex, Direction::RIGHT);
-            if (portalExit != -1) rightCellIndex = portalExit;
-        }
-        if (field_[topCellIndex].type == CellType::PORTAL) {
-            portalExit = __GetPortalExitIndex(topCellIndex, Direction::UP);
-            if (portalExit != -1) topCellIndex = portalExit;
-        }
-        if (field_[bottomCellIndex].type == CellType::PORTAL) {
-            portalExit = __GetPortalExitIndex(bottomCellIndex, Direction::DOWN);
-            if (portalExit != -1) bottomCellIndex = portalExit;
-        }
-
-        if (field_[leftCellIndex].type == CellType::PASS ||
-            leftCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
-            leftCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
-        {
-            nodes_[cellIndex].push_back(leftCellIndex);
-            if (!passed[leftCellIndex]) {
-                passed[leftCellIndex] = true;
-                traversalOrder.push(leftCellIndex);
-                if (leftCellIndex != validation.snakeAssIndex && leftCellIndex != validation.startingCellIndex) {
-                    currentPassCells_.push_back(leftCellIndex);
-                }
+    int spaceIndex;
+    while (true) {
+        spaceIndex = -1;
+        for (int i = 0; i < field_.size(); ++i) {
+            if (field_[i].type == CellType::PASS &&
+                find(currentPassCells_.begin(), currentPassCells_.end(), i) == currentPassCells_.end())
+            {
+                spaceIndex = i;
+                break;
             }
         }
-        if (field_[rightCellIndex].type == CellType::PASS ||
-            rightCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
-            rightCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
-        {
-            nodes_[cellIndex].push_back(rightCellIndex);
-            if (!passed[rightCellIndex]) {
-                passed[rightCellIndex] = true;
-                traversalOrder.push(rightCellIndex);
-                if (rightCellIndex != validation.snakeAssIndex && rightCellIndex != validation.startingCellIndex) {
-                    currentPassCells_.push_back(rightCellIndex);
+        if (spaceIndex == -1) return;
+
+        queue<int> traversalOrder;
+        traversalOrder.push(spaceIndex);
+        vector<bool> passed(field_.size());
+        passed[spaceIndex] = true;
+        currentPassCells_.push_back(spaceIndex);
+        int cellIndex, x, y;
+        int leftCellIndex, rightCellIndex, topCellIndex, bottomCellIndex;
+        int portalExit;
+
+        while (!traversalOrder.empty()) {
+            cellIndex = traversalOrder.front();
+            traversalOrder.pop();
+            x = cellIndex % width_;
+            y = cellIndex / width_;
+
+            leftCellIndex = y * width_ + (x - 1);
+            rightCellIndex = y * width_ + (x + 1);
+            topCellIndex = (y - 1) * width_ + x;
+            bottomCellIndex = (y + 1) * width_ + x;
+
+            if (field_[leftCellIndex].type == CellType::PORTAL) {
+                portalExit = __GetPortalExitIndex(leftCellIndex, Direction::LEFT);
+                if (portalExit != -1) leftCellIndex = portalExit;
+            }
+            if (field_[rightCellIndex].type == CellType::PORTAL) {
+                portalExit = __GetPortalExitIndex(rightCellIndex, Direction::RIGHT);
+                if (portalExit != -1) rightCellIndex = portalExit;
+            }
+            if (field_[topCellIndex].type == CellType::PORTAL) {
+                portalExit = __GetPortalExitIndex(topCellIndex, Direction::UP);
+                if (portalExit != -1) topCellIndex = portalExit;
+            }
+            if (field_[bottomCellIndex].type == CellType::PORTAL) {
+                portalExit = __GetPortalExitIndex(bottomCellIndex, Direction::DOWN);
+                if (portalExit != -1) bottomCellIndex = portalExit;
+            }
+
+            if (field_[leftCellIndex].type == CellType::PASS ||
+                leftCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
+                leftCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
+            {
+                nodes_[cellIndex].push_back(leftCellIndex);
+                if (!passed[leftCellIndex]) {
+                    passed[leftCellIndex] = true;
+                    traversalOrder.push(leftCellIndex);
+                    if (leftCellIndex != validation.snakeAssIndex && leftCellIndex != validation.startingCellIndex) {
+                        currentPassCells_.push_back(leftCellIndex);
+                    }
                 }
             }
-        }
-        if (field_[topCellIndex].type == CellType::PASS ||
-            topCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
-            topCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
-        {
-            nodes_[cellIndex].push_back(topCellIndex);
-            if (!passed[topCellIndex]) {
-                passed[topCellIndex] = true;
-                traversalOrder.push(topCellIndex);
-                if (topCellIndex != validation.snakeAssIndex && topCellIndex != validation.startingCellIndex) {
-                    currentPassCells_.push_back(topCellIndex);
+            if (field_[rightCellIndex].type == CellType::PASS ||
+                rightCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
+                rightCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
+            {
+                nodes_[cellIndex].push_back(rightCellIndex);
+                if (!passed[rightCellIndex]) {
+                    passed[rightCellIndex] = true;
+                    traversalOrder.push(rightCellIndex);
+                    if (rightCellIndex != validation.snakeAssIndex && rightCellIndex != validation.startingCellIndex) {
+                        currentPassCells_.push_back(rightCellIndex);
+                    }
                 }
             }
-        }
-        if (field_[bottomCellIndex].type == CellType::PASS ||
-            bottomCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
-            bottomCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
-        {
-            nodes_[cellIndex].push_back(bottomCellIndex);
-            if (!passed[bottomCellIndex]) {
-                passed[bottomCellIndex] = true;
-                traversalOrder.push(bottomCellIndex);
-                if (bottomCellIndex != validation.snakeAssIndex && bottomCellIndex != validation.startingCellIndex) {
-                    currentPassCells_.push_back(bottomCellIndex);
+            if (field_[topCellIndex].type == CellType::PASS ||
+                topCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
+                topCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
+            {
+                nodes_[cellIndex].push_back(topCellIndex);
+                if (!passed[topCellIndex]) {
+                    passed[topCellIndex] = true;
+                    traversalOrder.push(topCellIndex);
+                    if (topCellIndex != validation.snakeAssIndex && topCellIndex != validation.startingCellIndex) {
+                        currentPassCells_.push_back(topCellIndex);
+                    }
+                }
+            }
+            if (field_[bottomCellIndex].type == CellType::PASS ||
+                bottomCellIndex == validation.snakeAssIndex && cellIndex != validation.startingCellIndex ||
+                bottomCellIndex == validation.startingCellIndex && cellIndex != validation.snakeAssIndex)
+            {
+                nodes_[cellIndex].push_back(bottomCellIndex);
+                if (!passed[bottomCellIndex]) {
+                    passed[bottomCellIndex] = true;
+                    traversalOrder.push(bottomCellIndex);
+                    if (bottomCellIndex != validation.snakeAssIndex && bottomCellIndex != validation.startingCellIndex) {
+                        currentPassCells_.push_back(bottomCellIndex);
+                    }
                 }
             }
         }
@@ -691,6 +682,15 @@ void Playground::__FillSnakeTurnsQueue()
     while (!snakeTurnsReversed.empty()) {
         snakeTurns_.push(snakeTurnsReversed.top());
         snakeTurnsReversed.pop();
+    }
+}
+
+void Playground::__GetBorderPortals()
+{
+    if (!borderPortalIndexes_.empty()) return;  // alert thread was interrupted by another alert thread, sets haven't been cleaned up
+    for (int i = 0; i < field_.size(); ++i) {
+        if ((i % width_ != 0) && (i % width_ != width_ - 1) && (i / width_ != 0) && (i / width_ != height_ - 1)) continue;
+        if (field_[i].type == CellType::PORTAL) borderPortalIndexes_.insert(i);
     }
 }
 
@@ -761,6 +761,7 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
             nextCellIndex = y * width_ + X;
             if (field_[nextCellIndex].type != CellType::WALL) {
                 if (y != 1) {
+                    fieldPortalIndexes_.insert(possiblePortalIndex);
                     field_[possiblePortalIndex].type = CellType::PORTAL;
                     draw::GameCell(field_[possiblePortalIndex]);
                 }
@@ -784,6 +785,7 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
             nextCellIndex = y * width_ + X;
             if (field_[nextCellIndex].type != CellType::WALL) {
                 if (y != height_ - 2) {
+                    fieldPortalIndexes_.insert(possiblePortalIndex);
                     field_[possiblePortalIndex].type = CellType::PORTAL;
                     draw::GameCell(field_[possiblePortalIndex]);
                 }
@@ -821,6 +823,7 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
             nextCellIndex = Y * width_ + x;
             if (field_[nextCellIndex].type != CellType::WALL && field_[nextCellIndex].type != CellType::PORTAL) {
                 if (x != 1) {
+                    fieldPortalIndexes_.insert(possiblePortalIndex);
                     field_[possiblePortalIndex].type = CellType::PORTAL;
                     draw::GameCell(field_[possiblePortalIndex]);
                 }
@@ -844,6 +847,7 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
             nextCellIndex = Y * width_ + x;
             if (field_[nextCellIndex].type != CellType::WALL && field_[nextCellIndex].type != CellType::PORTAL) {
                 if (x != width_ - 2) {
+                    fieldPortalIndexes_.insert(possiblePortalIndex);
                     field_[possiblePortalIndex].type = CellType::PORTAL;
                     draw::GameCell(field_[possiblePortalIndex]);
                 }
@@ -882,67 +886,18 @@ bool Playground::__WholeAxisIsAWall(Orientation orientation, int axisValue)
 
 void Playground::__MovePortalsBackToBorder()
 {
-    int leftIndex, rightIndex, upperIndex, lowerIndex;
-    for (int x = 1; x < width_ - 1; ++x) {
-        upperIndex = x;
-        lowerIndex = (height_ - 1) * width_ + x;
-        if (field_[upperIndex].type == CellType::PORTAL || field_[lowerIndex].type == CellType::PORTAL) {
-            field_[upperIndex].type = CellType::PORTAL;
-            draw::GameCell(field_[upperIndex]);
-            field_[lowerIndex].type = CellType::PORTAL;
-            draw::GameCell(field_[lowerIndex]);
+    for (auto it = borderPortalIndexes_.begin(); it != borderPortalIndexes_.end(); ++it) {
+        if (field_[*it].type == CellType::WALL) {
+            field_[*it].type = CellType::PORTAL;
+            draw::GameCell(field_[*it]);
         }
     }
-    for (int y = 1; y < height_ - 1; ++y) {
-        leftIndex = y * width_;
-        rightIndex = y * width_ + (width_ - 1);
-        if (field_[leftIndex].type == CellType::PORTAL || field_[rightIndex].type == CellType::PORTAL) {
-            field_[leftIndex].type = CellType::PORTAL;
-            draw::GameCell(field_[leftIndex]);
-            field_[rightIndex].type = CellType::PORTAL;
-            draw::GameCell(field_[rightIndex]);
-        }
+    for (auto it = fieldPortalIndexes_.begin(); it != fieldPortalIndexes_.end(); ++it) {
+        field_[*it].type = CellType::WALL;
+        draw::GameCell(field_[*it]);
     }
-
-    // also removing portals that both made it inside field (bc it is impossible to identify where they are from)
-    for (int i = 0; i < field_.size(); ++i) {
-        if ((i % width_ != 0) && (i % width_ != width_ - 1) && (i / width_ != 0) && (i / width_ != height_ - 1)) {
-            if (field_[i].type == CellType::PORTAL) {
-                field_[i].type = CellType::WALL;
-                draw::GameCell(field_[i]);
-            }
-        }
-    }
-
-    // add corner "portals" back
-    int upperLeftCorner = 0,
-        upperRightCorner = width_ - 1,
-        lowerLeftCorner = (height_ - 1) * width_,
-        lowerRightCorner = width_ * height_ - 1;
-    int upperLeftAdj1 = 1,
-        upperLeftAdj2 = width_,
-        upperRightAdj1 = width_ - 2,
-        upperRightAdj2 = 2 * width_ - 1,
-        lowerLeftAdj1 = (height_ - 2) * width_,
-        lowerLeftAdj2 = (height_ - 1) * width_ + 1,
-        lowerRightAdj1 = (height_ - 2) * width_ + (width_ - 1),
-        lowerRightAdj2 = width_ * height_ - 2;
-    if (field_[upperLeftAdj1].type == CellType::PORTAL && field_[upperLeftAdj2].type == CellType::PORTAL) {
-        field_[upperLeftCorner].type = CellType::PORTAL;
-        draw::GameCell(field_[upperLeftCorner]);
-    }
-    if (field_[upperRightAdj1].type == CellType::PORTAL && field_[upperRightAdj2].type == CellType::PORTAL) {
-        field_[upperRightCorner].type = CellType::PORTAL;
-        draw::GameCell(field_[upperRightCorner]);
-    }
-    if (field_[lowerLeftAdj1].type == CellType::PORTAL && field_[lowerLeftAdj2].type == CellType::PORTAL) {
-        field_[lowerLeftCorner].type = CellType::PORTAL;
-        draw::GameCell(field_[lowerLeftCorner]);
-    }
-    if (field_[lowerRightAdj1].type == CellType::PORTAL && field_[lowerRightAdj2].type == CellType::PORTAL) {
-        field_[lowerRightCorner].type = CellType::PORTAL;
-        draw::GameCell(field_[lowerRightCorner]);
-    }
+    borderPortalIndexes_.clear();
+    fieldPortalIndexes_.clear();
 }
 
 void Playground::__RepaintSnakeCells()

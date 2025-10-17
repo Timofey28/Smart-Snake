@@ -3,7 +3,7 @@
 #include <windows.h>
 #include <cassert>
 
-extern DWORD prev_mode;
+#include "console.h"
 
 
 enum ButtonPressed

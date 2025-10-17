@@ -157,6 +157,6 @@ void MouseInput::WaitForAnyEvent()
 
 void MouseInput::__EnableMouseInput()
 {
-    SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), ENABLE_EXTENDED_FLAGS | (::prev_mode & ~ENABLE_QUICK_EDIT_MODE));
+    SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), ENABLE_EXTENDED_FLAGS | (Console::s_previousMode & ~ENABLE_QUICK_EDIT_MODE));
     SetConsoleMode(handle_, ENABLE_MOUSE_INPUT);
 }

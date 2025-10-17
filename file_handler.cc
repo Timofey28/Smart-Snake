@@ -10,11 +10,6 @@ map<time_t, int, greater<time_t>>::iterator FileHandler::s_currExpAmountsByDates
 fs::path FileHandler::s_currentDirectory_;
 
 
-void FileHandler::Initialize()
-{
-    fs::create_directory(GAMES_FOLDER);
-}
-
 time_t FileHandler::GetLastWriteTime(fs::path pathToFileOrFolder)
 {
     auto ftime = fs::last_write_time(pathToFileOrFolder);
@@ -105,7 +100,7 @@ void FileHandler::ReadGame(
     fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // skip line break character
 
     // .initialdata, line 2
-    snakeTurns = {};
+    snakeTurns.clear();
     while (fin.peek() != '\n') {
         fin >> directionValue;
         snakeTurns.push_front(static_cast<Direction>(directionValue - 48));
@@ -130,6 +125,7 @@ void FileHandler::ReadGame(
 
     // game file, line 2
     char coordX, coordY;
+    gameIndexes.clear();
     while (fin >> coordX >> coordY) {
         gameIndexes.push_back(fromBase93ToDecimal(coordY) * fieldWidth + fromBase93ToDecimal(coordX));
     }

@@ -9,6 +9,7 @@
 #include <cassert>
 #include <optional>
 
+#include "console.h"
 #include "file_handler.h"
 #include "utils.h"
 #include "draw.h"
@@ -17,7 +18,6 @@
 #include "mouse_input.h"
 #include "game.h"
 
-extern int nConsoleWidth, nConsoleHeight;
 using BoxStyle = Symbols::BoxLight;
 
 

@@ -24,7 +24,7 @@ map<Sorting, string> Interface::s_sortingName_ = {
 void Interface::__InitTableDimensions()
 {
     // Фактическая высота таблиц
-    int maxTableHeight = nConsoleHeight - s_upperMargin_ * 2;
+    int maxTableHeight = Console::s_dimensions.height - s_upperMargin_ * 2;
     int pileHeight = s_datePileContentHeight_ + 1;
     s_dateTableHeight_ = maxTableHeight - (pileHeight + (maxTableHeight % pileHeight) - 1) % pileHeight;
     pileHeight = s_experimentPileContentHeight_ + 1;
@@ -272,7 +272,7 @@ bool Interface::DatesAndExperimentsList()
 Result Interface::GamesList()
 {
     system("cls");
-    assert(nConsoleHeight >= 18);
+    assert(Console::s_dimensions.height >= 18);
     Experiment& exp = s_selectedDateExperiments_[s_chosenExperimentIndex_];
     s_gamePileContentWidth_ = exp.CalculateGamePileContentWidth();
 
@@ -310,7 +310,7 @@ Result Interface::GamesList()
 
     if (!s_listGames_) {
         s_listGames_ = ScrollableList(exp.gamesAmount, s_gameTablePileLimit_, s_gameTableHeight_, 0, 0);
-        assert(s_gameLeftMargin_ + s_gamePileContentWidth_ + 2 * s_gamePilePadding_ + 2 + 2 * s_listGames_.value().scrollbar <= nConsoleWidth);
+        assert(s_gameLeftMargin_ + s_gamePileContentWidth_ + 2 * s_gamePilePadding_ + 2 + 2 * s_listGames_.value().scrollbar <= Console::s_dimensions.width);
         assert(s_selectedGames_.empty());
         s_selectedGames_.reserve(exp.gamesAmount);
         for (int i = 0; i < exp.gamesAmount; ++i) {
@@ -324,7 +324,9 @@ Result Interface::GamesList()
     s_coordsGameNo_ = {s_gameMenuLeftMargin_ + 6, 11};
     cout << "\n" << string(s_gameMenuLeftMargin_, ' ') << "Поползновений: " << s_selectedGames_[s_listGames_.value().cursorPileIndex].MovesAmount();
     s_coordsMovesAmount_ = {s_gameMenuLeftMargin_ + 15, 12};
-    cout << "\n" << string(s_gameMenuLeftMargin_, ' ') << "В среднем до еды: " << doubleToStr(s_selectedGames_[s_listGames_.value().cursorPileIndex].AvgMovesToFood());
+    cout << "\n" << string(s_gameMenuLeftMargin_, ' ') << "В среднем до еды: ";
+    if (s_selectedGames_[s_listGames_.value().cursorPileIndex].AvgMovesToFood() == -1) cout << "...";
+    else cout << doubleToStr(s_selectedGames_[s_listGames_.value().cursorPileIndex].AvgMovesToFood());
     s_coordsAvgMovesToFood_ = {s_gameMenuLeftMargin_ + 18, 13};
 
     cout << "\n" << string(s_gameMenuLeftMargin_, ' ');
@@ -942,5 +944,6 @@ void Interface::__SetDetailedGameInfo(int gameNo, int movesAmount, double avgMov
     setPosition(s_coordsMovesAmount_.first, s_coordsMovesAmount_.second);
     cout << movesAmount << "      ";
     setPosition(s_coordsAvgMovesToFood_.first, s_coordsAvgMovesToFood_.second);
-    cout << doubleToStr(avgMovesToFood) << "      ";
+    if (avgMovesToFood == -1) cout << "...      ";
+    else cout << doubleToStr(avgMovesToFood) << "      ";
 }

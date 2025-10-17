@@ -1,7 +1,6 @@
 #include "draw.h"
 using namespace std;
 
-int PointOfNoReturn;
 static int previousBarValue = -1;
 
 void setPosition(short x, short y)
@@ -9,8 +8,7 @@ void setPosition(short x, short y)
     COORD coord;
     coord.X = x;
     coord.Y = y;
-    static HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    if(!SetConsoleCursorPosition(handle, coord)) {
+    if(!SetConsoleCursorPosition(Console::s_handle, coord)) {
         DWORD errorCode = GetLastError();
         string posStr = "(" + to_string(x) + ", " + to_string(y) + ")";
         throw runtime_error("Failed to set cursor position " + posStr + ". Error code: " + to_string(errorCode));
@@ -24,15 +22,13 @@ void setPosition(const Cell& cell, bool secondPart)
 
 void setColor(Color color)
 {
-    static HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleTextAttribute(handle, (WORD) color);
+    SetConsoleTextAttribute(Console::s_handle, (WORD) color);
 }
 
 void getPosition(short& x, short& y)
 {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
-    if (GetConsoleScreenBufferInfo(hConsole, &consoleInfo)) {
+    if (GetConsoleScreenBufferInfo(Console::s_handle, &consoleInfo)) {
         COORD cursorPosition = consoleInfo.dwCursorPosition;
         x = cursorPosition.X;
         y = cursorPosition.Y;
@@ -42,10 +38,11 @@ void getPosition(short& x, short& y)
 
 void draw::GameCell(const Cell& cell, int stretch)
 {
-    if (cell.num == PointOfNoReturn) return;
+    lock_guard<recursive_mutex> lg(rmtx);
+    if (cell.num == Console::s_pointOfNoReturn) return;
     setPosition(cell.realX, cell.realY);
     setColor(CELL_COLOR[cell.type]);
-    cout << string(max(1, min(stretch, PointOfNoReturn - cell.num)) * 2, ' ');  // (from 1 to whatever is smaller) * 2
+    cout << string(max(1, min(stretch, Console::s_pointOfNoReturn - cell.num)) * 2, ' ');  // (from 1 to whatever is smaller) * 2
 }
 
 void draw::SnakeHead(const Cell& cell, Direction movementDirection)
@@ -80,7 +77,6 @@ void draw::Field(const vector<Cell>& field, int width, bool onlyPerimeter)
 {
     int height = field.size() / width;
     if (onlyPerimeter) {
-        system("cls");
         draw::GameCell(field[0], width);
         draw::GameCell(field[field.size() - width], width);
         draw::GameCell(field[width]);
@@ -145,11 +141,11 @@ void draw::Crash(bool paint, const vector<Cell>& field, int width, int snakeHead
     _setmode(_fileno(stdout), _O_TEXT);
 }
 
-void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight)
+void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight, int captionWidth)
 {
     assert(fieldWidth == 0 && fieldHeight == 0);
-    int maxFieldWidth = min(91, nConsoleWidth / 2 - 2);
-    int maxFieldHeight = min(91, nConsoleHeight - 2);
+    int maxFieldWidth = min(91, (Console::s_dimensions.width - captionWidth) / 2 - 2);
+    int maxFieldHeight = min(91, Console::s_dimensions.height - 2);
 
     string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";
     string phraseChooseHeight = "Выбери высоту поля (3 - " + to_string(maxFieldHeight) + ") => ";
@@ -258,7 +254,7 @@ void draw::__ClearInputAndMoveCursorBack(int phraseLength, int inputLength)
 void draw::ProgressBar(int done, int total)
 {
     int rowIndex = 3;
-    int places = nConsoleWidth - 35;
+    int places = Console::s_dimensions.width - 35;
 
     if (done == total) {
         if (previousBarValue == -1) {
@@ -304,62 +300,68 @@ void draw::ProgressBar(int done, int total)
 
 // namespace alert
 
-void draw::alert::MultimpleOrNoneSnakes(int snakesAmount)
-{
-    string alertMsg;
-    if (!snakesAmount) alertMsg = "Не найдено ни одной змейки. ИСПРАВИТЬ!!!";
-    else alertMsg = "Змейка должна быть только одна. ИСПРАВИТЬ!!!";
-    setPosition(0, 0);
-    setColor(Color::NORMAL);
-    cout << alertMsg;
-}
-
-void draw::alert::IncorrectSnake()
-{
-    string alertMsg = "Змейка некорректна, ее части не могут находиться рядом друг с другом. ИСПРАВИТЬ!!!";
-    setPosition(0, 0);
-    setColor(Color::NORMAL);
-    cout << alertMsg;
-}
-
-void draw::alert::ClosedSpaces()
-{
-    string alertMsg = "На игровом поле имеются комнаты, в которые невозможно попасть. Закрась их или сделай туда проход";
-    setPosition(0, 0);
-    setColor(Color::NORMAL);
-    cout << alertMsg;
-}
-
-void draw::alert::LoopedSnake()
-{
-    string alertMsg = "Змейка зациклена, а так нельзя. ИСПРАВЬ!!!";
-    setPosition(0, 0);
-    setColor(Color::NORMAL);
-    cout << alertMsg;
-}
-
-void draw::alert::NoPossibleStart()
-{
-    string alertMsg = "Змейка не может начать игру, потому что ей некуда идти. ИСПРАВИТЬ!!!";
-    setPosition(0, 0);
-    setColor(Color::NORMAL);
-    cout << alertMsg;
-}
-
-void draw::alert::Remove()
-{
-    setPosition(0, 0);
-    setColor(Color::BLACK);
-    cout << string(100, ' ');
-}
-
-void draw::alert::Victory()
-{
-    string alertMsg = "Победа! Ура, ура урааа!!!";
-    setPosition(0, 0);
-    setColor(Color::NORMAL);
-    cout << alertMsg;
-}
+//void draw::alert::MultipleOrNoneSnakes(int snakesAmount, const vector<Cell>& field, int width, function<void()> Callback, function<void()> cDrawCaption)
+//{
+//    unique_lock<recursive_mutex> ul(rmtx, std::defer_lock);
+//    string alertMsg;
+//    if (!snakesAmount) alertMsg = "Не найдено ни одной змейки. ИСПРАВИТЬ!!!";
+//    else alertMsg = "Змейка должна быть только одна. ИСПРАВИТЬ!!!";
+//
+//    ul.lock();
+//    setPosition(0, 0);
+//    setColor(Color::BLACK_ON_RED);
+//    cout << alertMsg;
+//    ul.unlock();
+//
+//    this_thread::sleep_for(2s);
+//
+//    ul.lock();
+//    setPosition(0, 0);
+//    setColor(Color::NORMAL);
+//    cout << string(alertMsg.size(), ' ');
+//    draw::Field(field, width);
+//    Callback();
+//    cDrawCaption();
+//}
+//
+//void draw::alert::IncorrectSnake()
+//{
+//    string alertMsg = "Змейка некорректна, ее части не могут находиться рядом друг с другом. ИСПРАВИТЬ!!!";
+//    setPosition(0, 0);
+//    setColor(Color::BLACK_ON_RED);
+//    cout << alertMsg;
+//}
+//
+//void draw::alert::ClosedSpaces()
+//{
+//    string alertMsg = "На игровом поле имеются комнаты, в которые невозможно попасть. Закрась их или сделай туда проход";
+//    setPosition(0, 0);
+//    setColor(Color::BLACK_ON_RED);
+//    cout << alertMsg;
+//}
+//
+//void draw::alert::LoopedSnake()
+//{
+//    string alertMsg = "Змейка зациклена, а так нельзя. ИСПРАВЬ!!!";
+//    setPosition(0, 0);
+//    setColor(Color::BLACK_ON_RED);
+//    cout << alertMsg;
+//}
+//
+//void draw::alert::NoPossibleStart()
+//{
+//    string alertMsg = "Змейка не может начать игру, потому что ей некуда идти. ИСПРАВИТЬ!!!";
+//    setPosition(0, 0);
+//    setColor(Color::BLACK_ON_RED);
+//    cout << alertMsg;
+//}
+//
+//void draw::alert::Remove()
+//{
+//    setPosition(0, 0);
+//    setColor(Color::BLACK);
+//    cout << string(100, ' ');
+//}
 
 template<typename BoxSymbols>
 void draw::Box(int indentX, int indentY, int width, int height, int pileContentHeight, int pilesAmount, Color focusColor, int activePile)

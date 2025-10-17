@@ -1,12 +1,5 @@
 #include "validation.h"
-
-#include <unordered_set>
-#include <queue>
-#include <cassert>
-//#include <thread>
-
 using namespace std;
-
 
 bool Validation::SnakeSingularityAndCorrectness(const vector<Cell>& field, int fieldWidth)
 {
@@ -393,33 +386,4 @@ int Validation::__GetFirstSpaceIndex(const vector<Cell>& field, const vector<boo
         }
     }
     return spaceIndex;
-}
-
-bool Validation::IsASnake(const Cell& cell)
-{
-    if (cell.type == CellType::SNAKE_BODY || cell.type == CellType::SNAKE_HEAD) return true;
-    return false;
-}
-
-bool Validation::IsASnake(CellType cellType)
-{
-    if (cellType == CellType::SNAKE_BODY || cellType == CellType::SNAKE_HEAD) return true;
-    return false;
-}
-
-bool Validation::__IsPossibleSpace(const Cell& cell)
-{
-    unordered_set<CellType> possibleSpace = {
-        CellType::PASS,
-        CellType::SNAKE_BODY,
-        CellType::SNAKE_HEAD
-    };
-    if (possibleSpace.count(cell.type)) return true;
-    return false;
-}
-
-bool Validation::__IsPossiblePassage(const Cell& cell)
-{
-    if (cell.type == CellType::PASS || cell.type == CellType::PORTAL) return true;
-    return false;
 }

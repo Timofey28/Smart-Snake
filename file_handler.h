@@ -23,8 +23,8 @@ public:
     static std::map<time_t, int, std::greater<time_t>> s_experimentAmountsByDates;
     static std::map<time_t, int, std::greater<time_t>>::iterator s_currExpAmountsByDatesIter;
 
-    static void Initialize();
-    inline static fs::path GetGamesFolder() { return GAMES_FOLDER; }
+    static void Initialize() { fs::create_directory(GAMES_FOLDER); }
+    static fs::path GetGamesFolder() { return GAMES_FOLDER; }
     static time_t GetLastWriteTime(fs::path pathToFileOrFolder);
 
     /* ".initialdata"

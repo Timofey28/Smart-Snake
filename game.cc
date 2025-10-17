@@ -157,9 +157,11 @@ void Game::__CalculateMovesInfo()
 {
     movesAmount_ = gameIndexes_.size() - (finalSnakeLength_ - startingSnakeLength_);
     auto it = find(gameIndexes_.rbegin(), gameIndexes_.rend(), lastFoodIndex_);
-    assert(it != gameIndexes_.rend());
-    int _movesToLastFood = gameIndexes_.size() - distance(gameIndexes_.rbegin(), it);
-    avgMovesToFood_ = (double) (_movesToLastFood - (finalSnakeLength_ - startingSnakeLength_ - 1)) / (finalSnakeLength_ - startingSnakeLength_);
+    if (it != gameIndexes_.rend()) {
+        int _movesToLastFood = gameIndexes_.size() - distance(gameIndexes_.rbegin(), it);
+        avgMovesToFood_ = (double) (_movesToLastFood - (finalSnakeLength_ - startingSnakeLength_ - 1)) / (finalSnakeLength_ - startingSnakeLength_);
+    }
+    else avgMovesToFood_ = -1;
 }
 
 void Game::__FindSnakeAssIndex()

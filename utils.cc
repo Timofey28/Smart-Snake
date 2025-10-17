@@ -3,14 +3,6 @@
 static const std::string BASE93_DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!\"#$%&'()*+,-./:;<=>?@[]^_`{|}~";
 static std::unordered_map<char, int> BASE93_TO_INT;
 
-std::map<CellType, Color> CELL_COLOR = {
-    {CellType::PASS, Color::BLACK_ON_BLUE},
-    {CellType::WALL, Color::BLACK_ON_CYAN},
-    {CellType::PORTAL, Color::BLACK_ON_BRIGHT_GREEN},
-    {CellType::FOOD, Color::BLACK_ON_RED},
-    {CellType::SNAKE_BODY, Color::BLACK_ON_BRIGHT_MAGENTA},
-    {CellType::SNAKE_HEAD, Color::BLACK_ON_MAGENTA},
-};
 std::mt19937 generator(time(nullptr));
 //std::mt19937 generator(1);
 std::uniform_int_distribution<int> uid2{0, 1};
@@ -35,7 +27,7 @@ std::string toString(Direction direction)
         case Direction::UP: return "Up";
         case Direction::DOWN: return "Down";
         case Direction::NONE: return "None";
-        default: return "Unknown";
+        default: return "Unknown" + std::to_string((int) direction);
     }
 }
 
@@ -94,7 +86,7 @@ int findCellFromMovementDirection(int cellIndex, Direction movementDirection, co
     else if (movementDirection == Direction::RIGHT) cellIndex++;
     else if (movementDirection == Direction::UP) cellIndex -= width;
     else if (movementDirection == Direction::DOWN) cellIndex += width;
-    else throw std::runtime_error("Unknown direction.");
+    else throw std::runtime_error("Unknown direction (-1): " + std::to_string((int) movementDirection));
 
     if (field[cellIndex].type == CellType::PORTAL) {
         int possibleCellIndex = getPortalExitIndex(cellIndex, movementDirection, field, width, height);
@@ -177,7 +169,7 @@ int getPortalExitIndex(int portalEnterIndex, Direction movementDirection, const 
             possibleExitIndex += width;
         }
     }
-    else throw std::runtime_error("Unknown direction.");
+    else throw std::runtime_error("Unknown direction (-2).");
 
     return -1;
 }
@@ -319,7 +311,7 @@ Direction toLeftFrom(Direction direction)
     else if (direction == Direction::RIGHT) return Direction::UP;
     else if (direction == Direction::UP) return Direction::LEFT;
     else if (direction == Direction::DOWN) return Direction::RIGHT;
-    else throw std::runtime_error("Unknown direction.");
+    else throw std::runtime_error("Unknown direction (-3).");
 }
 
 Direction toRightFrom(Direction direction)
@@ -328,7 +320,7 @@ Direction toRightFrom(Direction direction)
     else if (direction == Direction::RIGHT) return Direction::DOWN;
     else if (direction == Direction::UP) return Direction::RIGHT;
     else if (direction == Direction::DOWN) return Direction::LEFT;
-    else throw std::runtime_error("Unknown direction.");
+    else throw std::runtime_error("Unknown direction (-4).");
 }
 
 Direction opposite(Direction direction)
@@ -337,7 +329,7 @@ Direction opposite(Direction direction)
     else if (direction == Direction::RIGHT) return Direction::LEFT;
     else if (direction == Direction::UP) return Direction::DOWN;
     else if (direction == Direction::DOWN) return Direction::UP;
-    else throw std::runtime_error("Unknown direction.");
+    else throw std::runtime_error("Unknown direction (-5).");
 }
 
 

@@ -9,12 +9,10 @@
 #include <iomanip>
 #include <sstream>
 
+#include "console.h"
 #include "utils.h"
 #include "file_handler.h"
 
-
-extern int nConsoleWidth, nConsoleHeight;
-extern int PointOfNoReturn;
 const int TAB_WIDTH = 8;
 
 void setPosition(short, short);
@@ -29,7 +27,7 @@ namespace draw
     void Field(const std::vector<Cell>& field, int width, bool onlyPerimeter = false);
     void Crash(bool paint, const std::vector<Cell>& field, int width, int snakeHeadIndex = -1);
 
-    void EnterFieldDimensions(int& fieldWidth, int& fieldHeight);
+    void EnterFieldDimensions(int& fieldWidth, int& fieldHeight, int captionWidth);
     void EnterGamesAmount(int& gamesAmount);
     void __ClearInputAndMoveCursorBack(int phraseLength, int inputLength);
 
@@ -52,18 +50,16 @@ namespace draw
     template<typename... Args>
     void Info(std::pair<int, int> xy, Args... args, Color color = Color::NORMAL);
 
-    namespace alert
-    {
-        void MultimpleOrNoneSnakes(int snakesAmount);
-        void IncorrectSnake();
-        void ClosedSpaces();
-        void LoopedSnake();
-        void NoPossibleStart();
-
-        void Victory();
-
-        void Remove();
-
-    }  // namespace alert
+//    namespace alert
+//    {
+//        void MultipleOrNoneSnakes(int snakesAmount, const std::vector<Cell>& field, int width, std::function<void()> Callback, std::function<void()> cDrawCaption);
+//        void IncorrectSnake();
+//        void ClosedSpaces();
+//        void LoopedSnake();
+//        void NoPossibleStart();
+//
+//        void Remove();
+//
+//    }  // namespace alert
 
 }  // namespace draw

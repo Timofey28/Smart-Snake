@@ -4,7 +4,14 @@ using namespace std;
 
 Application::Application()
 {
+    setlocale(0, "");
+    SetConsoleCP(866);
+    SetConsoleOutputCP(866);
 
+    Console::Initialize();
+    FileHandler::Initialize();
+    MouseInput::Initialize();
+    initializeBase93Map();
 }
 
 void Application::Run()
