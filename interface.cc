@@ -9,7 +9,7 @@ int Interface::s_gamePileContentWidth_;
 bool Interface::s_focusOnDatesList_ = true;
 unordered_map<time_t, Experiment> Interface::s_experiments_;
 vector<Experiment> Interface::s_selectedDateExperiments_;
-vector<Game> Interface::s_selectedGames_;
+vector<unique_ptr<Game>> Interface::s_selectedGames_;
 optional<ScrollableList> Interface::s_listDates_, Interface::s_listExperiments_, Interface::s_listGames_;
 ClickInfo Interface::clickInfo;
 int Interface::s_chosenExperimentIndex_, Interface::s_chosenGameIndex_;
@@ -76,7 +76,7 @@ bool Interface::DatesAndExperimentsList()
     int pilesShown = min(s_dateTablePileLimit_, (int) FileHandler::s_dateFolders.size());
     for (int pile = s_listDates_.value().upperPileIndex; pile < s_listDates_.value().upperPileIndex + pilesShown; ++pile) {
         Color _color = (pile == s_listDates_.value().cursorPileIndex) ? _highlightColor : Color::NORMAL;
-        __DrawTableData(Table::DAT, _color, pile - s_listDates_.value().upperPileIndex, pile);
+        __DrawTableData(TableType::DAT, _color, pile - s_listDates_.value().upperPileIndex, pile);
     }
 
     draw::Box<BoxStyle>(
@@ -88,11 +88,11 @@ bool Interface::DatesAndExperimentsList()
     pilesShown = min(s_experimentTablePileLimit_, (int) s_selectedDateExperiments_.size());
     for (int pile = s_listExperiments_.value().upperPileIndex; pile < s_listExperiments_.value().upperPileIndex + pilesShown; ++pile) {
         Color _color = (!firstTime && pile == s_listExperiments_.value().cursorPileIndex) ? s_colorFocused_ : Color::NORMAL;
-        __DrawTableData(Table::EXPERIMENT, _color, pile - s_listExperiments_.value().upperPileIndex, pile);
+        __DrawTableData(TableType::EXPERIMENT, _color, pile - s_listExperiments_.value().upperPileIndex, pile);
     }
 
-    if (s_listDates_.value().scrollbar) __DrawScrollbar(Table::DAT);
-    if (s_listExperiments_.value().scrollbar) __DrawScrollbar(Table::EXPERIMENT);
+    if (s_listDates_.value().scrollbar) __DrawScrollbar(TableType::DAT);
+    if (s_listExperiments_.value().scrollbar) __DrawScrollbar(TableType::EXPERIMENT);
 
     vector<Action> actions;
     while (true) {
@@ -102,23 +102,23 @@ bool Interface::DatesAndExperimentsList()
             if (bp == ButtonPressed::ARROW_LEFT) {
                 if (!s_focusOnDatesList_) {
                     s_focusOnDatesList_ = true;
-                    __DrawWholeTablePile(Table::EXPERIMENT, Color::NORMAL);
-                    __DrawWholeTablePile(Table::DAT, s_colorFocused_);
+                    __DrawWholeTablePile(TableType::EXPERIMENT, Color::NORMAL);
+                    __DrawWholeTablePile(TableType::DAT, s_colorFocused_);
                 }
             }
 
             else if (bp == ButtonPressed::ARROW_RIGHT) {
                 if (s_focusOnDatesList_) {
                     s_focusOnDatesList_ = false;
-                    __DrawWholeTablePile(Table::DAT, s_colorSelected_);
-                    __DrawWholeTablePile(Table::EXPERIMENT, s_colorFocused_);
+                    __DrawWholeTablePile(TableType::DAT, s_colorSelected_);
+                    __DrawWholeTablePile(TableType::EXPERIMENT, s_colorFocused_);
                 }
             }
 
             else if (bp == ButtonPressed::ARROW_UP) {
                 if (s_focusOnDatesList_) {
                     actions = s_listDates_.value().ReactTo(Event::EV_ARROW_UP);
-                    __Execute(Table::DAT, actions);
+                    __Execute(TableType::DAT, actions);
                     if (actions.size()) {
                         assert(FileHandler::s_currExpAmountsByDatesIter != FileHandler::s_experimentAmountsByDates.begin());
                         FileHandler::s_currExpAmountsByDatesIter--;
@@ -127,14 +127,14 @@ bool Interface::DatesAndExperimentsList()
                 }
                 else {
                     actions = s_listExperiments_.value().ReactTo(Event::EV_ARROW_UP);
-                    __Execute(Table::EXPERIMENT, actions);
+                    __Execute(TableType::EXPERIMENT, actions);
                 }
             }
 
             else if (bp == ButtonPressed::ARROW_DOWN) {
                 if (s_focusOnDatesList_) {
                     actions = s_listDates_.value().ReactTo(Event::EV_ARROW_DOWN);
-                    __Execute(Table::DAT, actions);
+                    __Execute(TableType::DAT, actions);
                     if (actions.size()) {
                         FileHandler::s_currExpAmountsByDatesIter++;
                         assert(FileHandler::s_currExpAmountsByDatesIter != FileHandler::s_experimentAmountsByDates.end());
@@ -143,7 +143,7 @@ bool Interface::DatesAndExperimentsList()
                 }
                 else {
                     actions = s_listExperiments_.value().ReactTo(Event::EV_ARROW_DOWN);
-                    __Execute(Table::EXPERIMENT, actions);
+                    __Execute(TableType::EXPERIMENT, actions);
                 }
             }
 
@@ -158,8 +158,8 @@ bool Interface::DatesAndExperimentsList()
             else if (bp == ButtonPressed::ENTER) {
                 if (s_focusOnDatesList_) {
                     s_focusOnDatesList_ = false;
-                    __DrawWholeTablePile(Table::DAT, s_colorSelected_);
-                    __DrawWholeTablePile(Table::EXPERIMENT, s_colorFocused_);
+                    __DrawWholeTablePile(TableType::DAT, s_colorSelected_);
+                    __DrawWholeTablePile(TableType::EXPERIMENT, s_colorFocused_);
                 }
                 else {
                     s_chosenExperimentIndex_ = s_listExperiments_.value().cursorPileIndex;
@@ -185,11 +185,11 @@ bool Interface::DatesAndExperimentsList()
             if (bp == ButtonPressed::WHEEL_UP) {
                 if (s_focusOnDatesList_) {
                     if (changedList) {
-                        __DrawWholeTablePile(Table::DAT, s_colorFocused_);
-                        __DrawWholeTablePile(Table::EXPERIMENT, Color::NORMAL);
+                        __DrawWholeTablePile(TableType::DAT, s_colorFocused_);
+                        __DrawWholeTablePile(TableType::EXPERIMENT, Color::NORMAL);
                     }
                     actions = s_listDates_.value().ReactTo(Event::EV_WHEEL_UP);
-                    __Execute(Table::DAT, actions);
+                    __Execute(TableType::DAT, actions);
                     if (actions.size()) {
                         assert(FileHandler::s_currExpAmountsByDatesIter != FileHandler::s_experimentAmountsByDates.begin());
                         FileHandler::s_currExpAmountsByDatesIter--;
@@ -198,22 +198,22 @@ bool Interface::DatesAndExperimentsList()
                 }
                 else {
                     if (changedList) {
-                        __DrawWholeTablePile(Table::DAT, s_colorSelected_);
-                        __DrawWholeTablePile(Table::EXPERIMENT, s_colorFocused_);
+                        __DrawWholeTablePile(TableType::DAT, s_colorSelected_);
+                        __DrawWholeTablePile(TableType::EXPERIMENT, s_colorFocused_);
                     }
                     actions = s_listExperiments_.value().ReactTo(Event::EV_WHEEL_UP);
-                    __Execute(Table::EXPERIMENT, actions);
+                    __Execute(TableType::EXPERIMENT, actions);
                 }
             }
 
             else if (bp == ButtonPressed::WHEEL_DOWN) {
                 if (s_focusOnDatesList_) {
                     if (changedList) {
-                        __DrawWholeTablePile(Table::DAT, s_colorFocused_);
-                        __DrawWholeTablePile(Table::EXPERIMENT, Color::NORMAL);
+                        __DrawWholeTablePile(TableType::DAT, s_colorFocused_);
+                        __DrawWholeTablePile(TableType::EXPERIMENT, Color::NORMAL);
                     }
                     actions = s_listDates_.value().ReactTo(Event::EV_WHEEL_DOWN);
-                    __Execute(Table::DAT, actions);
+                    __Execute(TableType::DAT, actions);
                     if (actions.size()) {
                         FileHandler::s_currExpAmountsByDatesIter++;
                         assert(FileHandler::s_currExpAmountsByDatesIter != FileHandler::s_experimentAmountsByDates.end());
@@ -222,27 +222,27 @@ bool Interface::DatesAndExperimentsList()
                 }
                 else {
                     if (changedList) {
-                        __DrawWholeTablePile(Table::DAT, s_colorSelected_);
-                        __DrawWholeTablePile(Table::EXPERIMENT, s_colorFocused_);
+                        __DrawWholeTablePile(TableType::DAT, s_colorSelected_);
+                        __DrawWholeTablePile(TableType::EXPERIMENT, s_colorFocused_);
                     }
                     actions = s_listExperiments_.value().ReactTo(Event::EV_WHEEL_DOWN);
-                    __Execute(Table::EXPERIMENT, actions);
+                    __Execute(TableType::EXPERIMENT, actions);
                 }
             }
 
             else if (bp == ButtonPressed::LEFT_BUTTON && !clickInfo.isBorder && !clickInfo.isInnerBorder) {
                 if (s_focusOnDatesList_) {
                     if (changedList && clickInfo.screenPileIndex != s_listDates_.value().ScreenPileIndex()) {
-                        __DrawBoxPile(Table::EXPERIMENT, Color::NORMAL, s_listExperiments_.value().ScreenPileIndex());
+                        __DrawBoxPile(TableType::EXPERIMENT, Color::NORMAL, s_listExperiments_.value().ScreenPileIndex());
                     }
                     if (s_listDates_.value().ScreenPileIndex() == clickInfo.screenPileIndex) {
                         s_focusOnDatesList_ = false;
-                        __DrawWholeTablePile(Table::DAT, s_colorSelected_);
-                        __DrawWholeTablePile(Table::EXPERIMENT, s_colorFocused_);
+                        __DrawWholeTablePile(TableType::DAT, s_colorSelected_);
+                        __DrawWholeTablePile(TableType::EXPERIMENT, s_colorFocused_);
                     }
                     else {
                         actions = s_listDates_.value().ReactTo(Event::EV_CLICK_PILE, clickInfo.screenPileIndex);
-                        __Execute(Table::DAT, actions);
+                        __Execute(TableType::DAT, actions);
                         if (actions.size()) {
                             int shift = clickInfo.screenPileIndex - actions[0].value1;
                             assert(shift != 0);
@@ -314,19 +314,19 @@ Result Interface::GamesList()
         assert(s_selectedGames_.empty());
         s_selectedGames_.reserve(exp.gamesAmount);
         for (int i = 0; i < exp.gamesAmount; ++i) {
-            s_selectedGames_.push_back(Game(exp.Path() / (to_string(i + 1) + ".txt"), exp.gameScores[i], false));
+            s_selectedGames_.push_back(make_unique<Game>(exp.Path() / (to_string(i + 1) + ".txt"), exp.gameScores[i], false));
         }
-        s_selectedGames_[0].Load();
+        s_selectedGames_[0]->Load();
         s_gameListSorting_ = Sorting::CHRONOLOGICAL;
     }
 
-    cout << "\n" << string(s_gameMenuLeftMargin_, ' ') << "Игра #" << s_selectedGames_[s_listGames_.value().cursorPileIndex].no;
+    cout << "\n" << string(s_gameMenuLeftMargin_, ' ') << "Игра #" << s_selectedGames_[s_listGames_.value().cursorPileIndex]->no;
     s_coordsGameNo_ = {s_gameMenuLeftMargin_ + 6, 11};
-    cout << "\n" << string(s_gameMenuLeftMargin_, ' ') << "Поползновений: " << s_selectedGames_[s_listGames_.value().cursorPileIndex].MovesAmount();
+    cout << "\n" << string(s_gameMenuLeftMargin_, ' ') << "Поползновений: " << s_selectedGames_[s_listGames_.value().cursorPileIndex]->MovesAmount();
     s_coordsMovesAmount_ = {s_gameMenuLeftMargin_ + 15, 12};
     cout << "\n" << string(s_gameMenuLeftMargin_, ' ') << "В среднем до еды: ";
-    if (s_selectedGames_[s_listGames_.value().cursorPileIndex].AvgMovesToFood() == -1) cout << "...";
-    else cout << doubleToStr(s_selectedGames_[s_listGames_.value().cursorPileIndex].AvgMovesToFood());
+    if (s_selectedGames_[s_listGames_.value().cursorPileIndex]->AvgMovesToFood() == -1) cout << "...";
+    else cout << doubleToStr(s_selectedGames_[s_listGames_.value().cursorPileIndex]->AvgMovesToFood());
     s_coordsAvgMovesToFood_ = {s_gameMenuLeftMargin_ + 18, 13};
 
     cout << "\n" << string(s_gameMenuLeftMargin_, ' ');
@@ -350,9 +350,9 @@ Result Interface::GamesList()
     int pilesShown = min(s_gameTablePileLimit_, (int) s_selectedGames_.size());
     for (int pile = s_listGames_.value().upperPileIndex; pile < s_listGames_.value().upperPileIndex + pilesShown; ++pile) {
         Color _color = (pile == s_listGames_.value().cursorPileIndex) ? s_colorFocused_ : Color::NORMAL;
-        __DrawTableData(Table::GAME, _color, pile - s_listGames_.value().upperPileIndex, pile);
+        __DrawTableData(TableType::GAME, _color, pile - s_listGames_.value().upperPileIndex, pile);
     }
-    if (s_listGames_.value().scrollbar) __DrawScrollbar(Table::GAME);
+    if (s_listGames_.value().scrollbar) __DrawScrollbar(TableType::GAME);
 
     vector<Action> actions;
     while (true) {
@@ -361,24 +361,24 @@ Result Interface::GamesList()
         if (MouseInput::isKeyboardEvent) {
             if (bp == ButtonPressed::ARROW_UP) {
                 actions = s_listGames_.value().ReactTo(Event::EV_ARROW_UP);
-                __Execute(Table::GAME, actions);
+                __Execute(TableType::GAME, actions);
                 if (actions.size()) {
-                    s_selectedGames_[s_listGames_.value().cursorPileIndex].Load();
-                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex].no,
-                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex].MovesAmount();
-                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex].AvgMovesToFood();
+                    s_selectedGames_[s_listGames_.value().cursorPileIndex]->Load();
+                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex]->no,
+                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex]->MovesAmount();
+                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex]->AvgMovesToFood();
                     __SetDetailedGameInfo(_gameNo, _movesAmount, _avgMovesToFood);
                 }
             }
 
             else if (bp == ButtonPressed::ARROW_DOWN) {
                 actions = s_listGames_.value().ReactTo(Event::EV_ARROW_DOWN);
-                __Execute(Table::GAME, actions);
+                __Execute(TableType::GAME, actions);
                 if (actions.size()) {
-                    s_selectedGames_[s_listGames_.value().cursorPileIndex].Load();
-                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex].no,
-                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex].MovesAmount();
-                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex].AvgMovesToFood();
+                    s_selectedGames_[s_listGames_.value().cursorPileIndex]->Load();
+                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex]->no,
+                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex]->MovesAmount();
+                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex]->AvgMovesToFood();
                     __SetDetailedGameInfo(_gameNo, _movesAmount, _avgMovesToFood);
                 }
             }
@@ -386,12 +386,12 @@ Result Interface::GamesList()
             else if (bp == ButtonPressed::CTRL) {
                 __SetNextSortingOrder();
                 actions = s_listGames_.value().ReactTo(Event::EV_CTRL_OR_RMB);
-                __Execute(Table::GAME, actions);
+                __Execute(TableType::GAME, actions);
                 if (actions.size()) {
-                    s_selectedGames_[s_listGames_.value().cursorPileIndex].Load();
-                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex].no,
-                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex].MovesAmount();
-                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex].AvgMovesToFood();
+                    s_selectedGames_[s_listGames_.value().cursorPileIndex]->Load();
+                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex]->no,
+                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex]->MovesAmount();
+                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex]->AvgMovesToFood();
                     __SetDetailedGameInfo(_gameNo, _movesAmount, _avgMovesToFood);
                 }
             }
@@ -420,28 +420,28 @@ Result Interface::GamesList()
 
         else {  // Mouse event
             __GetLastClickInfo(Window::GAME_SELECTION_MENU);
-            if (!clickInfo.bGamesList && bp != ButtonPressed::WHEEL) continue;
+            if (!clickInfo.bGamesList && bp != ButtonPressed::WHEEL && bp != ButtonPressed::RIGHT_BUTTON) continue;
 
             if (bp == ButtonPressed::WHEEL_UP) {
                 actions = s_listGames_.value().ReactTo(Event::EV_WHEEL_UP);
-                __Execute(Table::GAME, actions);
+                __Execute(TableType::GAME, actions);
                 if (actions.size()) {
-                    s_selectedGames_[s_listGames_.value().cursorPileIndex].Load();
-                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex].no,
-                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex].MovesAmount();
-                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex].AvgMovesToFood();
+                    s_selectedGames_[s_listGames_.value().cursorPileIndex]->Load();
+                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex]->no,
+                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex]->MovesAmount();
+                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex]->AvgMovesToFood();
                     __SetDetailedGameInfo(_gameNo, _movesAmount, _avgMovesToFood);
                 }
             }
 
             else if (bp == ButtonPressed::WHEEL_DOWN) {
                 actions = s_listGames_.value().ReactTo(Event::EV_WHEEL_DOWN);
-                __Execute(Table::GAME, actions);
+                __Execute(TableType::GAME, actions);
                 if (actions.size()) {
-                    s_selectedGames_[s_listGames_.value().cursorPileIndex].Load();
-                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex].no,
-                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex].MovesAmount();
-                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex].AvgMovesToFood();
+                    s_selectedGames_[s_listGames_.value().cursorPileIndex]->Load();
+                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex]->no,
+                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex]->MovesAmount();
+                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex]->AvgMovesToFood();
                     __SetDetailedGameInfo(_gameNo, _movesAmount, _avgMovesToFood);
                 }
             }
@@ -449,12 +449,12 @@ Result Interface::GamesList()
             else if (bp == ButtonPressed::RIGHT_BUTTON) {
                 __SetNextSortingOrder();
                 actions = s_listGames_.value().ReactTo(Event::EV_CTRL_OR_RMB);
-                __Execute(Table::GAME, actions);
+                __Execute(TableType::GAME, actions);
                 if (actions.size()) {
-                    s_selectedGames_[s_listGames_.value().cursorPileIndex].Load();
-                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex].no,
-                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex].MovesAmount();
-                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex].AvgMovesToFood();
+                    s_selectedGames_[s_listGames_.value().cursorPileIndex]->Load();
+                    int _gameNo = s_selectedGames_[s_listGames_.value().cursorPileIndex]->no,
+                        _movesAmount = s_selectedGames_[s_listGames_.value().cursorPileIndex]->MovesAmount();
+                    double _avgMovesToFood = s_selectedGames_[s_listGames_.value().cursorPileIndex]->AvgMovesToFood();
                     __SetDetailedGameInfo(_gameNo, _movesAmount, _avgMovesToFood);
                 }
             }
@@ -474,32 +474,101 @@ Result Interface::GamesList()
     }
 }
 
-void Interface::RunGame()
+void Interface::GamePlayback()
 {
     system("cls");
-    Game& game = s_selectedGames_[s_chosenGameIndex_];
+    Game& game = *s_selectedGames_[s_chosenGameIndex_];
     game.Load();
-    game.PrintFirstFrame();
+    __ConfigureFontSize(game);
 
+    game.InitAndPrintInterface();
+    game.paused.store(true, std::memory_order_release);
+    game.forwardPlayback.store(true, std::memory_order_release);
+    game.finished.store(false, std::memory_order_release);
+
+    thread gameplay([&game](){ Interface::__RunGame(game); });
+    GameAction gameAction;
     while (true) {
         MouseInput::GetAnyEventInfo();
-        ButtonPressed bp = MouseInput::buttonPressed;
-        if (MouseInput::isKeyboardEvent) {
-            if (bp == ButtonPressed::ARROW_LEFT) {
-                if (!game.PrintPreviousFrame());
-            }
-            else if (bp == ButtonPressed::ARROW_RIGHT) {
-                if (!game.PrintNextFrame());
-            }
-            else if (bp == ButtonPressed::ESCAPE) {
-                setColor(Color::NORMAL);
-                return;
-            }
+        gameAction = game.ProcessUserInput();
+        if (gameAction == GameAction::NONE_GA) continue;
+        if (gameAction == GameAction::EXIT_GA) {
+            game.finished.store(true, std::memory_order_release);
+            cvar.notify_one();
+            break;
+        }
+
+        if (gameAction == GameAction::CHANGE_PLAYBACK_MODE) {
+            bool _prevMode = game.forwardPlayback.load(std::memory_order_acquire);
+            game.forwardPlayback.store(_prevMode ^ 1, std::memory_order_release);
+            game.WriteReproductionMode(_prevMode ^ 1);
+        }
+        else if (gameAction == GameAction::SET_FRAME) {
+            if (game.paused.load(std::memory_order_acquire)) game.PrintFrameByIndex();
+            else game.PrintFrameByIndex(mtx);
+        }
+        else if (gameAction == GameAction::FRAME_BACKWARD) {
+            assert(game.paused.load(std::memory_order_acquire));
+            game.PrintPreviousFrame();
+        }
+        else if (gameAction == GameAction::FRAME_FORWARD) {
+            assert(game.paused.load(std::memory_order_acquire));
+            game.PrintNextFrame();
+        }
+        else if (gameAction == GameAction::SET_SPEED) game.SetAndPaintNewSpeedNo();
+        else if (gameAction == GameAction::START_PAUSE) {
+            game.SetAndPaintPause();
+            cvar.notify_one();
         }
     }
+    gameplay.join();
 
-    this_thread::sleep_for(100ms);
-    MouseInput::WaitForAnyEvent();
+    Console::SetInitialFontSize();
+}
+
+void Interface::__RunGame(Game& game)
+{
+    while (true) {
+        if (!game.paused.load(std::memory_order_acquire)) {
+            unique_lock<mutex> ulocker(mtx);
+            if (game.forwardPlayback.load(std::memory_order_acquire)) game.PrintNextFrame();
+            else game.PrintPreviousFrame();
+            auto startTime = chrono::high_resolution_clock::now();
+
+            game.CorrectScrollbarSlider();
+            game.CorrectStateInfo();
+            ulocker.unlock();
+
+            auto elapsed = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - startTime);
+            int frameTime = game.SpeedNo2FrameTime(game.currentSpeedNo.load(std::memory_order_relaxed));
+
+            ulocker.lock();
+            if (cvar.wait_for(ulocker, chrono::milliseconds(max(0LL, (long long) frameTime - elapsed.count())), [&game]() {
+                return game.finished.load(std::memory_order_acquire);
+            })) { break; }
+            ulocker.unlock();
+        }
+        else {
+            {
+                unique_lock<mutex> ulocker(mtx);
+                cvar.wait(ulocker, [&game]() {
+                    return !game.paused.load(std::memory_order_acquire) || game.finished.load(std::memory_order_acquire);
+                });
+            }
+            if (game.finished.load(std::memory_order_acquire)) break;
+        }
+    }
+}
+
+void Interface::__ConfigureFontSize(Game& game)
+{
+    for (auto it = Console::s_fontSizeToDimensions.rbegin(); it != Console::s_fontSizeToDimensions.rend(); ++it) {
+        if (it->second.width >= game.ContentWidth() && it->second.height >= game.ContentHeight()) {
+            Console::SetFontSize(it->first);
+            break;
+        }
+    }
+    game.SetFieldIndents((Console::s_dimensions.width - game.ContentWidth()) / 2, (Console::s_dimensions.height - game.ContentHeight()) / 2 + 1);
 }
 
 Experiment Interface::__GetExperimentInfo(fs::path experimentFolderPath)
@@ -587,11 +656,11 @@ vector<string> Interface::__MakePileData(int gameNo, int score, int maxPossibleS
     return {result};
 }
 
-void Interface::__DrawTableData(Table table, Color color, optional<int> screenPileIndex, optional<int> cursorPileIndex)
+void Interface::__DrawTableData(TableType tableType, Color color, optional<int> screenPileIndex, optional<int> cursorPileIndex)
 {
     int _leftMargin, _pileContentHeight, _pilePadding, _screenPileIndex, _cursorPileIndex;
     vector<string> data;
-    if (table == Table::DAT) {
+    if (tableType == TableType::DAT) {
         _leftMargin = s_dateLeftMargin_;
         _pileContentHeight = s_datePileContentHeight_;
         _pilePadding = s_datePilePadding_;
@@ -607,7 +676,7 @@ void Interface::__DrawTableData(Table table, Color color, optional<int> screenPi
             data = __MakePileData(it, s_listDates_.value().cursorPileIndex);
         }
     }
-    else if (table == Table::EXPERIMENT) {
+    else if (tableType == TableType::EXPERIMENT) {
         _leftMargin = s_experimentLeftMargin_;
         _pileContentHeight = s_experimentPileContentHeight_;
         _pilePadding = s_experimentPilePadding_;
@@ -622,7 +691,7 @@ void Interface::__DrawTableData(Table table, Color color, optional<int> screenPi
             data = __MakePileData(s_selectedDateExperiments_[_cursorPileIndex], _cursorPileIndex);
         }
     }
-    else if (table == Table::GAME) {
+    else if (tableType == TableType::GAME) {
         _leftMargin = s_gameLeftMargin_;
         _pileContentHeight = s_gamePileContentHeight_;
         _pilePadding = s_gamePilePadding_;
@@ -630,8 +699,8 @@ void Interface::__DrawTableData(Table table, Color color, optional<int> screenPi
             _screenPileIndex = screenPileIndex.value();
             _cursorPileIndex = cursorPileIndex.value_or(s_listGames_.value().cursorPileIndex);
             data = __MakePileData(
-                s_selectedGames_[_cursorPileIndex].no,
-                s_selectedGames_[_cursorPileIndex].score,
+                s_selectedGames_[_cursorPileIndex]->no,
+                s_selectedGames_[_cursorPileIndex]->score,
                 s_selectedDateExperiments_[s_chosenExperimentIndex_].maxPossibleSnakeLength -
                     s_selectedDateExperiments_[s_chosenExperimentIndex_].initialSnakeLength
             );
@@ -640,8 +709,8 @@ void Interface::__DrawTableData(Table table, Color color, optional<int> screenPi
             _screenPileIndex = s_listGames_.value().ScreenPileIndex();
             _cursorPileIndex = s_listGames_.value().cursorPileIndex;
             data = __MakePileData(
-                s_selectedGames_[_cursorPileIndex].no,
-                s_selectedGames_[_cursorPileIndex].score,
+                s_selectedGames_[_cursorPileIndex]->no,
+                s_selectedGames_[_cursorPileIndex]->score,
                 s_selectedDateExperiments_[s_chosenExperimentIndex_].maxPossibleSnakeLength -
                     s_selectedDateExperiments_[s_chosenExperimentIndex_].initialSnakeLength
             );
@@ -656,10 +725,10 @@ void Interface::__DrawTableData(Table table, Color color, optional<int> screenPi
     );
 }
 
-void Interface::__DrawBoxPile(Table table, Color color, optional<int> screenPileIndex, bool careful)
+void Interface::__DrawBoxPile(TableType tableType, Color color, optional<int> screenPileIndex, bool careful)
 {
     int _screenPileIndex;
-    if (table == Table::DAT) {
+    if (tableType == TableType::DAT) {
         _screenPileIndex = screenPileIndex.value_or(s_listDates_.value().ScreenPileIndex());
         draw::BoxPile<BoxStyle>(
             s_dateLeftMargin_,
@@ -672,7 +741,7 @@ void Interface::__DrawBoxPile(Table table, Color color, optional<int> screenPile
             careful
         );
     }
-    else if (table == Table::EXPERIMENT) {
+    else if (tableType == TableType::EXPERIMENT) {
         _screenPileIndex = screenPileIndex.value_or(s_listExperiments_.value().ScreenPileIndex());
         draw::BoxPile<BoxStyle>(
             s_experimentLeftMargin_,
@@ -685,7 +754,7 @@ void Interface::__DrawBoxPile(Table table, Color color, optional<int> screenPile
             careful
         );
     }
-    else if (table == Table::GAME) {
+    else if (tableType == TableType::GAME) {
         _screenPileIndex = screenPileIndex.value_or(s_listGames_.value().ScreenPileIndex());
         draw::BoxPile<BoxStyle>(
             s_gameLeftMargin_,
@@ -700,10 +769,10 @@ void Interface::__DrawBoxPile(Table table, Color color, optional<int> screenPile
     }
 }
 
-void Interface::__DrawWholeTablePile(Table table, Color color, optional<int> screenPileIndex, optional<int> cursorPileIndex, bool careful)
+void Interface::__DrawWholeTablePile(TableType tableType, Color color, optional<int> screenPileIndex, optional<int> cursorPileIndex, bool careful)
 {
-    __DrawBoxPile(table, color, screenPileIndex, careful);
-    __DrawTableData(table, color, screenPileIndex, cursorPileIndex);
+    __DrawBoxPile(tableType, color, screenPileIndex, careful);
+    __DrawTableData(tableType, color, screenPileIndex, cursorPileIndex);
 }
 
 void Interface::__DrawVerticalLine(int x, int y, int length, Color color)
@@ -715,22 +784,22 @@ void Interface::__DrawVerticalLine(int x, int y, int length, Color color)
     draw::Symbol(coords, color);
 }
 
-void Interface::__DrawScrollbar(Table table)
+void Interface::__DrawScrollbar(TableType tableType)
 {
     int _x, _scrollbarHeight, _sliderHeight, _upperPileIndex;
-    if (table == Table::DAT) {
+    if (tableType == TableType::DAT) {
         _x = s_dateLeftMargin_ + s_datePileContentWidth_ + 2 * s_datePilePadding_ + 2;
         _scrollbarHeight = s_listDates_.value().scrollbarHeight;
         _sliderHeight = s_listDates_.value().sliderHeight;
         _upperPileIndex = s_listDates_.value().upperPileIndex;
     }
-    else if (table == Table::EXPERIMENT) {
+    else if (tableType == TableType::EXPERIMENT) {
         _x = s_experimentLeftMargin_ + s_experimentPileContentWidth_ + 2 * s_experimentPilePadding_ + 2;
         _scrollbarHeight = s_listExperiments_.value().scrollbarHeight;
         _sliderHeight = s_listExperiments_.value().sliderHeight;
         _upperPileIndex = s_listExperiments_.value().upperPileIndex;
     }
-    else if (table == Table::GAME) {
+    else if (tableType == TableType::GAME) {
         _x = s_gameLeftMargin_ + s_gamePileContentWidth_ + 2 * s_gamePilePadding_ + 2;
         _scrollbarHeight = s_listGames_.value().scrollbarHeight;
         _sliderHeight = s_listGames_.value().sliderHeight;
@@ -751,9 +820,9 @@ void Interface::__RemoveExperimentTableScrollbar()
     );
 }
 
-void Interface::__ClearPile(Table table, int screenPileIndex)
+void Interface::__ClearPile(TableType tableType, int screenPileIndex)
 {
-    if (table == Table::DAT) {
+    if (tableType == TableType::DAT) {
         draw::TableData(
             s_dateLeftMargin_+ 1 + s_datePilePadding_,
             s_upperMargin_ + 1 + screenPileIndex * (s_datePileContentHeight_ + 1),
@@ -761,7 +830,7 @@ void Interface::__ClearPile(Table table, int screenPileIndex)
             Color::NORMAL
         );
     }
-    else if (table == Table::EXPERIMENT) {
+    else if (tableType == TableType::EXPERIMENT) {
         draw::TableData(
             s_experimentLeftMargin_ + 1 + s_experimentPilePadding_,
             s_upperMargin_ + 1 + screenPileIndex * (s_experimentPileContentHeight_ + 1),
@@ -769,7 +838,7 @@ void Interface::__ClearPile(Table table, int screenPileIndex)
             Color::NORMAL
         );
     }
-    else if (table == Table::GAME) {
+    else if (tableType == TableType::GAME) {
         draw::TableData(
             s_gameLeftMargin_ + 1 + s_gamePilePadding_,
             s_upperMargin_ + 1 + screenPileIndex * (s_gamePileContentHeight_ + 1),
@@ -787,47 +856,47 @@ void Interface::__ClearLowerPileBoxLine(int screenPileIndex)
     _setmode(_fileno(stdout), _O_TEXT);
 }
 
-void Interface::__Execute(Table table, const vector<Action>& actions)
+void Interface::__Execute(TableType tableType, const vector<Action>& actions)
 {
     Operation _op;
     for (const auto& action : actions) {
         _op = action.operation;
-        if (_op == Operation::TO_NORMAL) __DrawWholeTablePile(table, Color::NORMAL, action.value1, action.value2);
-        else if (_op == Operation::TO_FOCUSED) __DrawWholeTablePile(table, s_colorFocused_, action.value1, action.value2);
+        if (_op == Operation::TO_NORMAL) __DrawWholeTablePile(tableType, Color::NORMAL, action.value1, action.value2);
+        else if (_op == Operation::TO_FOCUSED) __DrawWholeTablePile(tableType, s_colorFocused_, action.value1, action.value2);
         else if (_op == Operation::SHIFT_PILES) {
             int _upperPileIndex = action.value1,
                 _cursorPileIndex = action.value2,
                 _tablePileLimit,
                 _pilesAmount;
             Color _color;
-            if (table == Table::DAT) {
+            if (tableType == TableType::DAT) {
                 _tablePileLimit = s_dateTablePileLimit_;
                 _pilesAmount = FileHandler::s_experimentAmountsByDates.size();
             }
-            else if (table == Table::EXPERIMENT) {
+            else if (tableType == TableType::EXPERIMENT) {
                 _tablePileLimit = s_experimentTablePileLimit_;
                 _pilesAmount = FileHandler::s_currExpAmountsByDatesIter->second;
             }
-            else if (table == Table::GAME) {
+            else if (tableType == TableType::GAME) {
                 _tablePileLimit = s_gameTablePileLimit_;
                 _pilesAmount = s_selectedGames_.size();
             }
             for (int i = 0; i < min(_tablePileLimit, _pilesAmount); ++i) {
                _color = (_upperPileIndex + i == _cursorPileIndex) ? s_colorFocused_ : Color::NORMAL;
-                __DrawWholeTablePile(table, _color, i, _upperPileIndex + i, (_upperPileIndex + i - 1 == _cursorPileIndex));
+                __DrawWholeTablePile(tableType, _color, i, _upperPileIndex + i, (_upperPileIndex + i - 1 == _cursorPileIndex));
             }
         }
         else if (_op == Operation::ADD_SLIDER_PART || _op == Operation::REMOVE_SLIDER_PART) {
             int _x, _y = s_upperMargin_ + 1 + action.value1;
-            if (table == Table::DAT) _x = s_dateLeftMargin_ + s_datePileContentWidth_ + 2 * s_datePilePadding_ + 2;
-            else if (table == Table::EXPERIMENT) _x = s_experimentLeftMargin_ + s_experimentPileContentWidth_ + 2 * s_experimentPilePadding_ + 2;
-            else if (table == Table::GAME) _x = s_gameLeftMargin_ + s_gamePileContentWidth_ + 2 * s_gamePilePadding_ + 2;
+            if (tableType == TableType::DAT) _x = s_dateLeftMargin_ + s_datePileContentWidth_ + 2 * s_datePilePadding_ + 2;
+            else if (tableType == TableType::EXPERIMENT) _x = s_experimentLeftMargin_ + s_experimentPileContentWidth_ + 2 * s_experimentPilePadding_ + 2;
+            else if (tableType == TableType::GAME) _x = s_gameLeftMargin_ + s_gamePileContentWidth_ + 2 * s_gamePilePadding_ + 2;
             switch (_op) {
                 case Operation::ADD_SLIDER_PART: __DrawVerticalLine(_x, _y, 1, s_colorSlider_); break;
                 case Operation::REMOVE_SLIDER_PART: __DrawVerticalLine(_x, _y, 1, s_colorScrollbar_); break;
             }
         }
-        else if (_op == Operation::RESET_SCROLLBAR) __DrawScrollbar(table);
+        else if (_op == Operation::RESET_SCROLLBAR) __DrawScrollbar(tableType);
     }
 }
 
@@ -842,13 +911,13 @@ void Interface::__LoadNewExperiments()
     s_listExperiments_ = ScrollableList(s_selectedDateExperiments_.size(), s_experimentTablePileLimit_, s_experimentTableHeight_, 0, 0);
 
     for (int pile = 0; pile < min(s_experimentTablePileLimit_, (int) s_selectedDateExperiments_.size()); ++pile) {
-        __DrawWholeTablePile(Table::EXPERIMENT, Color::NORMAL, pile, pile);
+        __DrawWholeTablePile(TableType::EXPERIMENT, Color::NORMAL, pile, pile);
     }
     for (int pile = min(s_experimentTablePileLimit_, (int) s_selectedDateExperiments_.size()); pile < s_experimentTablePileLimit_; ++pile) {
         if (pile != s_experimentTablePileLimit_ - 1) __ClearLowerPileBoxLine(pile);
-        __ClearPile(Table::EXPERIMENT, pile);
+        __ClearPile(TableType::EXPERIMENT, pile);
     }
-    if (s_listExperiments_.value().scrollbar) __DrawScrollbar(Table::EXPERIMENT);
+    if (s_listExperiments_.value().scrollbar) __DrawScrollbar(TableType::EXPERIMENT);
     else if (prevTableScrollbar) __RemoveExperimentTableScrollbar();
 }
 
@@ -912,22 +981,24 @@ void Interface::__SetNextSortingOrder()
     switch (s_gameListSorting_)
     {
         case Sorting::ASC:
-            sort(s_selectedGames_.begin(), s_selectedGames_.end(), [](const Game& g1, const Game& g2) {
-                 if (g1.score == g2.score) return g1.no < g2.no;
-                 return g1.score < g2.score;
+            sort(s_selectedGames_.begin(), s_selectedGames_.end(), [](const unique_ptr<Game>& g1, const unique_ptr<Game>& g2) {
+                 if (g1->score == g2->score) return g1->no < g2->no;
+                 return g1->score < g2->score;
             });
             break;
 
         case Sorting::DESC:
-            sort(s_selectedGames_.begin(), s_selectedGames_.end(), [](const Game& g1, const Game& g2) {
-                 if (g1.score == g2.score) return g1.no < g2.no;
-                 return g1.score > g2.score;
+            sort(s_selectedGames_.begin(), s_selectedGames_.end(), [](const unique_ptr<Game>& g1, const unique_ptr<Game>& g2) {
+                 if (g1->score == g2->score) return g1->no < g2->no;
+                 return g1->score > g2->score;
             });
             break;
 
         case Sorting::CHRONOLOGICAL:
         default:
-            sort(s_selectedGames_.begin(), s_selectedGames_.end(), [](const Game& g1, const Game& g2) { return g1.no < g2.no; });
+            sort(s_selectedGames_.begin(), s_selectedGames_.end(), [](const unique_ptr<Game>& g1, const unique_ptr<Game>& g2) {
+                 return g1->no < g2->no;
+            });
             break;
     }
 

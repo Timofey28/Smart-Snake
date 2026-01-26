@@ -9,10 +9,10 @@ INPUT_RECORD MouseInput::inputRecord_;
 DWORD MouseInput::events_;
 
 
-void MouseInput::GetAnyEventInfo()
+void MouseInput::GetAnyEventInfo(bool flushBuffer)
 {
     MouseInput::__EnableMouseInput();
-    FlushConsoleInputBuffer(handle_);
+    if (flushBuffer) FlushConsoleInputBuffer(handle_);
 
     while (true) {
         ReadConsoleInput(handle_, &inputRecord_, 1, &events_);
@@ -91,6 +91,60 @@ void MouseInput::GetAnyEventInfo()
                     case VK_CONTROL:
                         MouseInput::buttonPressed = ButtonPressed::CTRL;
                         return;
+
+                    case VK_SPACE:
+                        MouseInput::buttonPressed = ButtonPressed::WHITESPACE;
+                        return;
+
+                    case '0':
+                    case VK_NUMPAD0:
+                        MouseInput::buttonPressed = ButtonPressed::DIGIT_0;
+                        return;
+
+                    case '1':
+                    case VK_NUMPAD1:
+                        MouseInput::buttonPressed = ButtonPressed::DIGIT_1;
+                        return;
+
+                    case '2':
+                    case VK_NUMPAD2:
+                        MouseInput::buttonPressed = ButtonPressed::DIGIT_2;
+                        return;
+
+                    case '3':
+                    case VK_NUMPAD3:
+                        MouseInput::buttonPressed = ButtonPressed::DIGIT_3;
+                        return;
+
+                    case '4':
+                    case VK_NUMPAD4:
+                        MouseInput::buttonPressed = ButtonPressed::DIGIT_4;
+                        return;
+
+                    case '5':
+                    case VK_NUMPAD5:
+                        MouseInput::buttonPressed = ButtonPressed::DIGIT_5;
+                        return;
+
+                    case '6':
+                    case VK_NUMPAD6:
+                        MouseInput::buttonPressed = ButtonPressed::DIGIT_6;
+                        return;
+
+                    case '7':
+                    case VK_NUMPAD7:
+                        MouseInput::buttonPressed = ButtonPressed::DIGIT_7;
+                        return;
+
+                    case '8':
+                    case VK_NUMPAD8:
+                        MouseInput::buttonPressed = ButtonPressed::DIGIT_8;
+                        return;
+
+                    case '9':
+                    case VK_NUMPAD9:
+                        MouseInput::buttonPressed = ButtonPressed::DIGIT_9;
+                        return;
                 }
             }
         }
@@ -100,7 +154,6 @@ void MouseInput::GetAnyEventInfo()
 void MouseInput::GetClickInfo()
 {
     MouseInput::__EnableMouseInput();
-    FlushConsoleInputBuffer(handle_);
 
     while (true) {
         ReadConsoleInput(handle_, &inputRecord_, 1, &events_);
@@ -129,6 +182,13 @@ void MouseInput::GetClickInfo()
             }
             else if (mer.dwButtonState == RIGHTMOST_BUTTON_PRESSED) {
                 MouseInput::buttonPressed = ButtonPressed::RIGHT_BUTTON;
+                return;
+            }
+        }
+        else if (inputRecord_.EventType == KEY_EVENT) {
+            KEY_EVENT_RECORD ker = inputRecord_.Event.KeyEvent;
+            if (ker.bKeyDown && ker.wVirtualKeyCode == VK_ESCAPE) {
+                MouseInput::buttonPressed = ButtonPressed::ESCAPE;
                 return;
             }
         }

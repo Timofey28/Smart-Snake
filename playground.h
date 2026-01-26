@@ -7,8 +7,8 @@
 
 #include "console.h"
 #include "utils.h"
-#include "mouse_input.h"
 #include "draw.h"
+#include "mouse_input.h"
 #include "validation.h"
 #include "file_handler.h"
 #include "algorithm.h"
@@ -23,8 +23,13 @@
 class Playground
 {
 public:
-    Playground() : caption(CAPTION_FIELD_ELEMENTS_ARRANGEMENT) { __Init(); }
-    void FieldParametersInputForm();
+    int gamesAmount;
+
+    Playground() :
+        captionFieldDimensions(CAPTION_FIELD_DIMENSIONS_INPUT),
+        captionFieldElements(CAPTION_FIELD_ELEMENTS_ARRANGEMENT) { __Init(); }
+    bool FieldParametersInputForm();
+    void EnterGamesAmount();
     void SaveInitialData();
     void SaveLastGame();
     void ReinitializeStartingData();
@@ -42,7 +47,7 @@ private:
     std::queue<Direction> snakeTurns_, initialSnakeTurns_;
     bool gameOn_, victory_;
     int foodIndex_, snakeHeadIndex_, snakeAssIndex_, initialSnakeHeadIndex_, initialSnakeAssIndex_;
-    const Caption& caption;
+    const Caption& captionFieldDimensions, captionFieldElements;
     std::unordered_set<int> borderPortalIndexes_, fieldPortalIndexes_;
 
     Validation validation;
@@ -55,6 +60,7 @@ private:
     float averageMovesToFood_;
 
     void __Init();
+    void __EnterFieldDimensions();
     void __InitializeFieldFromDimensions();
     void __ArrangeFieldElements();
     void __AdjustPortals();
@@ -85,6 +91,7 @@ private:
 inline void Playground::__ShowAlert(AlertType alertType)
 {
     auto cMovePortalsBackToBorder = std::bind(&Playground::__MovePortalsBackToBorder, this);
-    auto cDrawCaption = std::bind(&Caption::Draw, &this->caption);
+//    auto cDrawCaption = std::bind(&Caption::Draw<std::recursive_mutex>, &this->captionFieldElements, std::ref(rmtx));  // std::bind is outdated
+    auto cDrawCaption = [this, &rmtx]() { this->captionFieldElements.Draw(rmtx); };
     alert.Show(alertType, &field_, width_, cMovePortalsBackToBorder, cDrawCaption);
 }

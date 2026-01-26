@@ -44,23 +44,23 @@ int Application::ChooseOption()
 
 void Application::CreateGames()
 {
-    playground_.FieldParametersInputForm();
-    draw::EnterGamesAmount(gamesAmount_);
+    if (!playground_.FieldParametersInputForm()) return;
+    playground_.EnterGamesAmount();
     playground_.SaveInitialData();
 
     system("cls");
 
     auto start = chrono::high_resolution_clock::now();
 
-    assert(gamesAmount_ <= 1000);
-    draw::ProgressBar(0, gamesAmount_);
-    for (int gameNumber = 1; gameNumber <= gamesAmount_; ++gameNumber) {
+    assert(playground_.gamesAmount <= 1000);
+    draw::ProgressBar(0, playground_.gamesAmount);
+    for (int gameNumber = 1; gameNumber <= playground_.gamesAmount; ++gameNumber) {
         playground_.ReinitializeStartingData();
         while (playground_.GameOn()) {
             playground_.CalculateNextIteration();
         }
         playground_.SaveLastGame();
-        draw::ProgressBar(gameNumber, gamesAmount_);
+        draw::ProgressBar(gameNumber, playground_.gamesAmount);
     }
 
     auto end = chrono::high_resolution_clock::now();
@@ -80,7 +80,7 @@ void Application::ListOfGames()
             Result result = Interface::GamesList();
             if (result == Result::EXIT) return;
             else if (result == Result::BACK) break;
-            else if (result == Result::GAME_CHOSEN) Interface::RunGame();
+            else if (result == Result::GAME_CHOSEN) Interface::GamePlayback();
             else throw runtime_error("invalid choosing game result");
         }
     }

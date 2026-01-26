@@ -30,7 +30,8 @@ public:
         rows_(std::move(_captionRows)), indentX_(-1), indentY_(-1) {}
     int Width() const;
     int Height() const { return rows_.size(); }
-    void Draw() const;
+    template<class Mtx = NullMutex> void Draw(Mtx& m = noLock) const;
+    void Clear(Color backgroundColor = Color::BLACK) const;
     void SetIndents(int indentX, int indentY) const;
 
 private:

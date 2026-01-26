@@ -10,13 +10,13 @@
 #include <iomanip>
 #include <random>
 #include <sstream>
-
 #include <mutex>
-#include <thread>
+#include <optional>
+#include <condition_variable>
 
 
 enum Color {
-    NORMAL = 15,
+    NORMAL = 15,  // white on black
 
     // same color background & text
     BLACK = 0,
@@ -100,8 +100,18 @@ enum Orientation
 };
 
 
+struct NullMutex
+{
+    void lock() const {}
+    void unlock() const {}
+};
+
+inline NullMutex noLock;
 inline std::mutex mtx;
 inline std::recursive_mutex rmtx;
+inline std::condition_variable cvar;
+
+constexpr auto nopt = std::nullopt;
 inline std::map<CellType, Color> CELL_COLOR = {
     {CellType::PASS, Color::BLACK_ON_BLUE},
     {CellType::WALL, Color::BLACK_ON_CYAN},
@@ -175,12 +185,13 @@ struct Cell
         type(CellType::UNKNOWN) {}
 
     Cell(int number, int fieldWidth, int indentX, int indentY, CellType cellType = CellType::PASS) :
-        fieldX(number % fieldWidth + indentX),
-        fieldY(number / fieldWidth + indentY),
-        realX(fieldX * 2),
-        realY(fieldY),
+        fieldX(number % fieldWidth),
+        fieldY(number / fieldWidth),
+        realX(indentX + (number % fieldWidth) * 2),
+        realY(indentY + number / fieldWidth),
         num(number),
         type(cellType) {}
+
     bool isNone() { return type == CellType::UNKNOWN; }
 };
 
@@ -193,27 +204,36 @@ struct Symbols
     static constexpr wchar_t PLUS_MINUS = 0x00B1;
     static constexpr wchar_t HORIZONTAL_DOUBLE_LINE = 0x2550;
     static constexpr wchar_t DOT_ABOVE = 0x02D9;
+    static constexpr wchar_t ELLIPSIS = 0x2026;  // многоточие
 
     struct BoxLight
     {
         static constexpr wchar_t HORIZONTAL_LINE = 0x2500;
         static constexpr wchar_t VERTICAL_LINE = 0x2502;
-        static constexpr wchar_t LEFT_TSHAPE = 0x251C;
         static constexpr wchar_t LEFT_UP_CORNER = 0x250C;
         static constexpr wchar_t LEFT_DOWN_CORNER = 0x2514;
-        static constexpr wchar_t RIGHT_TSHAPE = 0x2524;
         static constexpr wchar_t RIGHT_UP_CORNER = 0x2510;
         static constexpr wchar_t RIGHT_DOWN_CORNER = 0x2518;
+        static constexpr wchar_t TSHAPE_LEFT = 0x251C;
+        static constexpr wchar_t TSHAPE_RIGHT = 0x2524;
+        static constexpr wchar_t TSHAPE_UP = 0x252C;  // T
+        static constexpr wchar_t TSHAPE_DOWN = 0x2534;
+        static constexpr wchar_t CROSS = 0x253C;
     };
     struct BoxHeavy
     {
         static constexpr wchar_t HORIZONTAL_LINE = 0x2501;
         static constexpr wchar_t VERTICAL_LINE = 0x2503;
-        static constexpr wchar_t LEFT_TSHAPE = 0x2523;
         static constexpr wchar_t LEFT_UP_CORNER = 0x250F;
         static constexpr wchar_t LEFT_DOWN_CORNER = 0x2517;
-        static constexpr wchar_t RIGHT_TSHAPE = 0x252B;
         static constexpr wchar_t RIGHT_UP_CORNER = 0x2513;
         static constexpr wchar_t RIGHT_DOWN_CORNER = 0x251B;
+        static constexpr wchar_t TSHAPE_LEFT = 0x2523;
+        static constexpr wchar_t TSHAPE_RIGHT = 0x252B;
+        static constexpr wchar_t TSHAPE_UP = 0x2533;  // T
+        static constexpr wchar_t TSHAPE_DOWN = 0x253B;
+        static constexpr wchar_t CROSS = 0x254B;
     };
 };
+
+using BoxStyle = Symbols::BoxHeavy;

@@ -26,6 +26,9 @@ enum ButtonPressed
     ESCAPE,
     ENTER,
     CTRL,
+    WHITESPACE,
+    DIGIT_0, DIGIT_1, DIGIT_2, DIGIT_3, DIGIT_4,
+    DIGIT_5, DIGIT_6, DIGIT_7, DIGIT_8, DIGIT_9,
 };
 
 
@@ -35,7 +38,7 @@ public:
     static void Initialize() { handle_ = GetStdHandle(STD_INPUT_HANDLE); }
     static void GetClickInfo();
     static void WaitForAnyEvent();
-    static void GetAnyEventInfo();
+    static void GetAnyEventInfo(bool flushBuffer = true);
 
     static bool isKeyboardEvent;
     static short X, Y;

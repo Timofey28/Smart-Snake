@@ -35,11 +35,12 @@ public:
         const std::function<void()>& cMovePortalsBackToBorder,
         const std::function<void()>& cDrawCaption
     );
+    void RemovePreviousAlert();
 
 private:
     static constexpr int s_displayDuration_ = 2000;
     static constexpr Color s_textColor = Color::BLACK_ON_RED;
-    inline static const std::string s_alertMultipleSnakes = "Не обнаружено ни одной змейки. Добавь, пожалуйста!";
+    inline static const std::string s_alertMultipleSnakes = "Добавь на поле змейку!";
     inline static const std::string s_alertNoSnakes = "Змейка должна быть только одна!";
     inline static const std::string s_alertIncorrectSnake = "Змейка некорректна, ее несмежные части не могут находиться рядом друг с другом!";
     inline static const std::string s_alertClosedSpaces = "На игровом поле имеются комнаты, в которые невозможно попасть. Закрась их или сделай туда проход!";
@@ -50,7 +51,6 @@ private:
     std::condition_variable_any cv_;
     bool shouldRemoveAlert_, wasInterrupted_;
 
-    void __RemovePreviousAlert();
     void __Show(
         const std::string& msg,
         std::vector<Cell>* field,

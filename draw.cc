@@ -3,16 +3,21 @@ using namespace std;
 
 static int previousBarValue = -1;
 
-void setPosition(short x, short y)
+void setPosition(int x, int y)
 {
     COORD coord;
     coord.X = x;
     coord.Y = y;
-    if(!SetConsoleCursorPosition(Console::s_handle, coord)) {
+    if (!SetConsoleCursorPosition(Console::s_handle, coord)) {
         DWORD errorCode = GetLastError();
         string posStr = "(" + to_string(x) + ", " + to_string(y) + ")";
         throw runtime_error("Failed to set cursor position " + posStr + ". Error code: " + to_string(errorCode));
     }
+}
+
+void setPosition(pair<int, int> xy)
+{
+    setPosition(xy.first, xy.second);
 }
 
 void setPosition(const Cell& cell, bool secondPart)
@@ -25,7 +30,7 @@ void setColor(Color color)
     SetConsoleTextAttribute(Console::s_handle, (WORD) color);
 }
 
-void getPosition(short& x, short& y)
+void getPosition(int& x, int& y)
 {
     CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
     if (GetConsoleScreenBufferInfo(Console::s_handle, &consoleInfo)) {
@@ -36,14 +41,18 @@ void getPosition(short& x, short& y)
     else throw runtime_error("Failed to get current cursor position.");
 }
 
-void draw::GameCell(const Cell& cell, int stretch)
+template <class Mtx>
+void draw::GameCell(const Cell& cell, Mtx& m, int stretch)
 {
-    lock_guard<recursive_mutex> lg(rmtx);
+    lock_guard<Mtx> lock(m);
     if (cell.num == Console::s_pointOfNoReturn) return;
     setPosition(cell.realX, cell.realY);
     setColor(CELL_COLOR[cell.type]);
     cout << string(max(1, min(stretch, Console::s_pointOfNoReturn - cell.num)) * 2, ' ');  // (from 1 to whatever is smaller) * 2
 }
+template void draw::GameCell<NullMutex>(const Cell&, NullMutex&, int);
+template void draw::GameCell<mutex>(const Cell&, mutex&, int);
+template void draw::GameCell<recursive_mutex>(const Cell&, recursive_mutex&, int);
 
 void draw::SnakeHead(const Cell& cell, Direction movementDirection)
 {
@@ -73,25 +82,30 @@ void draw::SnakeHead(const Cell& cell, Direction movementDirection)
 //    cout << s;
 //}
 
-void draw::Field(const vector<Cell>& field, int width, bool onlyPerimeter)
+template <class Mtx>
+void draw::Field(const vector<Cell>& field, int width, Mtx& m, bool onlyPerimeter)
 {
     int height = field.size() / width;
     if (onlyPerimeter) {
-        draw::GameCell(field[0], width);
-        draw::GameCell(field[field.size() - width], width);
-        draw::GameCell(field[width]);
-        draw::GameCell(field[width * (height - 1) - 1]);
+        // weird parameters order because it's the only method where "stretch" is not default
+        draw::GameCell(field[0], m, width);
+        draw::GameCell(field[field.size() - width], m, width);
+        draw::GameCell(field[width], m);
+        draw::GameCell(field[width * (height - 1) - 1], m);
         for (int i = 2; i < height - 1; ++i) {
-            draw::GameCell(field[i * width - 1]);
-            draw::GameCell(field[i * width]);
+            draw::GameCell(field[i * width - 1], m);
+            draw::GameCell(field[i * width], m);
         }
-        for (int i = 1; i < height - 1; ++i) draw::GameCell(field[i * width + 1], width - 2);
+        for (int i = 1; i < height - 1; ++i) draw::GameCell(field[i * width + 1], m, width - 2);
     } else {
-        for (int i = 0; i < field.size(); ++i) draw::GameCell(field[i]);
+        for (int i = 0; i < field.size(); ++i) draw::GameCell(field[i], m);
     }
 }
+template void draw::Field<NullMutex>(const vector<Cell>&, int, NullMutex&, bool);
+template void draw::Field<mutex>(const vector<Cell>&, int, mutex&, bool);
 
-void draw::Crash(bool paint, const vector<Cell>& field, int width, int snakeHeadIndex)
+template <class Mtx>
+void draw::Crash(bool paint, const vector<Cell>& field, int width, int snakeHeadIndex, Mtx& m)
 {
     if (snakeHeadIndex == -1) {
         for (int i = 0; i < field.size(); ++i) {
@@ -102,6 +116,7 @@ void draw::Crash(bool paint, const vector<Cell>& field, int width, int snakeHead
         }
     }
     using BoxSymbols = Symbols::BoxHeavy;
+    lock_guard<Mtx> lock(m);
     _setmode(_fileno(stdout), _O_U16TEXT);
 
     // upper cells
@@ -140,111 +155,12 @@ void draw::Crash(bool paint, const vector<Cell>& field, int width, int snakeHead
 
     _setmode(_fileno(stdout), _O_TEXT);
 }
+template void draw::Crash<NullMutex>(bool, const vector<Cell>&, int, int, NullMutex&);
+template void draw::Crash<mutex>(bool, const vector<Cell>&, int, int, mutex&);
 
-void draw::EnterFieldDimensions(int& fieldWidth, int& fieldHeight, int captionWidth)
+void draw::ClearInputAndMoveCursorBack(int phraseLength, int inputLength)
 {
-    assert(fieldWidth == 0 && fieldHeight == 0);
-    int maxFieldWidth = min(91, (Console::s_dimensions.width - captionWidth) / 2 - 2);
-    int maxFieldHeight = min(91, Console::s_dimensions.height - 2);
-
-    string phraseChooseWidth = "Выбери ширину поля (3 - " + to_string(maxFieldWidth) + ") => ";
-    string phraseChooseHeight = "Выбери высоту поля (3 - " + to_string(maxFieldHeight) + ") => ";
-    string input;
-    int number;
-    bool bChooseWidth = true;
-    do {
-        if (!fieldWidth && !fieldHeight) system("cls");
-        if (bChooseWidth) {
-            if (!fieldWidth && !fieldHeight) cout << "\n\t" << phraseChooseWidth;
-            getline(cin, input);
-            if (canConvertToNumber(input)) {
-                number = stoi(input);
-                if (number >= 3 && number <= maxFieldWidth) {
-                    fieldWidth = number;
-                    bChooseWidth = false;
-                    if (!fieldHeight) cout << "\t" << phraseChooseHeight;
-                }
-                else {
-                    cout << '\a';
-                    __ClearInputAndMoveCursorBack(TAB_WIDTH + phraseChooseWidth.length(), input.length());
-                }
-            }
-            else {
-                if (input.empty()) {
-                    if (fieldHeight) setPosition(TAB_WIDTH + phraseChooseWidth.length(), 2);
-                    else bChooseWidth = false;
-                }
-                else if (tolower(input[0]) == 'q') {
-                    fieldWidth = 0;
-                    fieldHeight = 0;
-                    bChooseWidth = true;
-                }
-                else __ClearInputAndMoveCursorBack(TAB_WIDTH + phraseChooseWidth.length(), input.length());
-            }
-        }
-        else {
-            if (!fieldWidth && !fieldHeight) cout << "\n\t" << phraseChooseHeight;
-            getline(cin, input);
-            if (canConvertToNumber(input)) {
-                number = stoi(input);
-                if (number >= 3 && number <= maxFieldHeight) {
-                    fieldHeight = number;
-                    bChooseWidth = true;
-                    if (!fieldWidth) cout << "\t" << phraseChooseWidth;
-                }
-                else {
-                    cout << '\a';
-                    __ClearInputAndMoveCursorBack(TAB_WIDTH + phraseChooseHeight.length(), input.length());
-                }
-            }
-            else {
-                if (input.empty()) {
-                    if (fieldWidth) setPosition(TAB_WIDTH + phraseChooseHeight.length(), 2);
-                    else bChooseWidth = true;
-                }
-                else if (tolower(input[0]) == 'q') {
-                    fieldWidth = 0;
-                    fieldHeight = 0;
-                    bChooseWidth = true;
-                }
-                else __ClearInputAndMoveCursorBack(TAB_WIDTH + phraseChooseHeight.length(), input.length());
-            }
-        }
-    } while (!fieldWidth || !fieldHeight);
-    fieldWidth += 2;
-    fieldHeight += 2;
-}
-
-void draw::EnterGamesAmount(int& gamesAmount)
-{
-    int gamesLimit = 1000;
-    string phrase = "Введи количество игр (1 - " + to_string(gamesLimit) + ") => ";
-    string input;
-    int number;
-
-    system("cls");
-    cout << "\n\t" << phrase;
-    do {
-        getline(cin, input);
-        if (canConvertToNumber(input)) {
-            number = stoi(input);
-            if (number >= 1 && number <= gamesLimit) {
-                gamesAmount = number;
-                return;
-            }
-            cout << '\a';
-            __ClearInputAndMoveCursorBack(TAB_WIDTH + phrase.length(), input.length());
-        }
-        else {
-            if (input.empty()) setPosition(TAB_WIDTH + phrase.length(), 1);
-            else __ClearInputAndMoveCursorBack(TAB_WIDTH + phrase.length(), input.length());
-        }
-    } while (true);
-}
-
-void draw::__ClearInputAndMoveCursorBack(int phraseLength, int inputLength)
-{
-    short posX, posY;
+    int posX, posY;
     getPosition(posX, posY);
     setPosition(phraseLength, posY - 1);
     cout << string(inputLength, ' ');
@@ -298,72 +214,7 @@ void draw::ProgressBar(int done, int total)
 }
 
 
-// namespace alert
-
-//void draw::alert::MultipleOrNoneSnakes(int snakesAmount, const vector<Cell>& field, int width, function<void()> Callback, function<void()> cDrawCaption)
-//{
-//    unique_lock<recursive_mutex> ul(rmtx, std::defer_lock);
-//    string alertMsg;
-//    if (!snakesAmount) alertMsg = "Не найдено ни одной змейки. ИСПРАВИТЬ!!!";
-//    else alertMsg = "Змейка должна быть только одна. ИСПРАВИТЬ!!!";
-//
-//    ul.lock();
-//    setPosition(0, 0);
-//    setColor(Color::BLACK_ON_RED);
-//    cout << alertMsg;
-//    ul.unlock();
-//
-//    this_thread::sleep_for(2s);
-//
-//    ul.lock();
-//    setPosition(0, 0);
-//    setColor(Color::NORMAL);
-//    cout << string(alertMsg.size(), ' ');
-//    draw::Field(field, width);
-//    Callback();
-//    cDrawCaption();
-//}
-//
-//void draw::alert::IncorrectSnake()
-//{
-//    string alertMsg = "Змейка некорректна, ее части не могут находиться рядом друг с другом. ИСПРАВИТЬ!!!";
-//    setPosition(0, 0);
-//    setColor(Color::BLACK_ON_RED);
-//    cout << alertMsg;
-//}
-//
-//void draw::alert::ClosedSpaces()
-//{
-//    string alertMsg = "На игровом поле имеются комнаты, в которые невозможно попасть. Закрась их или сделай туда проход";
-//    setPosition(0, 0);
-//    setColor(Color::BLACK_ON_RED);
-//    cout << alertMsg;
-//}
-//
-//void draw::alert::LoopedSnake()
-//{
-//    string alertMsg = "Змейка зациклена, а так нельзя. ИСПРАВЬ!!!";
-//    setPosition(0, 0);
-//    setColor(Color::BLACK_ON_RED);
-//    cout << alertMsg;
-//}
-//
-//void draw::alert::NoPossibleStart()
-//{
-//    string alertMsg = "Змейка не может начать игру, потому что ей некуда идти. ИСПРАВИТЬ!!!";
-//    setPosition(0, 0);
-//    setColor(Color::BLACK_ON_RED);
-//    cout << alertMsg;
-//}
-//
-//void draw::alert::Remove()
-//{
-//    setPosition(0, 0);
-//    setColor(Color::BLACK);
-//    cout << string(100, ' ');
-//}
-
-template<typename BoxSymbols>
+template <typename BoxSymbols>
 void draw::Box(int indentX, int indentY, int width, int height, int pileContentHeight, int pilesAmount, Color focusColor, int activePile)
 {
     _setmode(_fileno(stdout), _O_U16TEXT);
@@ -380,7 +231,7 @@ void draw::Box(int indentX, int indentY, int width, int height, int pileContentH
         if (pile + 1 == activePile) setColor(focusColor);
         setPosition(indentX, indentY + (pile + 1) * (pileContentHeight + 1));
         if (pile == tablePileLimit - 1) wcout << BoxSymbols::LEFT_DOWN_CORNER << wstring(width - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_DOWN_CORNER;
-        else wcout << BoxSymbols::LEFT_TSHAPE << wstring(width - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_TSHAPE;
+        else wcout << BoxSymbols::TSHAPE_LEFT << wstring(width - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::TSHAPE_RIGHT;
     }
     setColor(Color::NORMAL);
     for (int pile = pilesAmount; pile < tablePileLimit; ++pile) {
@@ -396,7 +247,7 @@ void draw::Box(int indentX, int indentY, int width, int height, int pileContentH
 template void draw::Box<Symbols::BoxLight>(int, int, int, int, int, int, Color, int);
 template void draw::Box<Symbols::BoxHeavy>(int, int, int, int, int, int, Color, int);
 
-template<typename BoxSymbols>
+template <typename BoxSymbols>
 void draw::BoxPile(int indentX, int indentY, int pileWidth, int pileHeight, Color color, bool isFirst, bool isLast, bool careful)
 {
     _setmode(_fileno(stdout), _O_U16TEXT);
@@ -404,10 +255,10 @@ void draw::BoxPile(int indentX, int indentY, int pileWidth, int pileHeight, Colo
     if (!careful) {
         setPosition(indentX, indentY);
         if (isFirst) wcout << BoxSymbols::LEFT_UP_CORNER << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_UP_CORNER;
-        else wcout << BoxSymbols::LEFT_TSHAPE << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_TSHAPE;
+        else wcout << BoxSymbols::TSHAPE_LEFT << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::TSHAPE_RIGHT;
         setPosition(indentX, indentY + pileHeight - 1);
         if (isLast) wcout << BoxSymbols::LEFT_DOWN_CORNER << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_DOWN_CORNER;
-        else wcout << BoxSymbols::LEFT_TSHAPE << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::RIGHT_TSHAPE;
+        else wcout << BoxSymbols::TSHAPE_LEFT << wstring(pileWidth - 2, BoxSymbols::HORIZONTAL_LINE) << BoxSymbols::TSHAPE_RIGHT;
     }
     for (int i = 1; i <= pileHeight - 2; ++i) {
         setPosition(indentX, indentY + i);
@@ -460,7 +311,7 @@ void draw::Symbol(vector<pair<int, int>> coords, Color color)
     setColor(Color::NORMAL);
 }
 
-template<typename... Args>
+template <typename... Args>
 void draw::Info(pair<int, int> xy, Args... args, Color color)
 {
     setColor(color);

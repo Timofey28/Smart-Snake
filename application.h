@@ -22,7 +22,6 @@ public:
     void Run();
 
 private:
-    int gamesAmount_;
     Playground playground_;
 
     int ChooseOption();

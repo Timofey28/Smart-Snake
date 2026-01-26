@@ -8,6 +8,8 @@
 #include <thread>
 #include <cassert>
 #include <optional>
+#include <memory>
+#include <chrono>
 
 #include "console.h"
 #include "file_handler.h"
@@ -18,7 +20,7 @@
 #include "mouse_input.h"
 #include "game.h"
 
-using BoxStyle = Symbols::BoxLight;
+//#include <conio.h>
 
 
 enum Result
@@ -28,7 +30,7 @@ enum Result
     GAME_CHOSEN,
 };
 
-enum Table
+enum TableType
 {
     DAT,
     EXPERIMENT,
@@ -73,7 +75,7 @@ class Interface
 public:
     static bool DatesAndExperimentsList();
     static Result GamesList();
-    static void RunGame();
+    static void GamePlayback();
 
 private:
     static constexpr Color s_colorScrollbar_ = Color::ALMOST_WHITE, s_colorSlider_ = Color::GRAY, s_colorSortingOrder_ = Color::GOLD_ON_BLACK;
@@ -91,7 +93,7 @@ private:
     static int s_dateTablePileLimit_, s_experimentTablePileLimit_, s_gameTablePileLimit_;
     static std::unordered_map<time_t, Experiment> s_experiments_;
     static std::vector<Experiment> s_selectedDateExperiments_;
-    static std::vector<Game> s_selectedGames_;
+    static std::vector<std::unique_ptr<Game>> s_selectedGames_;
     static bool s_focusOnDatesList_;
     static std::optional<ScrollableList> s_listDates_, s_listExperiments_, s_listGames_;
     static ClickInfo clickInfo;
@@ -110,32 +112,34 @@ private:
     static std::vector<std::string> __MakePileData(Experiment e, int cursorPileIndex);
     static std::vector<std::string> __MakePileData(int gameCursorIndex, int score, int maxPossibleScore);
     static void __DrawTableData(
-        Table table,
+        TableType tableType,
         Color color,
         std::optional<int> screenPileIndex = std::nullopt,
         std::optional<int> cursorPileIndex = std::nullopt
     );
     static void __DrawBoxPile(
-        Table table,
+        TableType tableType,
         Color color,
         std::optional<int> screenPileIndex = std::nullopt,
         bool careful = false
     );
     static void __DrawWholeTablePile(
-        Table table,
+        TableType tableType,
         Color color,
         std::optional<int> screenPileIndex = std::nullopt,
         std::optional<int> cursorPileIndex = std::nullopt,
         bool careful = false
     );
     static void __DrawVerticalLine(int x, int y, int length, Color color);
-    static void __DrawScrollbar(Table table);
+    static void __DrawScrollbar(TableType tableType);
     static void __RemoveExperimentTableScrollbar();
-    static void __ClearPile(Table table, int screenPileIndex);
+    static void __ClearPile(TableType tableType, int screenPileIndex);
     static void __ClearLowerPileBoxLine(int screenPileIndex);  // always experiments' table
-    static void __Execute(Table table, const std::vector<Action>& actions);
+    static void __Execute(TableType tableType, const std::vector<Action>& actions);
     static void __LoadNewExperiments();
     static void __GetLastClickInfo(Window window);
     static void __SetNextSortingOrder();
     static void __SetDetailedGameInfo(int gameNo, int movesAmount, double avgMovesToFood);
+    static void __ConfigureFontSize(Game& game);
+    static void __RunGame(Game& game);
 };

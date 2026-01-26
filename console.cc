@@ -1,9 +1,8 @@
 #include "console.h"
-using namespace std;
 
-int Console::s_currentFontSize, Console::s_pointOfNoReturn;
+int Console::s_currentFontSize = 0, Console::s_pointOfNoReturn;
 Dimensions Console::s_dimensions(-1, -1);
-map<int, Dimensions> Console::s_fontSizeToDimensions;
+std::map<int, Dimensions> Console::s_fontSizeToDimensions;
 HANDLE Console::s_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 DWORD Console::s_previousMode;
 
@@ -36,14 +35,21 @@ void Console::Initialize()
 
 void Console::SetFontSize(int newFontSize, bool pause)
 {
-    __SetOrUnsetFullscreen();
+    if (newFontSize == s_currentFontSize) return;
+    __SetOrUnsetFullscreen();  // unset
     __SetFontSize(newFontSize);
-    if (pause) this_thread::sleep_for(1ms);
+    if (pause) std::this_thread::sleep_for(std::chrono::milliseconds(1));
     __GetConsoleDimensions();
+    if (pause) __SetCursorToLeftEdge();
     __CorrectBufferSize();
-    __SetOrUnsetFullscreen();
+    __SetOrUnsetFullscreen();  // set
     __GetConsoleDimensions();
     __MakeCursorInvisible();
+}
+
+void Console::SetInitialFontSize()
+{
+    if (s_currentFontSize != s_startingFontSize) SetFontSize(s_startingFontSize);
 }
 
 void Console::__GetConsoleDimensions()
@@ -56,9 +62,20 @@ void Console::__GetConsoleDimensions()
             s_dimensions.height = consoleInfo.srWindow.Bottom - consoleInfo.srWindow.Top + 1;
             s_pointOfNoReturn = s_dimensions.width / 2 * s_dimensions.height - 1;
         }
-        else throw runtime_error("Unable to get console screen buffer info");
+        else throw std::runtime_error("Unable to get console screen buffer info");
     }
-    else throw runtime_error("Unable to initialize HANDLE object");
+    else throw std::runtime_error("Unable to initialize HANDLE object");
+}
+
+void Console::__SetCursorToLeftEdge()
+{
+    COORD coord;
+    coord.X = 0;
+    coord.Y = 0;
+    if (!SetConsoleCursorPosition(Console::s_handle, coord)) {
+        DWORD errorCode = GetLastError();
+        throw std::runtime_error("console.cc, Console::__SetCursorToLeftEdge. Error code: " + std::to_string(errorCode));
+    }
 }
 
 void Console::__CorrectBufferSize()
@@ -68,8 +85,8 @@ void Console::__CorrectBufferSize()
     newScreenBufferSize.X = s_dimensions.width;
     newScreenBufferSize.Y = s_dimensions.height;
     if(!SetConsoleScreenBufferSize(s_handle, newScreenBufferSize)) {
-        string errorMsg = "Unable to set console screen buffer size: " + to_string(GetLastError());
-        throw runtime_error(errorMsg.c_str());
+        std::string errorMsg = "Unable to set console screen buffer size: " + std::to_string(GetLastError());
+        throw std::runtime_error(errorMsg.c_str());
     }
 }
 
@@ -88,7 +105,6 @@ void Console::__MakeCursorInvisible()
 
 void Console::__SetFontSize(int newFontSize)
 {
-    if (newFontSize == s_currentFontSize) return;
     HANDLE s_handle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_FONT_INFOEX fontInfo;
     fontInfo.cbSize = sizeof(fontInfo);

@@ -1,16 +1,13 @@
 #pragma once
 
+#include <iostream>
+#include <windows.h>
 #include <cmath>
 #include <map>
 #include <stdexcept>
 #include <cassert>
 #include <thread>
-#include <windows.h>
-
-//#include <conio.h>
-//#include <iostream>
-//#include <chrono>
-//#include "utils.h"
+#include <chrono>
 
 
 struct Dimensions
@@ -32,11 +29,13 @@ public:
 
     static void Initialize();
     static void SetFontSize(int newFontSize, bool pause = true);
+    static void SetInitialFontSize();
 
 private:
     static void __GetConsoleDimensions();
     static void __CorrectBufferSize();
     static void __SetOrUnsetFullscreen();
     static void __MakeCursorInvisible();
+    static void __SetCursorToLeftEdge();
     static void __SetFontSize(int newFontSize);
 };

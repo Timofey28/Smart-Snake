@@ -9,7 +9,7 @@ void Alert::Show(
     const function<void()>& cDrawCaption
 ) {
     unique_lock<recursive_mutex> ulocker(rmtx, std::defer_lock);
-    __RemovePreviousAlert();
+    RemovePreviousAlert();
     string msg;
     switch (alertType) {
         case MULTIPLE_SNAKES: msg = s_alertMultipleSnakes; break;
@@ -27,7 +27,7 @@ void Alert::Show(
     });
 }
 
-void Alert::__RemovePreviousAlert()
+void Alert::RemovePreviousAlert()
 {
     unique_lock<recursive_mutex> ulocker(rmtx);
     shouldRemoveAlert_ = true;
