@@ -57,6 +57,8 @@ public:
         int fieldWidth
     );
 
+    static void SaveGamesSummary(const std::vector<int>& gameScores);
+
     static void ReadGame(
         fs::path gameFilePath,
         int& fieldWidth, int& fieldHeight,
@@ -78,8 +80,9 @@ public:
     );
 
 private:
-    static const fs::path GAMES_FOLDER;
-    static const fs::path INITIAL_DATA_FILE;
+    static inline const fs::path GAMES_FOLDER = "Games";
+    static inline const fs::path INITIAL_DATA_FILE = ".initialdata";
+    static inline const fs::path GAMES_SUMMARY_FILE = "summary.txt";
     static fs::path s_currentDirectory_;
 
 //    static const map<int, string> monthNoToStr = {
@@ -100,5 +103,6 @@ private:
     static void __CreateCurrentDirectory();
     static int __GetFoldersAmount(fs::path directory);
     static int __GetFilesAmount(fs::path directory);
+    static int __GetGamesAmount(fs::path directory) { return __GetFilesAmount(directory) - 2; }
     static fs::path __GetGameInitialDataFilePath(fs::path gameFilePath);
 };

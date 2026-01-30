@@ -325,13 +325,19 @@ void Playground::SaveInitialData()
 void Playground::SaveLastGame()
 {
     FileHandler::SaveGame(
-        snakeTurns_.size() + 1,
+        snakeTurns_.size() + 1,  // final snake length
         firstFoodIndex_,
         lastFoodIndex_,
         crashDirection_,
         headAndFoodIndexes_,
         width_
     );
+    gameScores_.push_back(snakeTurns_.size() - initialSnakeTurns_.size());
+}
+
+void Playground::SaveGamesSummary()
+{
+    FileHandler::SaveGamesSummary(gameScores_);
 }
 
 vector<int> Playground::__GetCellVicinityByIndexes(int cellIndex)
@@ -629,6 +635,7 @@ void Playground::EnterGamesAmount()
     string phrase = "Введи количество игр (1 - " + to_string(gamesLimit) + ") => ";
     string input;
     int number;
+    gameScores_.clear();
 
     system("cls");
     cout << "\n\t" << phrase;

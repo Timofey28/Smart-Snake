@@ -32,6 +32,7 @@ public:
     void EnterGamesAmount();
     void SaveInitialData();
     void SaveLastGame();
+    void SaveGamesSummary();
     void ReinitializeStartingData();
     void CalculateNextIteration();
     bool GameOn() { return gameOn_; }
@@ -58,6 +59,7 @@ private:
     std::vector<int> headAndFoodIndexes_;
     Direction crashDirection_;
     float averageMovesToFood_;
+    std::vector<int> gameScores_;
 
     void __Init();
     void __EnterFieldDimensions();

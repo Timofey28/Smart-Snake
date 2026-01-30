@@ -5,8 +5,8 @@
 #include <vector>
 #include <cmath>
 
-#include "file_handler.h"
 #include "utils.h"
+#include "file_handler.h"
 
 namespace fs = std::filesystem;
 

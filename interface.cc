@@ -571,45 +571,6 @@ void Interface::__ConfigureFontSize(Game& game)
     game.SetFieldIndents((Console::s_dimensions.width - game.ContentWidth()) / 2, (Console::s_dimensions.height - game.ContentHeight()) / 2 + 1);
 }
 
-Experiment Interface::__GetExperimentInfo(fs::path experimentFolderPath)
-{
-    int experimentNo;
-    time_t timestamp;
-    try {
-        experimentNo = stoi((*(--experimentFolderPath.end())).string());
-        string dateStr = (*(++experimentFolderPath.begin())).string();
-        timestamp = dateStrISOFormatToTimestamp(dateStr);
-    } catch (const exception& e) {
-        throw runtime_error("Unable to parse folder \"" + experimentFolderPath.generic_string() + "\".");
-    }
-
-    time_t experimentDateNo = timestamp + experimentDateNo;
-    if (s_experiments_.count(experimentDateNo) == 0) {
-        s_experiments_.emplace(experimentDateNo, Experiment(experimentFolderPath));
-    }
-    return s_experiments_.at(experimentDateNo);
-}
-
-Experiment Interface::__GetExperimentInfo(time_t experimentDateNo)
-{
-    if (s_experiments_.count(experimentDateNo) == 0) {
-        string dateFolder;
-        int experimentNo;
-        time_t dateTT;
-        try {
-            dateFolder = timestampToISOFormatDateStr(experimentDateNo);
-            dateTT = dateStrISOFormatToTimestamp(dateFolder);
-            experimentNo = (int) experimentDateNo - dateTT;
-        } catch (const exception& e) {
-            throw runtime_error("Unable to parse timestamp (time_t) " + to_string(experimentDateNo) + ".");
-        }
-
-        fs::path experimentFolderPath = FileHandler::GetGamesFolder() / dateFolder / to_string(experimentNo);
-        s_experiments_.emplace(experimentDateNo, Experiment(experimentFolderPath));
-    }
-    return s_experiments_.at(experimentDateNo);
-}
-
 vector<string> Interface::__MakePileData(
     map<time_t, int, greater<time_t>>::iterator experimentAmountByDateIterator,
     int cursorPileIndex
@@ -898,6 +859,45 @@ void Interface::__Execute(TableType tableType, const vector<Action>& actions)
         }
         else if (_op == Operation::RESET_SCROLLBAR) __DrawScrollbar(tableType);
     }
+}
+
+Experiment Interface::__GetExperimentInfo(fs::path experimentFolderPath)
+{
+    int experimentNo;
+    time_t timestamp;
+    try {
+        experimentNo = stoi((*(--experimentFolderPath.end())).string());
+        string dateStr = (*(++experimentFolderPath.begin())).string();
+        timestamp = dateStrISOFormatToTimestamp(dateStr);
+    } catch (const exception& e) {
+        throw runtime_error("Unable to parse folder \"" + experimentFolderPath.generic_string() + "\".");
+    }
+
+    time_t experimentDateNo = timestamp + experimentDateNo;
+    if (s_experiments_.count(experimentDateNo) == 0) {
+        s_experiments_.emplace(experimentDateNo, Experiment(experimentFolderPath));
+    }
+    return s_experiments_.at(experimentDateNo);
+}
+
+Experiment Interface::__GetExperimentInfo(time_t experimentDateNo)
+{
+    if (s_experiments_.count(experimentDateNo) == 0) {
+        string dateFolder;
+        int experimentNo;
+        time_t dateTT;
+        try {
+            dateFolder = timestampToISOFormatDateStr(experimentDateNo);
+            dateTT = dateStrISOFormatToTimestamp(dateFolder);
+            experimentNo = (int) experimentDateNo - dateTT;
+        } catch (const exception& e) {
+            throw runtime_error("Unable to parse timestamp (time_t) " + to_string(experimentDateNo) + ".");
+        }
+
+        fs::path experimentFolderPath = FileHandler::GetGamesFolder() / dateFolder / to_string(experimentNo);
+        s_experiments_.emplace(experimentDateNo, Experiment(experimentFolderPath));
+    }
+    return s_experiments_.at(experimentDateNo);
 }
 
 void Interface::__LoadNewExperiments()

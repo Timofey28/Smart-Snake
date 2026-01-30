@@ -2,8 +2,6 @@
 
 using namespace std;
 
-const fs::path FileHandler::GAMES_FOLDER = "Games";
-const fs::path FileHandler::INITIAL_DATA_FILE = ".initialdata";
 map<time_t, fs::path> FileHandler::s_dateFolders;
 map<time_t, int, greater<time_t>> FileHandler::s_experimentAmountsByDates;
 map<time_t, int, greater<time_t>>::iterator FileHandler::s_currExpAmountsByDatesIter = FileHandler::s_experimentAmountsByDates.end();
@@ -73,6 +71,19 @@ void FileHandler::SaveGame(
         fout << toBase93(headOrFoodIndex % fieldWidth) << toBase93(headOrFoodIndex / fieldWidth);
     }
 
+    fout.close();
+}
+
+void FileHandler::SaveGamesSummary(const vector<int>& gameScores)
+{
+    ofstream fout(s_currentDirectory_ / GAMES_SUMMARY_FILE);
+    if (!fout.is_open()) {
+        ostringstream oss;
+        oss << "Unable to open file \"" << s_currentDirectory_ / GAMES_SUMMARY_FILE << "\".";
+        throw runtime_error(oss.str());
+    }
+
+    for (const auto& score : gameScores) fout << score << ' ';
     fout.close();
 }
 
@@ -170,17 +181,11 @@ void FileHandler::GetExperimentInitialData(
     fin.close();
 
     gameScores.clear();
-    int gamesAmount = __GetFilesAmount(experimentFolderPath) - 1;
-    string fileName;
-    int finalSnakeLength;
-    for (int fileNo = 1; fileNo <= gamesAmount; ++fileNo) {
-        fileName = to_string(fileNo) + ".txt";
-        fin.open(experimentFolderPath / fileName);
-        if (!fin.is_open()) throw runtime_error("Unable to open file \"" + (experimentFolderPath / fileName).generic_string() + "\".");
-        fin >> finalSnakeLength;
-        fin.close();
-        gameScores.push_back(finalSnakeLength - initialSnakeLength);
-    }
+    fin.open(experimentFolderPath / GAMES_SUMMARY_FILE);
+    if (!fin.is_open()) throw runtime_error("Unable to open file \"" + (experimentFolderPath / GAMES_SUMMARY_FILE).generic_string() + "\".");
+    int _score;
+    while (fin >> _score) gameScores.push_back(_score);
+    fin.close();
 }
 
 

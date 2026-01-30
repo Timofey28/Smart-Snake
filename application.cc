@@ -62,6 +62,7 @@ void Application::CreateGames()
         playground_.SaveLastGame();
         draw::ProgressBar(gameNumber, playground_.gamesAmount);
     }
+    playground_.SaveGamesSummary();
 
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
