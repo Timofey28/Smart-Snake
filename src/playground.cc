@@ -1,12 +1,5 @@
 #include "playground.h"
-
-#include <stdexcept>
-#include <cassert>
-#include <thread>
-#include <algorithm>
-
 using namespace std;
-
 
 void Playground::__Init()
 {
@@ -410,19 +403,19 @@ void Playground::__ArrangeFieldElements()
                     if (MouseInput::buttonPressed == ButtonPressed::LEFT_BUTTON && field_[cellIndex].type != CellType::PORTAL) {
                         typeToChangeTo = CellType::PORTAL;
                         field_[cellIndex].type = CellType::PORTAL;
-                        draw::GameCell(field_[cellIndex], rmtx);
+                        draw::GameCell(field_[cellIndex], ::rmtx);
                     }
                     else if (MouseInput::buttonPressed == ButtonPressed::RIGHT_BUTTON && field_[cellIndex].type != CellType::WALL) {
                         typeToChangeTo = CellType::WALL;
                         field_[cellIndex].type = CellType::WALL;
-                        draw::GameCell(field_[cellIndex], rmtx);
+                        draw::GameCell(field_[cellIndex], ::rmtx);
                     }
 
                     if (typeToChangeTo != CellType::UNKNOWN) {
                         int oppositeCellIndex = getOppositeBorderCellIndex(clickedX, clickedY, width_, height_);
 
                         field_[oppositeCellIndex].type = typeToChangeTo;
-                        draw::GameCell(field_[oppositeCellIndex], rmtx);
+                        draw::GameCell(field_[oppositeCellIndex], ::rmtx);
 
                         if (isAdjacentToCorner) {  // updating corner
                             int pairedAdjacentCellIndex, cornerCellIndex;
@@ -436,11 +429,11 @@ void Playground::__ArrangeFieldElements()
                             );
                             if (field_[cellIndex].type == CellType::PORTAL && field_[pairedAdjacentCellIndex].type == CellType::PORTAL) {
                                 field_[cornerCellIndex].type = CellType::PORTAL;
-                                draw::GameCell(field_[cornerCellIndex], rmtx);
+                                draw::GameCell(field_[cornerCellIndex], ::rmtx);
                             }
                             else {
                                 field_[cornerCellIndex].type = CellType::WALL;
-                                draw::GameCell(field_[cornerCellIndex], rmtx);
+                                draw::GameCell(field_[cornerCellIndex], ::rmtx);
                             }
 
                             getPairedAdjacentCellAndCornerCellIndex(
@@ -453,11 +446,11 @@ void Playground::__ArrangeFieldElements()
                             );
                             if (field_[oppositeCellIndex].type == CellType::PORTAL && field_[pairedAdjacentCellIndex].type == CellType::PORTAL) {
                                 field_[cornerCellIndex].type = CellType::PORTAL;
-                                draw::GameCell(field_[cornerCellIndex], rmtx);
+                                draw::GameCell(field_[cornerCellIndex], ::rmtx);
                             }
                             else {
                                 field_[cornerCellIndex].type = CellType::WALL;
-                                draw::GameCell(field_[cornerCellIndex], rmtx);
+                                draw::GameCell(field_[cornerCellIndex], ::rmtx);
                             }
                         }
                     }
@@ -466,20 +459,20 @@ void Playground::__ArrangeFieldElements()
                 else {  // if cell is inside field
                     if (MouseInput::buttonPressed == ButtonPressed::LEFT_BUTTON) {
                         field_[cellIndex].type = CellType::WALL;
-                        draw::GameCell(field_[cellIndex], rmtx);
+                        draw::GameCell(field_[cellIndex], ::rmtx);
                     }
                     else if (MouseInput::buttonPressed == ButtonPressed::RIGHT_BUTTON) {
 
                         field_[cellIndex].type = CellType::PASS;
-                        draw::GameCell(field_[cellIndex], rmtx);
+                        draw::GameCell(field_[cellIndex], ::rmtx);
                     }
                     else if (MouseInput::buttonPressed == ButtonPressed::CTRL_LEFT) {
                         field_[cellIndex].type = CellType::SNAKE_BODY;
-                        draw::GameCell(field_[cellIndex], rmtx);
+                        draw::GameCell(field_[cellIndex], ::rmtx);
                     }
                     else if (MouseInput::buttonPressed == ButtonPressed::CTRL_RIGHT) {
                         field_[cellIndex].type = CellType::SNAKE_HEAD;
-                        draw::GameCell(field_[cellIndex], rmtx);
+                        draw::GameCell(field_[cellIndex], ::rmtx);
                     }
                 }
             }
@@ -872,19 +865,19 @@ void Playground::__AdjustPortals()
         lowerRightAdj2 = width_ * height_ - 2;
     if (field_[upperLeftAdj1].type != CellType::PORTAL || field_[upperLeftAdj2].type != CellType::PORTAL) {
         field_[upperLeftCorner].type = CellType::WALL;
-        draw::GameCell(field_[upperLeftCorner], rmtx);
+        draw::GameCell(field_[upperLeftCorner], ::rmtx);
     }
     if (field_[upperRightAdj1].type != CellType::PORTAL || field_[upperRightAdj2].type != CellType::PORTAL) {
         field_[upperRightCorner].type = CellType::WALL;
-        draw::GameCell(field_[upperRightCorner], rmtx);
+        draw::GameCell(field_[upperRightCorner], ::rmtx);
     }
     if (field_[lowerLeftAdj1].type != CellType::PORTAL || field_[lowerLeftAdj2].type != CellType::PORTAL) {
         field_[lowerLeftCorner].type = CellType::WALL;
-        draw::GameCell(field_[lowerLeftCorner], rmtx);
+        draw::GameCell(field_[lowerLeftCorner], ::rmtx);
     }
     if (field_[lowerRightAdj1].type != CellType::PORTAL || field_[lowerRightAdj2].type != CellType::PORTAL) {
         field_[lowerRightCorner].type = CellType::WALL;
-        draw::GameCell(field_[lowerRightCorner], rmtx);
+        draw::GameCell(field_[lowerRightCorner], ::rmtx);
     }
 }
 
@@ -897,10 +890,10 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
 
         if (__WholeAxisIsAWall(orientation, axisValue)) {
             field_[X].type = CellType::WALL;
-            draw::GameCell(field_[X], rmtx);
+            draw::GameCell(field_[X], ::rmtx);
             index = (height_ - 1) * width_ + X;
             field_[index].type = CellType::WALL;
-            draw::GameCell(field_[index], rmtx);
+            draw::GameCell(field_[index], ::rmtx);
             return;
         }
 
@@ -915,14 +908,14 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
                 if (y != 1) {
                     fieldPortalIndexes_.insert(possiblePortalIndex);
                     field_[possiblePortalIndex].type = CellType::PORTAL;
-                    draw::GameCell(field_[possiblePortalIndex], rmtx);
+                    draw::GameCell(field_[possiblePortalIndex], ::rmtx);
                 }
                 break;
             }
             else {
                 if (y == 1) {
                     field_[possiblePortalIndex].type = CellType::WALL;
-                    draw::GameCell(field_[possiblePortalIndex], rmtx);
+                    draw::GameCell(field_[possiblePortalIndex], ::rmtx);
                 }
                 possiblePortalIndex = nextCellIndex;
             }
@@ -939,14 +932,14 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
                 if (y != height_ - 2) {
                     fieldPortalIndexes_.insert(possiblePortalIndex);
                     field_[possiblePortalIndex].type = CellType::PORTAL;
-                    draw::GameCell(field_[possiblePortalIndex], rmtx);
+                    draw::GameCell(field_[possiblePortalIndex], ::rmtx);
                 }
                 break;
             }
             else {
                 if (y == height_ - 2) {
                     field_[possiblePortalIndex].type = CellType::WALL;
-                    draw::GameCell(field_[possiblePortalIndex], rmtx);
+                    draw::GameCell(field_[possiblePortalIndex], ::rmtx);
                 }
                 possiblePortalIndex = nextCellIndex;
             }
@@ -959,10 +952,10 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
         if (__WholeAxisIsAWall(orientation, axisValue)) {
             index = Y * width_;
             field_[index].type = CellType::WALL;
-            draw::GameCell(field_[index], rmtx);
+            draw::GameCell(field_[index], ::rmtx);
             index = Y * width_ + (width_ - 1);
             field_[index].type = CellType::WALL;
-            draw::GameCell(field_[index], rmtx);
+            draw::GameCell(field_[index], ::rmtx);
             return;
         }
 
@@ -977,14 +970,14 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
                 if (x != 1) {
                     fieldPortalIndexes_.insert(possiblePortalIndex);
                     field_[possiblePortalIndex].type = CellType::PORTAL;
-                    draw::GameCell(field_[possiblePortalIndex], rmtx);
+                    draw::GameCell(field_[possiblePortalIndex], ::rmtx);
                 }
                 break;
             }
             else {
                 if (x == 1) {
                     field_[possiblePortalIndex].type = CellType::WALL;
-                    draw::GameCell(field_[possiblePortalIndex], rmtx);
+                    draw::GameCell(field_[possiblePortalIndex], ::rmtx);
                 }
                 possiblePortalIndex = nextCellIndex;
             }
@@ -1001,14 +994,14 @@ void Playground::__CalculatePortalEntries(Orientation orientation, int axisValue
                 if (x != width_ - 2) {
                     fieldPortalIndexes_.insert(possiblePortalIndex);
                     field_[possiblePortalIndex].type = CellType::PORTAL;
-                    draw::GameCell(field_[possiblePortalIndex], rmtx);
+                    draw::GameCell(field_[possiblePortalIndex], ::rmtx);
                 }
                 break;
             }
             else {
                 if (x == width_ - 2) {
                     field_[possiblePortalIndex].type = CellType::WALL;
-                    draw::GameCell(field_[possiblePortalIndex], rmtx);
+                    draw::GameCell(field_[possiblePortalIndex], ::rmtx);
                 }
                 possiblePortalIndex = nextCellIndex;
             }
@@ -1041,12 +1034,12 @@ void Playground::__MovePortalsBackToBorder()
     for (auto it = borderPortalIndexes_.begin(); it != borderPortalIndexes_.end(); ++it) {
         if (field_[*it].type == CellType::WALL) {
             field_[*it].type = CellType::PORTAL;
-            draw::GameCell(field_[*it], rmtx);
+            draw::GameCell(field_[*it], ::rmtx);
         }
     }
     for (auto it = fieldPortalIndexes_.begin(); it != fieldPortalIndexes_.end(); ++it) {
         field_[*it].type = CellType::WALL;
-        draw::GameCell(field_[*it], rmtx);
+        draw::GameCell(field_[*it], ::rmtx);
     }
     borderPortalIndexes_.clear();
     fieldPortalIndexes_.clear();
@@ -1067,11 +1060,11 @@ void Playground::__RepaintSnakeCells()
 
         if (cellIndex == validation.startingCellIndex) {
             field_[cellIndex].type = CellType::SNAKE_HEAD;
-            draw::GameCell(field_[cellIndex], rmtx);
+            draw::GameCell(field_[cellIndex], ::rmtx);
         }
         else {
             field_[cellIndex].type = CellType::SNAKE_BODY;
-            draw::GameCell(field_[cellIndex], rmtx);
+            draw::GameCell(field_[cellIndex], ::rmtx);
         }
 
         x = cellIndex % width_,

@@ -170,7 +170,7 @@ bool Interface::DatesAndExperimentsList()
 
         else {  // Mouse event
             __GetLastClickInfo(Window::EXPERIMENT_SELECTION_MENU);
-            if (!clickInfo.bDatesList && !clickInfo.bExperimentsList && bp != ButtonPressed::WHEEL) continue;
+            if (!clickInfo.bDatesList && !clickInfo.bExperimentsList && bp != ButtonPressed::RIGHT_BUTTON) continue;
 
             bool changedList = false;
             if (clickInfo.bDatesList) {
@@ -258,7 +258,7 @@ bool Interface::DatesAndExperimentsList()
                 }
             }
 
-            else if (bp == ButtonPressed::WHEEL) {
+            else if (bp == ButtonPressed::RIGHT_BUTTON) {
                 s_selectedDateExperiments_.clear();
                 s_listDates_.reset();
                 s_listExperiments_.reset();
@@ -338,7 +338,7 @@ Result Interface::GamesList()
     setColor(s_colorSortingOrder_);
     cout << s_sortingName_[s_gameListSorting_];
     setColor(Color::GRAY_ON_BLACK);
-    cout << "\n" << string(s_gameMenuLeftMargin_, ' ') << "Ctrl, пкм - изменить порядок";
+    cout << "\n" << string(s_gameMenuLeftMargin_, ' ') << "Ctrl, Wheel - изменить порядок";
     setColor(Color::NORMAL);
 
     draw::Box<BoxStyle>(
@@ -446,7 +446,7 @@ Result Interface::GamesList()
                 }
             }
 
-            else if (bp == ButtonPressed::RIGHT_BUTTON) {
+            else if (bp == ButtonPressed::WHEEL) {
                 __SetNextSortingOrder();
                 actions = s_listGames_.value().ReactTo(Event::EV_CTRL_OR_RMB);
                 __Execute(TableType::GAME, actions);
@@ -465,7 +465,7 @@ Result Interface::GamesList()
                 return Result::GAME_CHOSEN;
             }
 
-            else if (bp == ButtonPressed::WHEEL) {
+            else if (bp == ButtonPressed::RIGHT_BUTTON) {
                 s_listGames_.reset();
                 s_selectedGames_.clear();
                 return Result::BACK;
@@ -505,7 +505,7 @@ void Interface::GamePlayback()
         }
         else if (gameAction == GameAction::SET_FRAME) {
             if (game.paused.load(std::memory_order_acquire)) game.PrintFrameByIndex();
-            else game.PrintFrameByIndex(mtx);
+            else game.PrintFrameByIndex(::mtx);
         }
         else if (gameAction == GameAction::FRAME_BACKWARD) {
             assert(game.paused.load(std::memory_order_acquire));
@@ -530,7 +530,7 @@ void Interface::__RunGame(Game& game)
 {
     while (true) {
         if (!game.paused.load(std::memory_order_acquire)) {
-            unique_lock<mutex> ulocker(mtx);
+            unique_lock<mutex> ulocker(::mtx);
             if (game.forwardPlayback.load(std::memory_order_acquire)) game.PrintNextFrame();
             else game.PrintPreviousFrame();
             auto startTime = chrono::high_resolution_clock::now();
@@ -550,7 +550,7 @@ void Interface::__RunGame(Game& game)
         }
         else {
             {
-                unique_lock<mutex> ulocker(mtx);
+                unique_lock<mutex> ulocker(::mtx);
                 cvar.wait(ulocker, [&game]() {
                     return !game.paused.load(std::memory_order_acquire) || game.finished.load(std::memory_order_acquire);
                 });

@@ -1,7 +1,6 @@
 #include "application.h"
 using namespace std;
 
-
 Application::Application()
 {
     setlocale(0, "");

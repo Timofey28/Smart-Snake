@@ -97,6 +97,8 @@ vector<Action> ScrollableList::ReactTo(Event event, int pileIndex)
         };
         else return {Action(Operation::SHIFT_PILES, 0, 0)};
     }
+
+    return {};
 }
 
 void ScrollableList::__InitPileIndexConverter()

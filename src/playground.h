@@ -4,6 +4,10 @@
 #include <queue>
 #include <unordered_set>
 #include <stack>
+#include <stdexcept>
+#include <cassert>
+#include <thread>
+#include <algorithm>
 
 #include "console.h"
 #include "utils.h"
@@ -14,10 +18,6 @@
 #include "algorithm.h"
 #include "caption_init.h"
 #include "alert.h"
-
-//#include <sstream>
-//#include <iostream>
-//#include <conio.h>
 
 
 class Playground
@@ -93,7 +93,7 @@ private:
 inline void Playground::__ShowAlert(AlertType alertType)
 {
     auto cMovePortalsBackToBorder = std::bind(&Playground::__MovePortalsBackToBorder, this);
-//    auto cDrawCaption = std::bind(&Caption::Draw<std::recursive_mutex>, &this->captionFieldElements, std::ref(rmtx));  // std::bind is outdated
-    auto cDrawCaption = [this, &rmtx]() { this->captionFieldElements.Draw(rmtx); };
+//    auto cDrawCaption = std::bind(&Caption::Draw<std::recursive_mutex>, &this->captionFieldElements, std::ref(::rmtx));  // std::bind is outdated
+    auto cDrawCaption = [this]() { this->captionFieldElements.Draw(::rmtx); };
     alert.Show(alertType, &field_, width_, cMovePortalsBackToBorder, cDrawCaption);
 }

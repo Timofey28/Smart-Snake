@@ -8,7 +8,6 @@ HANDLE MouseInput::handle_;
 INPUT_RECORD MouseInput::inputRecord_;
 DWORD MouseInput::events_;
 
-
 void MouseInput::GetAnyEventInfo(bool flushBuffer)
 {
     MouseInput::__EnableMouseInput();

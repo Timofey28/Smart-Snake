@@ -403,7 +403,7 @@ GameAction Game::ProcessUserInput()
 
 void Game::SetAndPaintNewSpeedNo()
 {
-    lock_guard<mutex> lock(mtx);
+    lock_guard<mutex> lock(::mtx);
     speedsTable_->PaintCell(0, currentSpeedNo.load(std::memory_order_acquire) - 1, Color::NORMAL, CellSides());
     speedsTable_->PaintCell(0, newSpeedNo - 1, s_colorChosenSpeed_, CellSides());
     setPosition(fieldIndentX_ + leftPartWidth_ + s_spaceBetween_ + 10, upperMargin_ + s_indentSpeed_);
@@ -413,7 +413,7 @@ void Game::SetAndPaintNewSpeedNo()
 
 void Game::SetAndPaintPause()
 {
-    lock_guard<mutex> lock(mtx);
+    lock_guard<mutex> lock(::mtx);
     if (paused.load(std::memory_order_acquire)) {
         speedsTable_->SetCellValue(1, 1, {"Пауза"});
         speedsTable_->PaintCell(1,  0, s_colorArrows_, CellSides(0, 0, 0, 0, 0, 1, 1, 1));
@@ -431,7 +431,7 @@ void Game::SetAndPaintPause()
 void Game::WriteReproductionMode(bool frwd)
 {
     string caption;
-    unique_lock<mutex> ulocker(mtx, std::defer_lock);
+    unique_lock<mutex> ulocker(::mtx, std::defer_lock);
     if (frwd) {
         if (width_ >= 12) caption = s_fwdModeCaption_;
         else caption = s_fwdModeCaptionShort_;

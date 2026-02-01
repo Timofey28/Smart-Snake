@@ -1,12 +1,10 @@
 #include "file_handler.h"
-
 using namespace std;
 
 map<time_t, fs::path> FileHandler::s_dateFolders;
 map<time_t, int, greater<time_t>> FileHandler::s_experimentAmountsByDates;
 map<time_t, int, greater<time_t>>::iterator FileHandler::s_currExpAmountsByDatesIter = FileHandler::s_experimentAmountsByDates.end();
 fs::path FileHandler::s_currentDirectory_;
-
 
 time_t FileHandler::GetLastWriteTime(fs::path pathToFileOrFolder)
 {

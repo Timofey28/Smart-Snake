@@ -1,11 +1,5 @@
 #include "algorithm.h"
-
-#include <iostream>
-#include <vector>
-#include <queue>
-
 using namespace std;
-
 
 vector<int> Algorithm::FindShortestPath(const vector<vector<int>>& nodes, int startingNode, int endingNode)
 {
@@ -18,8 +12,8 @@ vector<int> Algorithm::FindShortestPath(const vector<vector<int>>& nodes, int st
 
     queue<int> traversalOrder;
     traversalOrder.push(startingNode);
-    int currentNode;
 
+    int currentNode;
     while (!traversalOrder.empty()) {
         currentNode = traversalOrder.front();
         traversalOrder.pop();

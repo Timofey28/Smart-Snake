@@ -8,13 +8,18 @@
 # Build
 bin/
 obj/
+build/
 
 # Service
 *.txt
 *jpg
-toANSI.bat
 toUTF8.bat
-*.bat
 
 # AppData
 Games/
+
+# Executable
+Smart-Snake.exe
+
+# Do not ignore!
+!CMakeLists.txt

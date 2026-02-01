@@ -34,8 +34,9 @@ std::string toString(Direction direction)
 
 void initializeBase93Map()
 {
-    for (int i = 0; i < BASE93_DIGITS.size(); ++i)
+    for (int i = 0; i < BASE93_DIGITS.size(); ++i) {
         BASE93_TO_INT[BASE93_DIGITS[i]] = i;
+    }
 }
 
 char toBase93(int num)

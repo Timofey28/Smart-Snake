@@ -8,7 +8,7 @@ void Alert::Show(
     const function<void()>& cMovePortalsBackToBorder,
     const function<void()>& cDrawCaption
 ) {
-    unique_lock<recursive_mutex> ulocker(rmtx, std::defer_lock);
+    unique_lock<recursive_mutex> ulocker(::rmtx, std::defer_lock);
     RemovePreviousAlert();
     string msg;
     switch (alertType) {
@@ -29,7 +29,7 @@ void Alert::Show(
 
 void Alert::RemovePreviousAlert()
 {
-    unique_lock<recursive_mutex> ulocker(rmtx);
+    unique_lock<recursive_mutex> ulocker(::rmtx);
     shouldRemoveAlert_ = true;
     ulocker.unlock();
 
@@ -49,7 +49,7 @@ void Alert::__Show(
 ) {
     int indentX = 0;
     if (msg.size() < Console::s_dimensions.width) indentX = (Console::s_dimensions.width - msg.size()) / 2;
-    unique_lock<recursive_mutex> ulocker(rmtx);
+    unique_lock<recursive_mutex> ulocker(::rmtx);
     setPosition(indentX, 0);
     setColor(s_textColor);
     cout << msg;
