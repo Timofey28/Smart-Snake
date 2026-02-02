@@ -10,6 +10,10 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 # Для режима Debug отключаем оптимизацию для удобства отладки
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 
+# Для статической линковки
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+add_link_options("-static")
+
 file(GLOB_RECURSE PROJECT_SOURCES "src/*.cc")
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
